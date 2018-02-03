@@ -405,6 +405,9 @@ def parse_bytes(msg_bytes):
         return None
     return HibikeMessage(message_id, payload)
 
+async def blocking_read_generator_async(serial_conn, stop_event=None):
+    pass
+
 
 def blocking_read_generator(serial_conn, stop_event=threading.Event()):
     """
