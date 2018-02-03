@@ -152,6 +152,17 @@ def send(serial_conn, message):
     out_buf = bytearray([0x00, len(encoded)]) + encoded
     serial_conn.write(out_buf)
 
+def send_transport(transport, message):
+    """
+    Send MESSAGE over SERIAL_CONN.
+    """
+    m_buff = message.to_bytes()
+    chk = checksum(m_buff)
+    m_buff.append(chk)
+    encoded = cobs_encode(m_buff)
+    out_buf = bytearray([0x00, len(encoded)]) + encoded
+    transport.write(out_buf)
+
 
 def encode_params(device_id, params):
     """
@@ -404,6 +415,9 @@ def parse_bytes(msg_bytes):
     if chk != checksum(message[:-1]):
         return None
     return HibikeMessage(message_id, payload)
+
+async def blocking_read_generator_async(serial_conn, stop_event=None):
+    pass
 
 
 def blocking_read_generator(serial_conn, stop_event=threading.Event()):
