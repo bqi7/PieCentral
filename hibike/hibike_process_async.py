@@ -114,18 +114,29 @@ def identify_smart_sensors(serial_conns):
 
 
 
-class Sensor(asyncio.Protocol):
+class SerialProtocol(asyncio.Protocol):
     """
     Handle communication over serial with a smart sensor.
     """
-    def __init__(self, uid, write_queue, error_queue, state_queue):
+    def __init__(self, uid, write_queue, error_queue, state_queue, event_loop):
         self.uid = uid
         self.write_queue = write_queue
         self.error_queue = error_queue
         self.state_queue = state_queue
-        self.instance_id = random.getrandbits(128)
+        self._ready = asyncio.Event()
+        asyncio.ensure_future(self.send_messages, loop=event_loop)
+
+    async def send_messages(self):
+        """
+        Send messages in the queue to the sensor.
+        """
+        await self._ready.wait()
+        while True:
+            await self.write_queue.get()
+            # TODO: use device_write_coro/transport_write
 
     def connection_made(self, transport):
+        self._ready.set()
         self.transport = transport
         print('port opened', transport)
         transport.serial.rts = False  # You can manipulate Serial object via transport
