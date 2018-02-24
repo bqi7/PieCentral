@@ -230,6 +230,12 @@ def make_disable():
     return message
 
 
+def make_heartbeat_request(heartbeat_id=0):
+    """Return a heartbeat request."""
+    payload = bytearray(struct.pack("<B", heartbeat_id))
+    message = HibikeMessage(MESSAGE_TYPES["HeartBeatRequest"], payload)
+    return message
+
 def make_heartbeat_response(heartbeat_id=0):
     """ Makes and returns HeartBeat message."""
     payload = bytearray(struct.pack('<B', heartbeat_id))
