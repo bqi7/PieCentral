@@ -5,7 +5,6 @@ import asyncio
 from collections import namedtuple
 import glob
 import os
-import queue
 import random
 import time
 
@@ -46,7 +45,7 @@ def get_working_serial_ports(excludes=()):
     ports.difference_update(excludes)
     return list(ports)
 
-  
+
 async def hotplug_async(devices, batched_data, error_queue, state_queue, event_loop):
     """
     Scan for new devices on serial ports and automatically spin them up.
