@@ -5,7 +5,6 @@ import asyncio
 from collections import namedtuple
 import glob
 import os
-import queue
 import random
 import time
 
@@ -40,13 +39,14 @@ def get_working_serial_ports(excludes=()):
                 + glob.glob("/dev/tty.usbmodem*"))
     try:
         virtual_device_config_file = os.path.join(os.path.dirname(__file__), "virtual_devices.txt")
-        ports.update(open(virtual_device_config_file, "r").read().split())
+        with open(virtual_device_config_file) as f:
+            ports.update(f.read().split())
     except IOError:
         pass
     ports.difference_update(excludes)
     return list(ports)
 
-  
+
 async def hotplug_async(devices, batched_data, error_queue, state_queue, event_loop):
     """
     Scan for new devices on serial ports and automatically spin them up.
@@ -61,7 +61,9 @@ async def hotplug_async(devices, batched_data, error_queue, state_queue, event_l
 
     while True:
         await asyncio.sleep(HOTPLUG_POLL_INTERVAL, loop=event_loop)
-        port_names = set(map(lambda dev: dev.transport.serial.name, devices.values()))
+        port_names = set(map(lambda dev: dev.transport.serial.name,
+                             filter(lambda x: x.transport.serial is not None,
+                                    filter(lambda x: x.transport is not None, devices.values()))))
         port_names.update(pending)
         new_serials = get_working_serial_ports(port_names)
         for port in new_serials:
