@@ -61,7 +61,8 @@ async def hotplug_async(devices, batched_data, error_queue, state_queue, event_l
     while True:
         await asyncio.sleep(HOTPLUG_POLL_INTERVAL, loop=event_loop)
         port_names = set(map(lambda dev: dev.transport.serial.name,
-                             filter(lambda x: x.transport is not None, devices.values())))
+                             filter(lambda x: x.transport.serial is not None,
+                                    filter(lambda x: x.transport is not None, devices.values()))))
         port_names.update(pending)
         new_serials = get_working_serial_ports(port_names)
         for port in new_serials:
