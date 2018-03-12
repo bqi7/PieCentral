@@ -39,7 +39,8 @@ def get_working_serial_ports(excludes=()):
                 + glob.glob("/dev/tty.usbmodem*"))
     try:
         virtual_device_config_file = os.path.join(os.path.dirname(__file__), "virtual_devices.txt")
-        ports.update(open(virtual_device_config_file, "r").read().split())
+        with open(virtual_device_config_file) as f:
+            ports.update(f.read().split())
     except IOError:
         pass
     ports.difference_update(excludes)
