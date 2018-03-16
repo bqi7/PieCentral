@@ -156,7 +156,7 @@ class SmartSensorProtocol(asyncio.Protocol):
             if message_type == hm.MESSAGE_TYPES["SubscriptionResponse"]:
                 params, delay, uid = hm.parse_subscription_response(packet)
                 self.uid = uid
-                self.state_queue.put_nowait(("device_subscribed", [uid, delay, params]))
+                await self.state_queue.coro_put(("device_subscribed", [uid, delay, params]))
             elif message_type == hm.MESSAGE_TYPES["DeviceData"]:
                 # This is kind of a hack, but it allows us to use `recv_messages` for
                 # detecting new smart sensors as well as reading from known ones.
