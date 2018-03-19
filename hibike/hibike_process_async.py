@@ -12,6 +12,7 @@ import time
 import hibike_message as hm
 import serial_asyncio
 import aioprocessing
+import aiofiles
 __all__ = ["hibike_process"]
 
 
@@ -39,8 +40,9 @@ def get_working_serial_ports(excludes=()):
                 + glob.glob("/dev/tty.usbmodem*"))
     try:
         virtual_device_config_file = os.path.join(os.path.dirname(__file__), "virtual_devices.txt")
-        with open(virtual_device_config_file) as f:
-            ports.update(f.read().split())
+        async with aiofiles.open(virtual_device_config_file) as f:
+            contents = await f.read()
+            ports.update(contents.split())
     except IOError:
         pass
     ports.difference_update(excludes)
@@ -182,6 +184,8 @@ class SmartSensorProtocol(asyncio.Protocol):
         Attempt to parse data from the serial port into
         a Hibike packet.
         """
+        import time
+        start_time = time.time()
         self.serial_buf.extend(data)
         zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
         if zero_loc != -1:
@@ -196,6 +200,7 @@ class SmartSensorProtocol(asyncio.Protocol):
                 # we can safely jump to it for the next iteration
                 new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
                 self.serial_buf = self.serial_buf[new_packet:]
+        print("data_received took {}".format(time.time() - start_time))
 
     def connection_lost(self, exc):
         if self.uid is not None:
