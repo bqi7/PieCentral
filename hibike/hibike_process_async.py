@@ -12,6 +12,7 @@ import time
 import hibike_message as hm
 import serial_asyncio
 import aioprocessing
+import aiofiles
 __all__ = ["hibike_process"]
 
 
@@ -24,7 +25,7 @@ IDENTIFY_TIMEOUT = 1
 HOTPLUG_POLL_INTERVAL = 1
 
 
-def get_working_serial_ports(excludes=()):
+async def get_working_serial_ports(excludes=()):
     """
     Scan for open COM ports, except those in `excludes`.
 
@@ -39,8 +40,9 @@ def get_working_serial_ports(excludes=()):
                 + glob.glob("/dev/tty.usbmodem*"))
     try:
         virtual_device_config_file = os.path.join(os.path.dirname(__file__), "virtual_devices.txt")
-        with open(virtual_device_config_file) as f:
-            ports.update(f.read().split())
+        async with aiofiles.open(virtual_device_config_file) as f:
+            contents = await f.read()
+            ports.update(contents.split())
     except IOError:
         pass
     ports.difference_update(excludes)
@@ -65,7 +67,7 @@ async def hotplug_async(devices, batched_data, error_queue, state_queue, event_l
                              filter(lambda x: x.transport.serial is not None,
                                     filter(lambda x: x.transport is not None, devices.values()))))
         port_names.update(pending)
-        new_serials = get_working_serial_ports(port_names)
+        new_serials = await get_working_serial_ports(port_names)
         for port in new_serials:
             try:
                 pending.add(port)

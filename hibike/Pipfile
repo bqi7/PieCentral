@@ -16,6 +16,7 @@ flask = "*"
 aioprocessing = "*"
 pyserial-asyncio = "*"
 aiofiles = "*"
+protobuf = "*"
 
 
 [dev-packages]
