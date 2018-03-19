@@ -184,8 +184,6 @@ class SmartSensorProtocol(asyncio.Protocol):
         Attempt to parse data from the serial port into
         a Hibike packet.
         """
-        import time
-        start_time = time.time()
         self.serial_buf.extend(data)
         zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
         if zero_loc != -1:
@@ -200,7 +198,6 @@ class SmartSensorProtocol(asyncio.Protocol):
                 # we can safely jump to it for the next iteration
                 new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
                 self.serial_buf = self.serial_buf[new_packet:]
-        print("data_received took {}".format(time.time() - start_time))
 
     def connection_lost(self, exc):
         if self.uid is not None:
