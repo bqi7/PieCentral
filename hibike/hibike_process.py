@@ -17,6 +17,7 @@ import sys
 # pylint: disable=import-error
 import hibike_message as hm
 import serial
+import yappi
 
 __all__ = ["hibike_process"]
 
@@ -215,6 +216,14 @@ def remove_disconnected_devices(error_queue, devices, clean_up_queue, state_queu
                 error_queue.put(err)
             return
 
+def profile_stop(profiler, time_limit=10):
+    """
+    Stop profiling after a set time limit, in seconds.
+    """
+    time.sleep(time_limit)
+    profiler.get_func_stats().print_all(out=sys.stdout, columns={0:("name",60), 1:("ncall", 5), 2:("tsub", 8), 3:("ttot", 8), 4:("tavg",8)})
+    profiler.get_thread_stats().print_all()
+
 # pylint: disable=too-many-branches, too-many-locals
 # pylint: disable=too-many-arguments, unused-argument
 def hibike_process(bad_things_queue, state_queue, pipe_from_child):
@@ -234,11 +243,14 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
         pack = spin_up_device(serial_port, uid, state_queue, batched_data, error_queue)
         devices[uid] = pack
 
+    yappi.start()
     batch_thread = threading.Thread(target=batch_data, args=(batched_data, state_queue))
     batch_thread.start()
     hotplug_thread = threading.Thread(target=hotplug,
                                       args=(devices, state_queue, batched_data, error_queue))
     hotplug_thread.start()
+    profile_thread = threading.Thread(target=profile_stop, args=(yappi,))
+    profile_thread.start()
 
     # Pings all devices and tells them to stop sending data
     for pack in devices.values():
