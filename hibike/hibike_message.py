@@ -24,6 +24,7 @@ DEVICES = {device["id"]: device for device in DEVICES}
 """
 Smart sensors and their associated device IDs.
 """
+# pylint: disable=pointless-string-statement
 """
 structure of devices
 {0:

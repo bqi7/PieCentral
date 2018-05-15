@@ -263,6 +263,7 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     parent_path = path.rstrip("hibike")
     runtime = os.path.join(parent_path, "runtime")
     sys.path.insert(1, runtime)
+    # pylint: disable=import-error
     import runtimeUtil
 
     while True:
