@@ -11,31 +11,30 @@ import threading
 import time
 import sys
 
-#from PieCentral.runtime.runtimeUtil import *
-# from runtimeUtil import *
-
-# pylint: disable=import-error
 import hibike_message as hm
 import serial
 
-__all__ = ["hibike_process"]
 
-
-# .04 milliseconds sleep is the same frequency we subscribe to devices at
 BATCH_SLEEP_TIME = .04
-# Time in seconds to wait until reading from a potential sensor
+"""
+The frequency to forward data to StateManager.
+"""
 IDENTIFY_TIMEOUT = 1
-# Time in seconds to wait between checking for new devices
-# and cleaning up old ones.
+"""
+Timeout, in seconds, for identifying a smart sensor on a serial port.
+"""
 HOTPLUG_POLL_INTERVAL = 1
+"""
+The number of seconds between hotplug scans.
+"""
 
 
 def get_working_serial_ports(excludes=()):
     """
-    Scan for open COM ports, except those in EXCLUDES.
+    Scan for open COM ports.
 
-    Returns:
-        A list of serial port objects (`serial.Serial`) and port names.
+    :param excludes: An iterable of serial ports to exclude from the scan
+    :return: A list of serial port objects (``serial.Serial``) and port names
     """
     excludes = set(excludes)
     # Last command is included so that it's compatible with OS X Sierra
@@ -63,11 +62,10 @@ def get_working_serial_ports(excludes=()):
 
 def identify_smart_sensors(serial_conns):
     """
-    Given a list of serial port connections, figure out which
-    contain smart sensors.
+    Identify which serial ports have smart sensors on them.
 
-    Returns:
-        A map of serial port names to UIDs.
+    :param serial_conns: A list of serial ports to check
+    :return: A map of serial port names to UIDs.
     """
     def recv_subscription_response(conn, uid_queue, stop_event):
         """
@@ -120,10 +118,14 @@ def identify_smart_sensors(serial_conns):
 
 def spin_up_device(serial_port, uid, state_queue, batched_data, error_queue):
     """
-    Spin up a device with a given UID on SERIAL_PORT.
+    Spin up a new device.
 
-    Returns:
-        The new device.
+    :param serial_port: The port that the device resides on
+    :param uid: The device's UID
+    :param state_queue: A queue to StateManager
+    :param batched_data: The batched read dictionary
+    :param error_queue: The device error queue
+    :return: The new device
     """
     pack = namedtuple("Threadpack", ["read_thread", "write_thread",
                                      "write_queue", "serial_port", "instance_id"])
@@ -145,6 +147,11 @@ def spin_up_device(serial_port, uid, state_queue, batched_data, error_queue):
 def hotplug(devices, state_queue, batched_data, error_queue):
     """
     Remove disconnected devices and scan for new ones.
+
+    :param devices: The mapping from UIDs to devices
+    :param state_queue: A queue to StateManager
+    :param batched_data: The batched read dictionary
+    :param error_queue: The device error queue
     """
     clean_up_queue = queue.Queue()
     clean_up_thread = threading.Thread(target=clean_up_devices, args=(clean_up_queue, ))
@@ -157,8 +164,9 @@ def hotplug(devices, state_queue, batched_data, error_queue):
 
 def scan_for_new_devices(existing_devices, state_queue, batched_data, error_queue):
     """
-    Find devices that are on serial ports not in EXISTING_DEVICES, and add
-    any that have been found to it.
+    Find any new devices and spin them up.
+
+    :param existing_devices: Devices that are already functioning
     """
     ports, names = get_working_serial_ports(map(lambda d: d.serial_port.name,
                                                 existing_devices.values()))
@@ -190,7 +198,10 @@ def clean_up_devices(device_queue):
 
 def remove_disconnected_devices(error_queue, devices, clean_up_queue, state_queue):
     """
-    Clean up any disconnected devices in ERROR_QUEUE.
+    Clean up disconnected devices.
+
+    :param error_queue: The device error queue
+    :param devices: The mapping from UIDs to devices
     """
     next_time_errors = []
     while True:
@@ -293,7 +304,10 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
 
 def device_write_thread(ser, instr_queue):
     """
-    Send packets to SER based on instructions from INSTR_QUEUE.
+    Send packets on a serial port.
+
+    :param ser: The serial port
+    :param instr_queue: A queue for packet data
     """
     try:
         while True:
@@ -322,7 +336,13 @@ def device_write_thread(ser, instr_queue):
 
 def device_read_thread(uid, pack, error_queue, state_queue, batched_data):
     """
-    Read packets from SER and update queues and BATCHED_DATA accordingly.
+    Read and decode packets.
+
+    :param uid: The device UID
+    :param pack: The device data
+    :param error_queue: The device error queue
+    :param state_queue: A queue to communicate with StateManager
+    :param batched_data: The batch read dictionary
     """
     ser = pack.serial_port
     instruction_queue = pack.write_queue
@@ -347,7 +367,10 @@ def device_read_thread(uid, pack, error_queue, state_queue, batched_data):
 
 def batch_data(data, state_queue):
     """
-    Write out DATA to STATE_QUEUE periodically.
+    Periodically send data to StateManager.
+
+    :param data: The data to send
+    :param state_queue: The queue to StateManager
     """
     while True:
         time.sleep(BATCH_SLEEP_TIME)

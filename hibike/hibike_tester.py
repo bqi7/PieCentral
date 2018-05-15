@@ -54,7 +54,10 @@ class Hibike:
 
     def get_last_cached(self, uid, param):
         """
-        Get the last value of PARAM received from the device at UID.
+        Fetch the value of a parameter last received from a device.
+
+        :param uid: The device UID
+        :param param: The parameter name
 
         Precondition: a device_data with a UID, params, and values must have been
         received from the param before calling this function.
@@ -80,7 +83,11 @@ class Hibike:
 
     def subscribe(self, uid, delay, params):
         """
-        Subscribe to device UID, with DELAY delay, and parameters PARAMS.
+        Subscribe to a device.
+
+        :param uid: The device UID
+        :param delay: The subscription delay
+        :param params: The parameter names to subscribe to
         """
         self.pipe_to_child.send(["subscribe_device", [uid, delay, params]])
 
@@ -100,13 +107,19 @@ class Hibike:
 
     def write(self, uid, params_and_values):
         """
-        Write PARAMS_AND_VALUES to the device at UID.
+        Write data to a device.
+
+        :param uid: The device UID
+        :param params_and_values: A list of (parameter name, value) tuples
         """
         self.pipe_to_child.send(["write_params", [uid, params_and_values]])
 
     def read(self, uid, params):
         """
-        Read PARAMS from the device at UID.
+        Read from a device.
+
+        :param uid: The device UID
+        :param params: A list of parameter names
         """
         self.pipe_to_child.send(["read_params", [uid, params]])
 

@@ -17,7 +17,13 @@ PARAM_MAP = {device["id"]: {param["name"]: (param["number"],
                                             param["read"],
                                             param["write"]) for param in device["params"]}
              for device in DEVICES}
+"""
+A mapping from device IDs to information about devices.
+"""
 DEVICES = {device["id"]: device for device in DEVICES}
+"""
+Smart sensors and their associated device IDs.
+"""
 """
 structure of devices
 {0:
@@ -30,7 +36,7 @@ structure of devices
 
 """
 
-# Dictionary mapping param types to python struct format characters
+
 PARAM_TYPES = {
     "bool": "?",
     "uint8_t": "B",
@@ -44,8 +50,11 @@ PARAM_TYPES = {
     "float": "f",
     "double": "d"
 }
+"""
+Dictionary mapping parameter types to Python ``struct`` format characters.
+"""
 
-# Dictionary of message types: message id
+
 MESSAGE_TYPES = {
     "Ping":                 0x10,
     "SubscriptionRequest":  0x11,
@@ -58,13 +67,19 @@ MESSAGE_TYPES = {
     "HeartBeatResponse":    0x18,
     "Error":                0xFF
 }
+"""
+A mapping from message type to message ID.
+"""
 
-# Dictionary of error names : error codes
+
 ERROR_CODES = {
     "UnexpectedDelimiter": 0xFD,
     "CheckumError": 0xFE,
     "GenericError": 0xFF
 }
+"""
+A mapping from error types to error codes.
+"""
 
 
 class HibikeMessage:
@@ -108,14 +123,14 @@ class HibikeMessage:
 
 def get_device_type(uid):
     """
-    The top 16 bits of UID.
+    Decode a device type from a UID.
     """
     return int(uid >> 72)
 
 
 def get_year(uid):
     """
-    Bits 71:64 of UID.
+    Decode the year from a uid.
     """
     temp = uid >> 64
     return int(temp & 0xFF)
@@ -123,7 +138,7 @@ def get_year(uid):
 
 def get_id(uid):
     """
-    Bits 63:0 of UID.
+    Decode the unique part of a UID.
     """
     return uid & 0xFFFFFFFFFFFFFFFF
 
@@ -143,7 +158,10 @@ def checksum(data):
 
 def send(serial_conn, message):
     """
-    Send MESSAGE over SERIAL_CONN.
+    Send a message over a serial connection.
+
+    :param serial_conn: The serial connection object
+    :param message: A ``HibikeMessage``
     """
     m_buff = message.to_bytes()
     chk = checksum(m_buff)
@@ -155,13 +173,11 @@ def send(serial_conn, message):
 
 def encode_params(device_id, params):
     """
-    Encode a list of parameters into a bitmask.
+    Encode a list of parameter names into a bitmask.
 
-    Parameters:
-        device_id  - a device type id (not uid)
-        params     - a list of parameter names
-    Returns:
-        An int representing the bitmask of a set of parameters.
+    :param device_id: A device type ID (not UID)
+    :param params: A list of parameter names
+    :return: An int that contains the parameter bitmask
     """
     param_nums = [PARAM_MAP[device_id][name][0] for name in params]
     entries = [1 << num for num in param_nums]
@@ -173,13 +189,11 @@ def encode_params(device_id, params):
 
 def decode_params(device_id, params_bitmask):
     """
-    Decode PARAMS_BITMASK.
+    Decode a bitmask into a list of parameter names.
 
-    Parameters:
-        device_id      - a device type id (not uid)
-        params_bitmask - the set of parameters in binary form
-    Returns:
-        A list of names symbolizing the encoded parameters.
+    :param device_id: A device type ID
+    :param params_bitmask: An integer containing the bitmask
+    :return: A list of parameter names corresponding to the bitmask
     """
     converted_params = []
     for param_count in range(16):
@@ -195,7 +209,10 @@ def decode_params(device_id, params_bitmask):
 
 def format_string(device_id, params):
     """
-    A string representation of the types of PARAMS.
+    The ``struct`` format string representing the types of parameters.
+
+    :param device_id: A device type ID
+    :param params: A list of parameter names
     """
     param_types = [PARAM_MAP[device_id][name][1] for name in params]
 
@@ -232,10 +249,10 @@ def make_subscription_request(device_id, params, delay):
 
     Looks up config data about the specified
     device_id to properly construct the message.
-    Parameters:
-        device_id - a device type id (not uid).
-        params    - an iterable of param names
-        delay     - the delay in milliseconds
+
+    :param device_id: a device type id (not uid).
+    :param params: an iterable of param names
+    :param delay: the delay in milliseconds
     """
     params_bitmask = encode_params(device_id, params)
     temp_payload = struct.pack('<HH', params_bitmask, delay)
@@ -250,11 +267,11 @@ def make_subscription_response(device_id, params, delay, uid):
 
     Looks up config data about the specified
     device_id to properly construct the message.
-    Parameters:
-        device_id - a device type id (not uid).
-        params    - an iterable of param names
-        delay     - the delay in milliseconds
-        uid       - the uid
+
+    :param device_id: a device type id (not uid).
+    :param params: an iterable of param names
+    :param delay: the delay in milliseconds
+    :param uid: the uid
     """
     params_bitmask = encode_params(device_id, params)
     device_type = get_device_type(uid)
@@ -274,9 +291,9 @@ def make_device_read(device_id, params):
 
     Looks up config data about the specified
     device_id to properly construct the message.
-    Parameters:
-        device_id - a device type id (not uid).
-        params    - an iterable of param names
+
+    :param device_id: a device type id (not uid).
+    :param params: an iterable of param names
     """
     params_bitmask = encode_params(device_id, params)
     temp_payload = struct.pack('<H', params_bitmask)
@@ -292,9 +309,9 @@ def make_device_write(device_id, params_and_values):
 
     Looks up config data about the specified
     device_id to properly construct the message.
-    Parameters:
-        device_id         - a device type id (not uid).
-        params_and_values - an iterable of param (name, value) tuples
+
+    :param device_id: a device type id (not uid).
+    :param params_and_values: an iterable of param (name, value) tuples
     """
     params_and_values = sorted(
         params_and_values, key=lambda x: PARAM_MAP[device_id][x[0]][0])
@@ -316,9 +333,9 @@ def make_device_data(device_id, params_and_values):
     If all the params cannot fit, it will fill as many as it can.
     Looks up config data about the specified
     device_id to properly construct the message.
-    Parameters:
-        device_id         - a device type id (not uid).
-        params_and_values - an iterable of param (name, value) tuples
+
+    :param device_id: a device type id (not uid).
+    :param params_and_values: an iterable of param (name, value) tuples
     """
     params = [param_tuple[0] for param_tuple in params_and_values]
     params_bitmask = encode_params(device_id, params)
@@ -343,7 +360,10 @@ def make_error(error_code):
 
 def parse_subscription_response(msg):
     """
-    Expand MSG into its constituent parts.
+    Decode a subscription response into its parts.
+
+    :param msg: A ``HibikeMessage`` containing a subscription response packet
+    :return: A tuple containing a list of parameter names, the delay, and the UID
     """
     assert msg.get_message_id() == MESSAGE_TYPES["SubscriptionResponse"]
     payload = msg.get_payload()
@@ -356,7 +376,11 @@ def parse_subscription_response(msg):
 
 def decode_device_write(msg, device_id):
     """
-    Decode a DeviceWrite packet, MSG, into its constituent parts.
+    Decode a device write packet.
+
+    :param msg: A ``HibikeMessage`` containing a device write packet
+    :param device_id: A device id
+    :return: A list of (parameter name, value) pairs
     """
     assert msg.get_message_id() == MESSAGE_TYPES["DeviceWrite"]
     payload = msg.get_payload()
@@ -370,7 +394,11 @@ def decode_device_write(msg, device_id):
 
 def parse_device_data(msg, device_id):
     """
-    Decode a DeviceData packet, MSG, into its constituent parts.
+    Decode a device data packet into parameters and values.
+
+    :param msg: A ``HibikeMessage`` containing a device data packet
+    :param device_id: A device ID
+    :returns: A list of (parameter name, value) pairs
     """
     assert msg.get_message_id() == MESSAGE_TYPES["DeviceData"]
     payload = msg.get_payload()
@@ -384,7 +412,10 @@ def parse_device_data(msg, device_id):
 
 def parse_bytes(msg_bytes):
     """
-    Parse MSG_BYTES into a HibikeMessage, or None if they form an invalid packet.
+    Try to parse bytes into a valid packet.
+
+    :param msg_bytes: The raw bytes of the packet
+    :return: A ``HibikeMessage`` with the packet data, or ``None``, if it couldn't be parsed
     """
     if len(msg_bytes) < 2:
         return None
@@ -408,7 +439,10 @@ def parse_bytes(msg_bytes):
 
 def blocking_read_generator(serial_conn, stop_event=threading.Event()):
     """
-    Yield packets from SERIAL_CONN, stopping if STOP_EVENT is set.
+    Yield packets from a serial connection.
+
+    :param serial_conn: The connection to read from
+    :param stop_event: An Event that, if triggered, stops additional reads
     """
     zero_byte = bytes([0])
     packets_buffer = bytearray()
@@ -450,7 +484,12 @@ def blocking_read_generator(serial_conn, stop_event=threading.Event()):
 
 def blocking_read(serial_conn):
     """
-    Read a list of packets from SERIAL_CONN, blocking until a complete packet is received.
+    Read a list of packets from a serial connection, blocking until they are complete.
+
+    `This function is deprecated.`
+
+    :param serial_conn: The connection to read from
+    :return: A list of packets read from the connection
     """
     zero_byte = bytes([0])
     packets = bytearray()
@@ -497,12 +536,12 @@ def blocking_read(serial_conn):
 
 def read(serial_conn):
     """
-    Continually read from SERIAL_CONN, attempting to construct an HibikeMessage.
+    Continually read from a serial connection to construct a packet.
 
-    Returns:
-        None if no message.
-        -1 if checksum doesn't match.
-        Otherwise, a new HibikeMessage with contents.
+    `This function is deprecated.`
+
+    :param serial_conn: The connection to read from
+    :return: ``None`` if no message, ``-1`` if bad checksum, otherwise a new ``HibikeMessage``
     """
     # deal with cobs encoding
     while serial_conn.inWaiting() > 0:
@@ -532,7 +571,7 @@ def read(serial_conn):
 
 def cobs_encode(data):
     """
-    COBS-encode DATA.
+    COBS-encode some data.
     """
     output = bytearray()
     curr_block = bytearray()
@@ -554,7 +593,7 @@ def cobs_encode(data):
 
 def cobs_decode(data):
     """
-    Decode COBS-encoded DATA.
+    Decode COBS-encoded data.
     """
     output = bytearray()
     index = 0
@@ -580,7 +619,7 @@ class HibikeMessageException(Exception):
 
 def device_name_to_id(name):
     """
-    Turn NAME into its corresponding device ID.
+    Turn a device name to a device ID.
     """
     for device in DEVICES.values():
         if device["name"] == name:
@@ -590,7 +629,7 @@ def device_name_to_id(name):
 
 def device_id_to_name(device_id):
     """
-    Turn DEVICE_ID into its corresponding device name.
+    Turn a device ID into a device name.
     """
     for device in DEVICES.values():
         if device["id"] == device_id:
@@ -600,35 +639,35 @@ def device_id_to_name(device_id):
 
 def uid_to_device_name(uid):
     """
-    Turn UID into its corresponding device name.
+    Turn a UID into a device name.
     """
     return device_id_to_name(uid_to_device_id(uid))
 
 
 def uid_to_device_id(uid):
     """
-    Turn UID into its corresponding device ID.
+    Turn a UID into a device ID.
     """
     return uid >> 72
 
 
 def all_params_for_device_id(device_id):
     """
-    Get all parameters that a device with ID DEVICE_ID takes.
+    Get all parameters that a device has.
     """
     return list(PARAM_MAP[device_id].keys())
 
 
 def readable(device_id, param):
     """
-    Check if the device at DEVICE_ID's parameter PARAM is readable.
+    Check that a parameter is readable for a device.
     """
     return PARAM_MAP[device_id][param][2]
 
 
 def writable(device_id, param):
     """
-    Check if the device at DEVICE_ID's parameter PARAM is writeable.
+    Check that a parameter is writeable for a device.
     """
     return PARAM_MAP[device_id][param][3]
 
