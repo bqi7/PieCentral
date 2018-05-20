@@ -146,7 +146,7 @@ def get_id(uid):
 
 def checksum(data):
     """
-    Compute a checksum for DATA.
+    Compute a checksum for some data.
     """
     # Remove this later after development
     assert isinstance(data, bytearray), "data must be a bytearray"
