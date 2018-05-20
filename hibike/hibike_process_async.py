@@ -13,8 +13,11 @@ import hibike_message as hm
 import serial_asyncio
 import aioprocessing
 import aiofiles
+import uvloop
+import yappi
 __all__ = ["hibike_process"]
 
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # .04 milliseconds sleep is the same frequency we subscribe to devices at
 BATCH_SLEEP_TIME = .04
@@ -23,9 +26,21 @@ IDENTIFY_TIMEOUT = 1
 # Time in seconds to wait between checking for new devices
 # and cleaning up old ones.
 HOTPLUG_POLL_INTERVAL = 1
+# Whether to use profiling or not
+USE_PROFILING = False
+# The time period to take measurements over, in seconds
+PROFILING_PERIOD = 60
+
+def scan_for_serial_ports():
+    """
+    Scan for serial ports that look like an Arduino.
+    """
+    return set(glob.glob("/dev/ttyACM*") +\
+               glob.glob("/dev/ttyUSB*") +\
+               glob.glob("/dev/tty.usbmodem*"))
 
 
-async def get_working_serial_ports(excludes=()):
+async def get_working_serial_ports(event_loop, excludes=()):
     """
     Scan for open COM ports, except those in `excludes`.
 
@@ -36,11 +51,10 @@ async def get_working_serial_ports(excludes=()):
     # Last command is included so that it's compatible with OS X Sierra
     # Note: If you are running OS X Sierra, do not access the directory through vagrant ssh
     # Instead access it through Volumes/vagrant/PieCentral
-    ports = set(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
-                + glob.glob("/dev/tty.usbmodem*"))
+    ports = await event_loop.run_in_executor(None, scan_for_serial_ports)
     try:
         virtual_device_config_file = os.path.join(os.path.dirname(__file__), "virtual_devices.txt")
-        async with aiofiles.open(virtual_device_config_file) as f:
+        async with aiofiles.open(virtual_device_config_file, loop=event_loop) as f:
             contents = await f.read()
             ports.update(contents.split())
     except IOError:
@@ -63,11 +77,10 @@ async def hotplug_async(devices, batched_data, error_queue, state_queue, event_l
 
     while True:
         await asyncio.sleep(HOTPLUG_POLL_INTERVAL, loop=event_loop)
-        port_names = set(map(lambda dev: dev.transport.serial.name,
-                             filter(lambda x: x.transport.serial is not None,
-                                    filter(lambda x: x.transport is not None, devices.values()))))
+        port_names = set([dev.transport.serial.name for dev in devices.values()\
+                          if dev.transport is not None and dev.transport.serial is not None])
         port_names.update(pending)
-        new_serials = await get_working_serial_ports(port_names)
+        new_serials = await get_working_serial_ports(event_loop, port_names)
         for port in new_serials:
             try:
                 pending.add(port)
@@ -83,6 +96,8 @@ class SmartSensorProtocol(asyncio.Protocol):
     Handle communication over serial with a smart sensor.
     """
     PACKET_BOUNDARY = bytes([0])
+    __slots__ = ["uid", "write_queue", "batched_data", "read_queue", "error_queue", "state_queue",
+                 "instance_id", "transport", "_ready", "serial_buf"]
     def __init__(self, devices, batched_data, error_queue, state_queue, event_loop, pending: set):
         # We haven't found out what our UID is yet
         self.uid = None
@@ -243,6 +258,18 @@ async def batch_data(sensor_values, state_queue, event_loop):
         await state_queue.coro_put(("device_values", [sensor_values]), loop=event_loop)
 
 
+async def print_profiler_stats(event_loop, time_delay):
+    """
+    Print profiler statistics after a number of seconds.
+    """
+    import sys
+    await asyncio.sleep(time_delay, loop=event_loop)
+    print("Printing profiler stats")
+    yappi.get_func_stats().print_all(out=sys.stdout, columns={0:("name",60), 1:("ncall", 5), 2:("tsub", 8), 3:("ttot", 8), 4:("tavg",8)})
+    yappi.get_func_stats().save("func_stats", type="callgrind")
+    yappi.get_thread_stats().print_all()
+
+
 # pylint: disable=unused-argument
 def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     """
@@ -265,6 +292,9 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
                                          state_queue, event_loop))
     event_loop.create_task(dispatch_instructions(devices, state_queue, pipe_from_child, event_loop))
     # start event loop
+    if USE_PROFILING:
+        yappi.start()
+        event_loop.create_task(print_profiler_stats(event_loop, PROFILING_PERIOD))
     event_loop.run_forever()
 
 
