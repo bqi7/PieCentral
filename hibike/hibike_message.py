@@ -407,19 +407,18 @@ def parse_bytes(msg_bytes):
     """
     if len(msg_bytes) < 2:
         return None
-    cobs_frame, message_size = struct.unpack('<BB', msg_bytes[:2])
+    cobs_frame, message_size = msg_bytes[:2]
     if cobs_frame != 0 or len(msg_bytes) < message_size + 2:
         return None
     message = cobs_decode(msg_bytes[2:message_size + 2])
 
     if len(message) < 2:
         return None
-    message_id, payload_length = struct.unpack('<BB', message[:2])
+    message_id, payload_length = message[0], message[1]
     if len(message) < 2 + payload_length + 1:
         return None
     payload = message[2:2 + payload_length]
-    chk = struct.unpack(
-        '<B', message[2 + payload_length:2 + payload_length + 1])[0]
+    chk = message[2 + payload_length]
     if chk != checksum(message[:-1]):
         return None
     return HibikeMessage(message_id, payload)
