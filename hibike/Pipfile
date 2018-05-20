@@ -12,13 +12,15 @@ python_version = "3.5"
 [packages]
 
 pyserial = "==3.2.1"
-flask = "*"
+Flask = "*"
 aioprocessing = "*"
 pyserial-asyncio = "*"
 aiofiles = "*"
 protobuf = "*"
+uvloop = "*"
 
 
 [dev-packages]
 
 pylint = "==1.7.2"
+yappi = "*"
