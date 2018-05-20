@@ -26,7 +26,7 @@ IDENTIFY_TIMEOUT = 1
 # Time in seconds to wait between checking for new devices
 # and cleaning up old ones.
 HOTPLUG_POLL_INTERVAL = 1
-# Whether to use profiling or not
+# Whether to use profiling or not. On the BBB, profiling adds a significant overhead (~30%).
 USE_PROFILING = False
 # The time period to take measurements over, in seconds
 PROFILING_PERIOD = 60
