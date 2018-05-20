@@ -265,7 +265,9 @@ async def print_profiler_stats(event_loop, time_delay):
     import sys
     await asyncio.sleep(time_delay, loop=event_loop)
     print("Printing profiler stats")
-    yappi.get_func_stats().print_all(out=sys.stdout, columns={0:("name",60), 1:("ncall", 5), 2:("tsub", 8), 3:("ttot", 8), 4:("tavg",8)})
+    yappi.get_func_stats().print_all(out=sys.stdout,
+                                     columns={0: ("name", 60), 1: ("ncall", 5), 2: ("tsub", 8),
+                                              3: ("ttot", 8), 4: ("tavg", 8)})
     yappi.get_func_stats().save("func_stats", type="callgrind")
     yappi.get_thread_stats().print_all()
 
