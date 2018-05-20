@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cdecc046f4f871053dff5e64c788894cce1d8f9b589af70e33f1fbcb6f9707da"
+            "sha256": "73e4a08469d6f0323dace6a765494bba18e8d757d53ec4f2a6383cbdbd54836e"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -47,6 +47,12 @@
                 "sha256:f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"
             ],
             "version": "==6.7"
+        },
+        "cobs": {
+            "hashes": [
+                "sha256:ae3319b5704d9269d1ca60787d2e5b79322bb9f440215ea086b986ed8d2a8405"
+            ],
+            "version": "==1.1.3"
         },
         "flask": {
             "hashes": [
@@ -143,10 +149,10 @@
     "develop": {
         "astroid": {
             "hashes": [
-                "sha256:38186e481b65877fd8b1f9acc33e922109e983eb7b6e487bd4c71002134ad331",
-                "sha256:35cfae47aac19c7b407b7095410e895e836f2285ccf1220336afba744cc4c5f2"
+                "sha256:032f6e09161e96f417ea7fad46d3fac7a9019c775f202182c22df0e4f714cb1c",
+                "sha256:dea42ae6e0b789b543f728ddae7ddb6740ba33a49fb52c4a4d9cb7bb4aa6ec09"
             ],
-            "version": "==1.6.3"
+            "version": "==1.6.4"
         },
         "isort": {
             "hashes": [
