@@ -5,7 +5,7 @@ from __future__ import print_function
 # Rewritten because Python.__version__ != 3
 import struct
 import os
-import jso
+import json
 import threading
 
 from cobs import cobs
