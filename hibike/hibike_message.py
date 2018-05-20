@@ -7,6 +7,7 @@ import struct
 import os
 import json
 import threading
+from functools import lru_cache
 
 from cobs import cobs
 
@@ -184,6 +185,7 @@ def encode_params(device_id, params):
     return mask
 
 
+@lru_cache(maxsize=128)
 def decode_params(device_id, params_bitmask):
     """
     Decode PARAMS_BITMASK.
@@ -206,7 +208,8 @@ def decode_params(device_id, params_bitmask):
     return named_params
 
 
-def format_string(device_id, params):
+@lru_cache(maxsize=128)
+def format_string_cached(device_id, params):
     """
     A string representation of the types of PARAMS.
     """
@@ -216,6 +219,14 @@ def format_string(device_id, params):
     for ptype_key in param_types:
         type_string += PARAM_TYPES[ptype_key]
     return type_string
+
+
+def format_string(device_id, params):
+    """
+    Shim for ``format_string``, to ensure all argumets
+    have hashable types.
+    """
+    return format_string_cached(device_id, tuple(params))
 
 
 def make_ping():
