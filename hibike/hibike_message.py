@@ -8,6 +8,8 @@ import os
 import json
 import threading
 
+from cobs import cobs
+
 CONFIG_FILE = open(os.path.join(
     os.path.dirname(__file__), 'hibikeDevices.json'), 'r')
 DEVICES = json.load(CONFIG_FILE)
@@ -405,19 +407,18 @@ def parse_bytes(msg_bytes):
     """
     if len(msg_bytes) < 2:
         return None
-    cobs_frame, message_size = struct.unpack('<BB', msg_bytes[:2])
+    cobs_frame, message_size = msg_bytes[:2]
     if cobs_frame != 0 or len(msg_bytes) < message_size + 2:
         return None
     message = cobs_decode(msg_bytes[2:message_size + 2])
 
     if len(message) < 2:
         return None
-    message_id, payload_length = struct.unpack('<BB', message[:2])
+    message_id, payload_length = message[0], message[1]
     if len(message) < 2 + payload_length + 1:
         return None
     payload = message[2:2 + payload_length]
-    chk = struct.unpack(
-        '<B', message[2 + payload_length:2 + payload_length + 1])[0]
+    chk = message[2 + payload_length]
     if chk != checksum(message[:-1]):
         return None
     return HibikeMessage(message_id, payload)
@@ -551,40 +552,14 @@ def cobs_encode(data):
     """
     COBS-encode DATA.
     """
-    output = bytearray()
-    curr_block = bytearray()
-    for byte in data:
-        if byte:
-            curr_block.append(byte)
-            if len(curr_block) == 254:
-                output.append(1 + len(curr_block))
-                output.extend(curr_block)
-                curr_block = bytearray()
-        else:
-            output.append(1 + len(curr_block))
-            output.extend(curr_block)
-            curr_block = bytearray()
-    output.append(1 + len(curr_block))
-    output.extend(curr_block)
-    return output
+    return bytearray(cobs.encode(data))
 
 
 def cobs_decode(data):
     """
     Decode COBS-encoded DATA.
     """
-    output = bytearray()
-    index = 0
-    while index < len(data):
-        block_size = data[index] - 1
-        index += 1
-        if index + block_size > len(data):
-            return bytearray()
-        output.extend(data[index:index + block_size])
-        index += block_size
-        if block_size + 1 < 255 and index < len(data):
-            output.append(0)
-    return output
+    return bytearray(cobs.decode(data))
 
 
 class HibikeMessageException(Exception):
