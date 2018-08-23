@@ -5,16 +5,17 @@ import asyncio
 from collections import namedtuple
 import glob
 import os
+import sys
 import random
 import time
 
 # pylint: disable=import-error
 import hibike_message as hm
+
 import serial_asyncio
 import aioprocessing
 import aiofiles
 import uvloop
-import yappi
 __all__ = ["hibike_process"]
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -30,6 +31,8 @@ HOTPLUG_POLL_INTERVAL = 1
 USE_PROFILING = False
 # The time period to take measurements over, in seconds
 PROFILING_PERIOD = 60
+PAUSE_QUEUE_SIZE = 10
+RESUME_QUEUE_SIZE = 2
 
 def scan_for_serial_ports():
     """
@@ -131,6 +134,7 @@ class SmartSensorProtocol(asyncio.Protocol):
             pending.remove(self.transport.serial.name)
 
         event_loop.create_task(self.send_messages())
+        event_loop.create_task(self.process_buffer(event_loop))
         event_loop.create_task(self.recv_messages())
         event_loop.create_task(register_sensor())
 
@@ -168,6 +172,10 @@ class SmartSensorProtocol(asyncio.Protocol):
         """
         await self._ready.wait()
         while not self.transport.is_closing():
+            if self.read_queue.qsize() >= PAUSE_QUEUE_SIZE:
+                self.transport.pause_reading()
+            if self.read_queue.qsize() <= RESUME_QUEUE_SIZE:
+                self.transport.resume_reading()
             packet = await self.read_queue.get()
             message_type = packet.get_message_id()
             if message_type == hm.MESSAGE_TYPES["SubscriptionResponse"]:
@@ -194,33 +202,40 @@ class SmartSensorProtocol(asyncio.Protocol):
         """
         self.transport.abort()
 
+    async def process_buffer(self, event_loop):
+        """
+        Process data from the serial buffer into Hibike packets.
+        """
+        while True:
+            await asyncio.sleep(1/40, loop=event_loop)
+            zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
+            if zero_loc != -1:
+                self.serial_buf = self.serial_buf[zero_loc:]
+                packet = hm.parse_bytes(self.serial_buf)
+                if packet != None:
+                    # Chop off a byte so we don't output this packet again
+                    self.serial_buf = self.serial_buf[1:]
+                    self.read_queue.put_nowait(packet)
+                elif self.serial_buf.count(self.PACKET_BOUNDARY) > 1:
+                    # If there's another packet in the buffer
+                    # we can safely jump to it for the next iteration
+                    new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
+                    self.serial_buf = self.serial_buf[new_packet:]
+
     def data_received(self, data):
         """
-        Attempt to parse data from the serial port into
-        a Hibike packet.
+        Put data into the serial buffer.
         """
         self.serial_buf.extend(data)
-        zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
-        if zero_loc != -1:
-            self.serial_buf = self.serial_buf[zero_loc:]
-            packet = hm.parse_bytes(self.serial_buf)
-            if packet != None:
-                # Chop off a byte so we don't output this packet again
-                self.serial_buf = self.serial_buf[1:]
-                self.read_queue.put_nowait(packet)
-            elif self.serial_buf.count(self.PACKET_BOUNDARY) > 1:
-                # If there's another packet in the buffer
-                # we can safely jump to it for the next iteration
-                new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
-                self.serial_buf = self.serial_buf[new_packet:]
 
     def connection_lost(self, exc):
         if self.uid is not None:
-            error = namedtuple("Disconnect", ["uid", "instance_id", "accessed"])
-            error.uid = self.uid
-            error.instance_id = self.instance_id
-            error.accessed = False
+            error = Disconnect(uid=self.uid, instance_id=self.instance_id, accessed=False)
             self.error_queue.put_nowait(error)
+
+
+# Information about a device disconnect
+Disconnect = namedtuple("Disconnect", ["uid", "instance_id", "accessed"])
 
 
 async def remove_disconnected_devices(error_queue, devices, state_queue, event_loop):
@@ -262,7 +277,10 @@ async def print_profiler_stats(event_loop, time_delay):
     """
     Print profiler statistics after a number of seconds.
     """
-    import sys
+    try:
+        import yappi
+    except ImportError:
+        return
     await asyncio.sleep(time_delay, loop=event_loop)
     print("Printing profiler stats")
     yappi.get_func_stats().print_all(out=sys.stdout,
@@ -272,17 +290,28 @@ async def print_profiler_stats(event_loop, time_delay):
     yappi.get_thread_stats().print_all()
 
 
+class QueueContext:
+    """
+    Stub to force aioprocessing to use an existing queue.
+    """
+    def __init__(self, queue):
+        self._queue = queue
+
+    # pylint: disable=invalid-name
+    def Queue(self, _size):
+        return self._queue
+
+
 # pylint: disable=unused-argument
 def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     """
     Run the main hibike processs.
     """
+    pipe_from_child = aioprocessing.AioConnection(pipe_from_child)
     # By default, AioQueue instantiates a new Queue object, but we
     # don't want that.
-    old_queue_context = namedtuple("StateManagerQueue", ["Queue"])
-    old_queue_context.Queue = lambda size: state_queue
-    pipe_from_child = aioprocessing.AioConnection(pipe_from_child)
-    state_queue = aioprocessing.AioQueue(context=old_queue_context)
+    state_queue = aioprocessing.AioQueue(context=QueueContext(state_queue))
+    bad_things_queue = aioprocessing.AioQueue(context=QueueContext(bad_things_queue))
 
     devices = {}
     batched_data = {}
@@ -292,18 +321,31 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     event_loop.create_task(batch_data(batched_data, state_queue, event_loop))
     event_loop.create_task(hotplug_async(devices, batched_data, error_queue,
                                          state_queue, event_loop))
-    event_loop.create_task(dispatch_instructions(devices, state_queue, pipe_from_child, event_loop))
+    event_loop.create_task(dispatch_instructions(devices, bad_things_queue, state_queue,
+                                                 pipe_from_child, event_loop))
     # start event loop
     if USE_PROFILING:
-        yappi.start()
-        event_loop.create_task(print_profiler_stats(event_loop, PROFILING_PERIOD))
+        try:
+            import yappi
+            yappi.start()
+            event_loop.create_task(print_profiler_stats(event_loop, PROFILING_PERIOD))
+        except ImportError:
+            print("Unable to import profiler. Make sure you installed with the '--dev' flag.")
+
     event_loop.run_forever()
 
 
-async def dispatch_instructions(devices, state_queue, pipe_from_child, event_loop):
+async def dispatch_instructions(devices, bad_things_queue, state_queue,
+                                pipe_from_child, event_loop):
     """
     Respond to instructions from `StateManager`.
     """
+    path = os.path.dirname(os.path.abspath(__file__))
+    parent_path = path.rstrip("hibike")
+    runtime = os.path.join(parent_path, "runtime")
+    sys.path.insert(1, runtime)
+    import runtimeUtil
+
     while True:
         instruction, args = await pipe_from_child.coro_recv(loop=event_loop)
         try:
@@ -329,5 +371,13 @@ async def dispatch_instructions(devices, state_queue, pipe_from_child, event_loo
                 timestamp = time.time()
                 args.append(timestamp)
                 await state_queue.coro_put(("timestamp_up", args), loop=event_loop)
-        except KeyError:
-            print("Tried to access a nonexistent device")
+        except KeyError as e:
+            await bad_things_queue.coro_put(runtimeUtil.BadThing(
+                sys.exc_info(),
+                str(e),
+                event=runtimeUtil.BAD_EVENTS.HIBIKE_NONEXISTENT_DEVICE))
+        except TypeError as e:
+            await bad_things_queue.coro_put(runtimeUtil.BadThing(
+                sys.exc_info(),
+                str(e),
+                event=runtimeUtil.BAD_EVENTS.HIBIKE_INSTRUCTION_ERROR))
