@@ -30,6 +30,8 @@ HOTPLUG_POLL_INTERVAL = 1
 USE_PROFILING = False
 # The time period to take measurements over, in seconds
 PROFILING_PERIOD = 60
+PAUSE_QUEUE_SIZE = 10
+RESUME_QUEUE_SIZE = 2
 
 def scan_for_serial_ports():
     """
@@ -168,6 +170,10 @@ class SmartSensorProtocol(asyncio.Protocol):
         """
         await self._ready.wait()
         while not self.transport.is_closing():
+            if len(self.read_queue) >= PAUSE_QUEUE_SIZE:
+                self.transport.pause_reading()
+            if len(self.read_queue) <= RESUME_QUEUE_SIZE:
+                self.transport.resume_reading()
             packet = await self.read_queue.get()
             message_type = packet.get_message_id()
             if message_type == hm.MESSAGE_TYPES["SubscriptionResponse"]:
