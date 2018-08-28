@@ -133,8 +133,8 @@ class SmartSensorProtocol(asyncio.Protocol):
             pending.remove(self.transport.serial.name)
 
         event_loop.create_task(self.send_messages())
+        event_loop.create_task(self.process_buffer(event_loop))
         event_loop.create_task(self.recv_messages())
-        event_loop.create_task(self.process_buffer())
         event_loop.create_task(register_sensor())
 
     async def send_messages(self):
@@ -201,9 +201,12 @@ class SmartSensorProtocol(asyncio.Protocol):
         """
         self.transport.abort()
 
-    async def process_buffer(self):
+    async def process_buffer(self, event_loop):
+        """
+        Process data from the serial buffer into Hibike packets.
+        """
         while True:
-            await asyncio.sleep(1/40)
+            await asyncio.sleep(1/40, loop=event_loop)
             zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
             if zero_loc != -1:
                 self.serial_buf = self.serial_buf[zero_loc:]
@@ -220,8 +223,7 @@ class SmartSensorProtocol(asyncio.Protocol):
 
     def data_received(self, data):
         """
-        Attempt to parse data from the serial port into
-        a Hibike packet.
+        Put data into the serial buffer.
         """
         self.serial_buf.extend(data)
     
