@@ -94,7 +94,6 @@ def to_setup(args):
                                               b1_num, b2_name, b2_num)
     alliances[ALLIANCE_COLOR.GOLD] = Alliance(ALLIANCE_COLOR.GOLD, g1_name,
                                               g1_num, g2_name, g2_num)
-    send_team_scores_sensors()
 
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TEAMS, {
         "b1name" : b1_name, "b1num" : b1_num,
@@ -177,7 +176,6 @@ def reset(args=None):
         if alliance is not None:
             alliance.reset()
     disable_robots()
-    send_team_scores_sensors()
     print("RESET MATCH, MOVE TO SETUP")
 
 def get_match(args):
@@ -242,14 +240,10 @@ def disable_robots():
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
 ###########################################
-# Game Specific Methods (Solar Scramble)
+# Game Specific Methods
 ###########################################
 
-def send_team_scores_sensors():
-    team_scores = {ALLIANCE_COLOR.BLUE: math.floor(alliances.get(ALLIANCE_COLOR.BLUE).score),
-                   ALLIANCE_COLOR.GOLD: math.floor(alliances.get(ALLIANCE_COLOR.GOLD).score)}
-
-    lcm_send(LCM_TARGETS.SENSORS, SENSOR_HEADER.TEAM_SCORE, {"score": team_scores})
+#nothing
 
 ###########################################
 # Event to Function Mappings for each Stage
@@ -295,12 +289,13 @@ game_timer = Timer(TIMER_TYPES.MATCH)
 
 match_number = -1
 alliances = {ALLIANCE_COLOR.GOLD: None, ALLIANCE_COLOR.BLUE: None}
+events = None
 
 ###########################################
 # Game Specific Variables
 ###########################################
 
-events = None
+#nothing
 
 if __name__ == '__main__':
     start()
