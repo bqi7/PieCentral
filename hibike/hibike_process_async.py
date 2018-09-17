@@ -285,17 +285,28 @@ async def print_profiler_stats(event_loop, time_delay):
     yappi.get_thread_stats().print_all()
 
 
+class QueueContext:
+    """
+    Stub to force aioprocessing to use an existing queue.
+    """
+    __slots__ = ("queue")
+    def __init__(queue):
+        self._queue = queue
+
+    def Queue(self, _size):
+        return self._queue
+
+
 # pylint: disable=unused-argument
 def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     """
     Run the main hibike processs.
     """
+    pipe_from_child = aioprocessing.AioConnection(pipe_from_child)
     # By default, AioQueue instantiates a new Queue object, but we
     # don't want that.
-    old_queue_context = namedtuple("StateManagerQueue", ["Queue"])
-    old_queue_context.Queue = lambda size: state_queue
-    pipe_from_child = aioprocessing.AioConnection(pipe_from_child)
-    state_queue = aioprocessing.AioQueue(context=old_queue_context)
+    state_queue = aioprocessing.AioQueue(context=QueueContext(state_queue))
+    bad_things_queue = aioprocessing.AioQueue(context=QueueContext(bad_things_queue))
 
     devices = {}
     batched_data = {}
@@ -305,7 +316,8 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     event_loop.create_task(batch_data(batched_data, state_queue, event_loop))
     event_loop.create_task(hotplug_async(devices, batched_data, error_queue,
                                          state_queue, event_loop))
-    event_loop.create_task(dispatch_instructions(devices, state_queue, pipe_from_child, event_loop))
+    event_loop.create_task(dispatch_instructions(devices, bad_things_queue, state_queue,
+                                                 pipe_from_child, event_loop))
     # start event loop
     if USE_PROFILING:
         yappi.start()
@@ -313,10 +325,16 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     event_loop.run_forever()
 
 
-async def dispatch_instructions(devices, state_queue, pipe_from_child, event_loop):
+async def dispatch_instructions(devices, bad_things_queue, state_queue, pipe_from_child, event_loop):
     """
     Respond to instructions from `StateManager`.
     """
+    path = os.path.dirname(os.path.abspath(__file__))
+    parent_path = path.rstrip("hibike")
+    runtime = os.path.join(parent_path, "runtime")
+    sys.path.insert(1, runtime)
+    import runtimeUtil
+
     while True:
         instruction, args = await pipe_from_child.coro_recv(loop=event_loop)
         try:
@@ -342,5 +360,13 @@ async def dispatch_instructions(devices, state_queue, pipe_from_child, event_loo
                 timestamp = time.time()
                 args.append(timestamp)
                 await state_queue.coro_put(("timestamp_up", args), loop=event_loop)
-        except KeyError:
-            print("Tried to access a nonexistent device")
+        except KeyError as e:
+            await bad_things_queue.coro_put(runtimeUtil.BadThing(
+                sys.exc_info(),
+                str(e),
+                event=runtimeUtil.BAD_EVENTS.HIBIKE_NONEXISTENT_DEVICE))
+        except TypeError as e:
+            await bad_things_queue.coro_put(runtimeUtil.BadThing(
+                sys.exc_info(),
+                str(e),
+                event=runtimeUtil.BAD_EVENTS.HIBIKE_INSTRUCTION_ERROR))
