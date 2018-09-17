@@ -10,11 +10,11 @@ import time
 
 # pylint: disable=import-error
 import hibike_message as hm
+
 import serial_asyncio
 import aioprocessing
 import aiofiles
 import uvloop
-import yappi
 __all__ = ["hibike_process"]
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -229,11 +229,12 @@ class SmartSensorProtocol(asyncio.Protocol):
     
     def connection_lost(self, exc):
         if self.uid is not None:
-            error = namedtuple("Disconnect", ["uid", "instance_id", "accessed"])
-            error.uid = self.uid
-            error.instance_id = self.instance_id
-            error.accessed = False
+            error = Disconnect(uid=self.uid, instance_id=self.instance_id, accessed=False)
             self.error_queue.put_nowait(error)
+
+
+# Information about a device disconnect
+Disconnect = namedtuple(["uid", "instance_id", "accessed"])
 
 
 async def remove_disconnected_devices(error_queue, devices, state_queue, event_loop):
@@ -320,8 +321,13 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
                                                  pipe_from_child, event_loop))
     # start event loop
     if USE_PROFILING:
-        yappi.start()
-        event_loop.create_task(print_profiler_stats(event_loop, PROFILING_PERIOD))
+        try:
+            import yappi
+            yappi.start()
+            event_loop.create_task(print_profiler_stats(event_loop, PROFILING_PERIOD))
+        except ImportError:
+            print("Unable to import profiler. Make sure you installed with the '--dev' flag.")
+
     event_loop.run_forever()
 
 
@@ -370,3 +376,4 @@ async def dispatch_instructions(devices, bad_things_queue, state_queue, pipe_fro
                 sys.exc_info(),
                 str(e),
                 event=runtimeUtil.BAD_EVENTS.HIBIKE_INSTRUCTION_ERROR))
+
