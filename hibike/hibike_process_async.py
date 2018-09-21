@@ -5,6 +5,7 @@ import asyncio
 from collections import namedtuple
 import glob
 import os
+import sys
 import random
 import time
 
@@ -226,7 +227,7 @@ class SmartSensorProtocol(asyncio.Protocol):
         Put data into the serial buffer.
         """
         self.serial_buf.extend(data)
-    
+
     def connection_lost(self, exc):
         if self.uid is not None:
             error = Disconnect(uid=self.uid, instance_id=self.instance_id, accessed=False)
@@ -234,7 +235,7 @@ class SmartSensorProtocol(asyncio.Protocol):
 
 
 # Information about a device disconnect
-Disconnect = namedtuple(["uid", "instance_id", "accessed"])
+Disconnect = namedtuple("Disconnect", ["uid", "instance_id", "accessed"])
 
 
 async def remove_disconnected_devices(error_queue, devices, state_queue, event_loop):
@@ -276,7 +277,10 @@ async def print_profiler_stats(event_loop, time_delay):
     """
     Print profiler statistics after a number of seconds.
     """
-    import sys
+    try:
+        import yappi
+    except ImportError:
+        return
     await asyncio.sleep(time_delay, loop=event_loop)
     print("Printing profiler stats")
     yappi.get_func_stats().print_all(out=sys.stdout,
@@ -290,10 +294,10 @@ class QueueContext:
     """
     Stub to force aioprocessing to use an existing queue.
     """
-    __slots__ = ("queue")
-    def __init__(queue):
+    def __init__(self, queue):
         self._queue = queue
 
+    # pylint: disable=invalid-name
     def Queue(self, _size):
         return self._queue
 
@@ -331,7 +335,8 @@ def hibike_process(bad_things_queue, state_queue, pipe_from_child):
     event_loop.run_forever()
 
 
-async def dispatch_instructions(devices, bad_things_queue, state_queue, pipe_from_child, event_loop):
+async def dispatch_instructions(devices, bad_things_queue, state_queue,
+                                pipe_from_child, event_loop):
     """
     Respond to instructions from `StateManager`.
     """
@@ -376,4 +381,3 @@ async def dispatch_instructions(devices, bad_things_queue, state_queue, pipe_fro
                 sys.exc_info(),
                 str(e),
                 event=runtimeUtil.BAD_EVENTS.HIBIKE_INSTRUCTION_ERROR))
-
