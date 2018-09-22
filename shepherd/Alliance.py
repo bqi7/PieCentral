@@ -38,3 +38,5 @@ class Alliance:
                  {"alliance" : self.name, "score" : math.floor(self.score)})
         #TODO: Send info to sensors about reset
         #TODO: Send info to UI about reset
+        #TODO: Move score sends to shepherd.py
+    
