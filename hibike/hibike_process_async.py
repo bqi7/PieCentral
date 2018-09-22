@@ -11,6 +11,11 @@ import time
 
 # pylint: disable=import-error
 import hibike_message as hm
+try:
+    import hibike_packet
+    USING_PACKET_EXTENSION = True
+except ImportError:
+    USING_PACKET_EXTENSION = False
 
 import serial_asyncio
 import aioprocessing
@@ -114,7 +119,10 @@ class SmartSensorProtocol(asyncio.Protocol):
 
         self.transport = None
         self._ready = asyncio.Event(loop=event_loop)
-        self.serial_buf = bytearray()
+        if USING_PACKET_EXTENSION:
+            self.serial_buf = hibike_packet.RingBuffer()
+        else:
+            self.serial_buf = bytearray()
 
         async def register_sensor():
             """
@@ -134,7 +142,6 @@ class SmartSensorProtocol(asyncio.Protocol):
             pending.remove(self.transport.serial.name)
 
         event_loop.create_task(self.send_messages())
-        event_loop.create_task(self.process_buffer(event_loop))
         event_loop.create_task(self.recv_messages())
         event_loop.create_task(register_sensor())
 
@@ -202,12 +209,16 @@ class SmartSensorProtocol(asyncio.Protocol):
         """
         self.transport.abort()
 
-    async def process_buffer(self, event_loop):
-        """
-        Process data from the serial buffer into Hibike packets.
-        """
-        while True:
-            await asyncio.sleep(1/40, loop=event_loop)
+    if USING_PACKET_EXTENSION:
+        def data_received(self, data):
+            self.serial_buf.extend(data)
+            maybe_packet = hibike_packet.process_buffer(self.serial_buf)
+            if maybe_packet is not None:
+                message_id, payload = maybe_packet
+                message = hm.HibikeMessage(message_id, payload)
+                self.read_queue.put_nowait(message)
+    else:
+        def data_received(self, data):
             zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
             if zero_loc != -1:
                 self.serial_buf = self.serial_buf[zero_loc:]
@@ -221,12 +232,6 @@ class SmartSensorProtocol(asyncio.Protocol):
                     # we can safely jump to it for the next iteration
                     new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
                     self.serial_buf = self.serial_buf[new_packet:]
-
-    def data_received(self, data):
-        """
-        Put data into the serial buffer.
-        """
-        self.serial_buf.extend(data)
 
     def connection_lost(self, exc):
         if self.uid is not None:
