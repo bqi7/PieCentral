@@ -47,18 +47,18 @@ def teleop_main():
     #     else:
     #         Robot.run(high_five)
 
-    
+
 def set_left_motor(power):
     """Sets the power of the left motor"""
     Robot.set_value(left_motor, "duty_cycle", -1 *power)
-    
+
 def set_right_motor(power):
     """Sets the power of the right motor"""
     Robot.set_value(right_motor, "duty_cycle", 1 * power)
-    
+
 def set_wrist_servo(angle):
     Robot.set_value(servo_controller, wrist_servo, angle)
-    
+
 def set_elbow_servo(angle):
     Robot.set_value(servo_controller, elbow_servo, angle)
 
@@ -99,13 +99,13 @@ async def wave_and_high_five():
     await Actions.sleep(.3)
     set_elbow_servo(0)
     await Actions.sleep(1)
-    
+
     for _ in range(3):
         set_wrist_servo(-1)
         await Actions.sleep(1)
         set_wrist_servo(1)
         await Actions.sleep(1)
-    
+
 async def jiggle(power):
     set_right_motor(power)
     set_left_motor(power)
@@ -131,23 +131,23 @@ async def doEverything(power):
 	await Actions.sleep(.25)
 	high_five()
 	set_right_motor(power)
-        set_left_motor(power)
+    set_left_motor(power)
 	await Actions.sleep(.25)
 	wave()
 	set_right_motor(power)
-        set_left_motor(power)
+    set_left_motor(power)
 	await Actions.sleep(.25)
 	high_five()
 	set_right_motor(power)
-        set_left_motor(power)
+    set_left_motor(power)
 	await Actions.sleep(.25)
 	high_five()
 	set_right_motor(power)
-        set_left_motor(power)
+    set_left_motor(power)
 	await Actions.sleep(.25)
 	wave()
 	set_right_motor(power)
-        set_left_motor(power)
+    set_left_motor(power)
 	await Actions.sleep(.25)
 	wave()
 	await Actions.sleep(.25)
