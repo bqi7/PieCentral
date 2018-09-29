@@ -124,26 +124,26 @@ class SmartSensorProtocol(asyncio.Protocol):
         else:
             self.serial_buf = bytearray()
 
-        async def register_sensor():
-            """
-            Register this sensor with `hibike_process`, if possible.
-            """
-            await self._ready.wait()
-            hm.send_transport(self.transport, hm.make_ping())
-            await asyncio.sleep(IDENTIFY_TIMEOUT, loop=event_loop)
-            if self.uid is None:
-                self.quit()
-            else:
-                hm.send_transport(self.transport, hm.make_ping())
-                hm.send_transport(self.transport,
-                                  hm.make_subscription_request(hm.uid_to_device_id(self.uid),
-                                                               [], 0))
-                devices[self.uid] = self
-            pending.remove(self.transport.serial.name)
-
+        event_loop.create_task(self.register_sensor(event_loop, devices, pending))
         event_loop.create_task(self.send_messages())
         event_loop.create_task(self.recv_messages())
-        event_loop.create_task(register_sensor())
+
+    async def register_sensor(event_loop, devices, pending):
+        """
+        Try to get our UID from the sensor and register it with `hibike_process`.
+        """
+        await self._ready.wait()
+        hm.send_transport(self.transport, hm.make_ping())
+        await asyncio.sleep(IDENTIFY_TIMEOUT, loop=event_loop)
+        if self.uid is None:
+            self.quit()
+        else:
+            hm.send_transport(self.transport, hm.make_ping())
+            hm.send_transport(self.transport,
+                              hm.make_subscription_request(hm.uid_to_device_id(self.uid),
+                                                           [], 0))
+            devices[self.uid] = self
+        pending.remove(self.transport.serial.name)
 
     async def send_messages(self):
         """
@@ -171,7 +171,7 @@ class SmartSensorProtocol(asyncio.Protocol):
                 hm.send_transport(self.transport, hm.make_disable())
             elif instruction == "heartResp":
                 uid = args[0]
-                hm.send_transport(self.transport, hm.make_heartbeat_response())
+                hm.send_transport(self.transport, hm.make_heartbeat_response(self.read_queue.qsize()))
 
     async def recv_messages(self):
         """
@@ -219,6 +219,7 @@ class SmartSensorProtocol(asyncio.Protocol):
                 self.read_queue.put_nowait(message)
     else:
         def data_received(self, data):
+            self.serial_buf.extend(data)
             zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
             if zero_loc != -1:
                 self.serial_buf = self.serial_buf[zero_loc:]
@@ -239,8 +240,14 @@ class SmartSensorProtocol(asyncio.Protocol):
             self.error_queue.put_nowait(error)
 
 
-# Information about a device disconnect
-Disconnect = namedtuple("Disconnect", ["uid", "instance_id", "accessed"])
+class Disconnect:
+    """
+    Information about a device disconnect.
+    """
+    def __init__(self, uid, instance_id, accessed):
+        self.uid = uid
+        self.instance_id = instance_Id
+        self.accessed = accessed
 
 
 async def remove_disconnected_devices(error_queue, devices, state_queue, event_loop):
