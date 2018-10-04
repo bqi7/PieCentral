@@ -72,7 +72,7 @@ ERROR_CODES = {
 
 class HibikeMessage:
     """
-    An Hibike packet.
+    A Hibike packet.
     """
     def __init__(self, message_id, payload):
         assert message_id in MESSAGE_TYPES.values()

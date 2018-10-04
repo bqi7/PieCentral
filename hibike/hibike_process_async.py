@@ -39,6 +39,11 @@ PROFILING_PERIOD = 60
 PAUSE_QUEUE_SIZE = 10
 RESUME_QUEUE_SIZE = 2
 
+# Constant read_sleep_time options (in seconds)
+LOW = 1
+MID = 0.4
+HIGH = 0.15
+
 def scan_for_serial_ports():
     """
     Scan for serial ports that look like an Arduino.
@@ -106,6 +111,9 @@ class SmartSensorProtocol(asyncio.Protocol):
     PACKET_BOUNDARY = bytes([0])
     __slots__ = ["uid", "write_queue", "batched_data", "read_queue", "error_queue", "state_queue",
                  "instance_id", "transport", "_ready", "serial_buf"]
+    device_sleep_times = { "LimitSwitch": MID, "LineFollower": MID, "Potentiometer": MID, "Encoder": MID, "BatteryBuzzer": LOW, 
+                            "TeamFlag": LOW, "ServoControl": HIGH, "YogiBear": HIGH, "RFID": LOW }
+    
     def __init__(self, devices, batched_data, error_queue, state_queue, event_loop, pending: set):
         # We haven't found out what our UID is yet
         self.uid = None
@@ -116,6 +124,7 @@ class SmartSensorProtocol(asyncio.Protocol):
         self.error_queue = error_queue
         self.state_queue = state_queue
         self.instance_id = random.getrandbits(128)
+        self.read_sleep_time = 0
 
         self.transport = None
         self._ready = asyncio.Event(loop=event_loop)
@@ -143,6 +152,7 @@ class SmartSensorProtocol(asyncio.Protocol):
                               hm.make_subscription_request(hm.uid_to_device_id(self.uid),
                                                            [], 0))
             devices[self.uid] = self
+            self.read_sleep_time = device_sleep_times[hm.uid_to_device_id(self.uid)] # set the read_sleep_time to the device sleep time specified
         pending.remove(self.transport.serial.name)
 
     async def send_messages(self):
@@ -190,6 +200,8 @@ class SmartSensorProtocol(asyncio.Protocol):
                 self.uid = uid
                 await self.state_queue.coro_put(("device_subscribed", [uid, delay, params]))
             elif message_type == hm.MESSAGE_TYPES["DeviceData"]:
+                await asyncio.sleep(self.read_sleep_time) # sleep for predetermined time before reading new data from device
+                
                 # This is kind of a hack, but it allows us to use `recv_messages` for
                 # detecting new smart sensors as well as reading from known ones.
                 if self.uid is not None:
