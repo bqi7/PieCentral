@@ -5,7 +5,6 @@ from multiprocessing import Queue
 import serial
 from LCM import *
 from Utils import *
-# pylint: disable=import-error
 
 linebreak_port_one = "/dev/ttyACM0" # change to correct port
 linebreak_port_two = "/dev/ttyACM0" # change to correct port
