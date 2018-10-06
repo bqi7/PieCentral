@@ -15,7 +15,7 @@ class SHEPHERD_HEADER():
     STAGE_TIMER_END = "stage_timer_end"
 
 # pylint: disable=invalid-name
-class SENSOR_HEADER():
+# class SENSOR_HEADER():
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
