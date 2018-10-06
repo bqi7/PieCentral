@@ -93,15 +93,6 @@ def main():
     relevant_ports = identify_relevant_ports(working_ports)
     print("relevant ports: ", relevant_ports)
 
-    for obj_type, alliance, port in relevant_ports:
-        if obj_type == 'lb' and alliance == 'b':
-            goal_serial_one = port
-        elif obj_type == 'lb' and alliance == 'g':
-            goal_serial_two = port
-        elif obj_type == 'bs' and alliance == 'b':
-            bid_serial_blue = port
-        elif obj_type == 'bs' and alliance == 'g':
-            bid_serial_gold = port
 
     while True:
         time.sleep(100)
