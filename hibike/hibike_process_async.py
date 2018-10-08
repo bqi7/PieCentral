@@ -128,7 +128,7 @@ class SmartSensorProtocol(asyncio.Protocol):
         event_loop.create_task(self.send_messages())
         event_loop.create_task(self.recv_messages())
 
-    async def register_sensor(event_loop, devices, pending):
+    async def register_sensor(self, event_loop, devices, pending):
         """
         Try to get our UID from the sensor and register it with `hibike_process`.
         """
@@ -246,7 +246,7 @@ class Disconnect:
     """
     def __init__(self, uid, instance_id, accessed):
         self.uid = uid
-        self.instance_id = instance_Id
+        self.instance_id = instance_id
         self.accessed = accessed
 
 
