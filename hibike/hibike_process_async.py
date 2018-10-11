@@ -137,7 +137,7 @@ class SmartSensorProtocol(asyncio.Protocol):
         event_loop.create_task(self.send_messages())
         event_loop.create_task(self.recv_messages())
 
-    async def register_sensor(event_loop, devices, pending):
+    async def register_sensor(self, event_loop, devices, pending):
         """
         Try to get our UID from the sensor and register it with `hibike_process`.
         """
@@ -152,7 +152,7 @@ class SmartSensorProtocol(asyncio.Protocol):
                               hm.make_subscription_request(hm.uid_to_device_id(self.uid),
                                                            [], 0))
             devices[self.uid] = self
-            self.read_sleep_time = device_sleep_times[hm.uid_to_device_id(self.uid)] # set the read_sleep_time to the device sleep time specified
+            self.read_sleep_time = SmartSensorProtocol.device_sleep_times[hm.uid_to_device_id(self.uid)] # set the read_sleep_time to the device sleep time specified
         pending.remove(self.transport.serial.name)
 
     async def send_messages(self):
