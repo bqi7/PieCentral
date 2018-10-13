@@ -12,7 +12,7 @@ artifacts-install:
 	$(nop)
 
 lint:
-	cd .. && find . -not -path "./hibike_packet_extension" -name "*.py" | xargs pylint
+	cd .. && find . -type d -name "hibike_packet_extension" -prune -o -type f -name "*.py" -print | xargs pylint
 
 unit_tests:
 	cd .. && python3 -m unittest hibike_tests/*.py

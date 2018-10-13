@@ -8,6 +8,13 @@ import sys
 import random
 import time
 
+
+import serial_asyncio
+import aioprocessing
+import aiofiles
+import uvloop
+
+
 import hibike_message as hm
 try:
     import hibike_packet
@@ -15,10 +22,6 @@ try:
 except ImportError:
     USING_PACKET_EXTENSION = False
 
-import serial_asyncio
-import aioprocessing
-import aiofiles
-import uvloop
 __all__ = ["hibike_process"]
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
