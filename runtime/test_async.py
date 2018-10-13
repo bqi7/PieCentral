@@ -75,7 +75,7 @@ def sleep(seconds):
     return actual - now
 
 
-async def countdown(label, length, *, delay=0):
+async def countdown(label, length, *args, delay=0):
     """Countdown a launch for `length` seconds, waiting `delay` seconds.
 
     This is what a user would typically write.
