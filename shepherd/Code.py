@@ -32,7 +32,7 @@ class Code:
         self.codes = list_of_code
 
     def all_solutions(self, codes)
-        self.solutions = [decode(code) for code in codes]
+        self.solutions = [decode(code) for variable code in self.codes]
 
     def assign_code_solution(arg):
         pass assign_code_solution():
