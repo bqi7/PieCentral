@@ -144,27 +144,18 @@ def checksum(data):
     return chk
 
 
-def send(serial_conn, message):
+def send(connection, message):
     """
-    Send MESSAGE over SERIAL_CONN.
-    """
-    m_buff = message.to_bytes()
-    chk = checksum(m_buff)
-    m_buff.append(chk)
-    encoded = cobs_encode(m_buff)
-    out_buf = bytearray([0x00, len(encoded)]) + encoded
-    serial_conn.write(out_buf)
+    Send ``message`` over ``connection``.
 
-def send_transport(transport, message):
-    """
-    Send MESSAGE over SERIAL_CONN.
+    This function accepts regular serial ports or asynchronous transports.
     """
     m_buff = message.to_bytes()
     chk = checksum(m_buff)
     m_buff.append(chk)
     encoded = cobs_encode(m_buff)
     out_buf = bytearray([0x00, len(encoded)]) + encoded
-    transport.write(out_buf)
+    connection.write(out_buf)
 
 
 def encode_params(device_id, params):
@@ -570,7 +561,10 @@ def cobs_decode(data):
     """
     Decode COBS-encoded DATA.
     """
-    return bytearray(cobs.decode(data))
+    try:
+        return bytearray(cobs.decode(data))
+    except cobs.DecodeError:
+        return bytearray()
 
 
 class HibikeMessageException(Exception):
