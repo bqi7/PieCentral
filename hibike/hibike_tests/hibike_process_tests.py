@@ -18,12 +18,6 @@ import hibike_message as hm
 from hibike_tester import Hibike
 
 
-add_runtime_to_path()
-# We must import runtimeUtil to deserialize error messages
-# pylint: disable=import-error, wrong-import-position, unused-import
-import runtimeUtil
-
-
 def add_runtime_to_path():
     """
     Enable import of runtime modules.
@@ -32,6 +26,14 @@ def add_runtime_to_path():
     parent_path = path.rstrip("hibike_tests").rstrip("hibike/")
     runtime = os.path.join(parent_path, "runtime")
     sys.path.insert(1, runtime)
+
+
+add_runtime_to_path()
+# We must import runtimeUtil to deserialize error messages
+# pylint: disable=import-error, wrong-import-position, unused-import
+import runtimeUtil
+
+
 
 
 VIRTUAL_DEVICE_STARTUP_TIME = 2
