@@ -249,7 +249,8 @@ def apply_code(alliance, answer):
         code = answer.look_up_by_solution(answer)
         msg = {"alliance": alliance, "effect": code.effect}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
-
+        
+    
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -263,6 +264,10 @@ setup_functions = {
 auto_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.STAGE_TIMER_END : to_wait,
+    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button,
+    SHEPHERD_HEADER.CODE_APPLICATION : code_application,
+    SHEPHERD_HEADER.ROBOT_OFF : robot_off
+
     }
 
 wait_functions = {
@@ -275,6 +280,9 @@ wait_functions = {
 teleop_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.STAGE_TIMER_END : to_end,
+    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button,
+    SHEPHERD_HEADER.CODE_APPLICATION : code_application,
+    SHEPHERD_HEADER.ROBOT_OFF : robot_off
 }
 
 end_functions = {
@@ -283,6 +291,11 @@ end_functions = {
     SHEPHERD_HEADER.GET_SCORES : get_score,
     SHEPHERD_HEADER.SETUP_MATCH : to_setup,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
+    SHEPHERD_HEADER.FINAL_SCORE : final_score
+}
+
+perk_selection_functions = {
+    SHEPHERD_HEADER.GAME_PERKS : game_perks
 }
 
 ###########################################

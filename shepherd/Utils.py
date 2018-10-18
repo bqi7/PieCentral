@@ -13,6 +13,7 @@ class SHEPHERD_HEADER():
     SCORE_ADJUST = "score_adjust"
 
     STAGE_TIMER_END = "stage_timer_end"
+    ROBOT_OFF = "robot_off"
 
 # pylint: disable=invalid-name
 # class SENSOR_HEADER():
