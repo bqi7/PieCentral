@@ -15,6 +15,12 @@ class SHEPHERD_HEADER():
     STAGE_TIMER_END = "stage_timer_end"
     ROBOT_OFF = "robot_off"
 
+    LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
+    CODE_APPLICATION = "code_application"
+
+    GAME_PERKS = "game_perks"
+    FINAL_SCORE = "final_score"
+
 # pylint: disable=invalid-name
 # class SENSOR_HEADER():
 
@@ -22,6 +28,8 @@ class SHEPHERD_HEADER():
 class DAWN_HEADER():
     ROBOT_STATE = "robot_state"
     HEARTBEAT = "heartbeat"
+    CODES = "codes"
+    DECODE = "decode"
 
 # pylint: disable=invalid-name
 class UI_HEADER():
@@ -36,6 +44,10 @@ class SCOREBOARD_HEADER():
     STAGE_TIMER_START = "stage_timer_start"
     RESET_TIMERS = "reset_timers"
     ALL_INFO = "all_info"
+
+    LAUNCH_BUTTON_TIMER_START = "launch_button_timer_start"
+    PERKS_SELECTED = "perks_selected"
+    APPLIED_EFFECT = "applied_effect"
 
 # pylint: disable=invalid-name
 class CONSTANTS():
@@ -68,3 +80,8 @@ class STATE():
     WAIT = "wait"
     TELEOP = "teleop"
     END = "end"
+
+class EFFECTS():
+    BLACKMAIL = "blackmail"
+    SPOILED_CANDY = "spoiled_candy"
+    ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]

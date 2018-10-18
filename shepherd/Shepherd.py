@@ -6,7 +6,7 @@ from Alliance import *
 from LCM import *
 from Timer import *
 from Utils import *
-from Code import *
+import Code
 import Sheet
 
 
@@ -243,14 +243,24 @@ def disable_robots():
 ###########################################
 # Game Specific Methods
 ###########################################
+code_solution = {}
+code_effect = {}
+
+def code_setup():
+    code_solution = Code.assign_code_solution()
+    code_effect = Code.assign_code_effect()
+    msg = code_solution
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
 def apply_code(alliance, answer):
-    if (answer != None):
-        code = answer.look_up_by_solution(answer)
-        msg = {"alliance": alliance, "effect": code.effect}
+    if (answer != None and answer in code_solution.values()):
+        code = [k for k,v in code_solution.items() if v == answer][0]
+        msg = {"alliance": alliance, "effect": code_effect[code]}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
-        
-    
+    else:
+        msg = {"alliance": alliance}
+        lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
