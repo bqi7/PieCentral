@@ -6,6 +6,7 @@ from Alliance import *
 from LCM import *
 from Timer import *
 from Utils import *
+from Code import *
 import Sheet
 
 
@@ -243,7 +244,11 @@ def disable_robots():
 # Game Specific Methods
 ###########################################
 
-#nothing
+def apply_code(alliance, answer):
+    if (answer != None):
+        code = answer.look_up_by_solution(answer)
+        msg = {"alliance": alliance, "effect": code.effect}
+        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
 
 ###########################################
 # Event to Function Mappings for each Stage
