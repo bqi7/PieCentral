@@ -21,7 +21,8 @@ class SHEPHERD_HEADER():
     FINAL_SCORE = "final_score"
 
 # pylint: disable=invalid-name
-# class SENSOR_HEADER():
+class SENSOR_HEADER():
+    FAILED_POWERUP = "failed_powerup"
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
@@ -29,6 +30,8 @@ class DAWN_HEADER():
     HEARTBEAT = "heartbeat"
     CODES = "codes"
     DECODE = "decode"
+    MASTER = "master"
+    SPECIFIC_ROBOT_STATE = "specific_robot_state"
 
 # pylint: disable=invalid-name
 class UI_HEADER():
@@ -84,8 +87,3 @@ class EFFECTS():
     BLACKMAIL = "blackmail"
     SPOILED_CANDY = "spoiled_candy"
     ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
-
-class PERKS():
-    EMPTY = "empty"
-    BUBBLEGUM = "bubblegum"
-    # To be continued

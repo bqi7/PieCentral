@@ -233,12 +233,30 @@ def enable_robots(autonomous):
 
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
+def set_master_robot(alliance, team_name):
+    '''
+    Set the master robot of the alliance
+    '''
+    if team_name == alliance.team_1_name:
+        team_number = alliance.team_1_number
+    else:
+        team_number = alliance.team_2_number
+    msg = {"alliance": alliance, "master": team_number}
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
+
 def disable_robots():
     '''
     Sends message to Dawn to disable all robots
     '''
     msg = {"autonomous": False, "enabled": False}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
+
+def disable_robot(team_number):
+    '''
+    Send message to Dawn to disable the robots of team
+    '''
+    msg = {"team_number": team_number, "autonomous": False, "enabled": False}
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.SPECIFIC_ROBOT_STATE, msg)
 
 ###########################################
 # Game Specific Methods
@@ -247,12 +265,18 @@ code_solution = {}
 code_effect = {}
 
 def code_setup():
+    '''
+    Set up code_solution and code_effect dictionaries and send code_solution to Dawn
+    '''
     code_solution = Code.assign_code_solution()
     code_effect = Code.assign_code_effect()
-    msg = code_solution
+    msg = {"codes_solutions": code_solution}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
 def apply_code(alliance, answer):
+    '''
+    Send Scoreboard the effect if the answer is correct
+    '''
     if (answer != None and answer in code_solution.values()):
         code = [k for k,v in code_solution.items() if v == answer][0]
         msg = {"alliance": alliance, "effect": code_effect[code]}
@@ -260,12 +284,6 @@ def apply_code(alliance, answer):
     else:
         msg = {"alliance": alliance}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
-
-def apply_perks(alliance, perk_1, perk_2, perk_3):
-    alliance.perk_1 = perk_1
-    alliance.perk_2 = perk_2
-    alliance.perk_3 = perk_3
-
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################

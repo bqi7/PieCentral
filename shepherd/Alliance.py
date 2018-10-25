@@ -42,4 +42,3 @@ class Alliance:
         #TODO: Send info to sensors about reset
         #TODO: Send info to UI about reset
         #TODO: Move score sends to shepherd.py
-    
