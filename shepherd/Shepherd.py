@@ -233,10 +233,12 @@ def enable_robots(autonomous):
 
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
-def set_master_robot(alliance, team_name):
+def set_master_robot(args):
     '''
     Set the master robot of the alliance
     '''
+    alliance = args["alliance"]
+    team_name = args["team_name"]
     if team_name == alliance.team_1_name:
         team_number = alliance.team_1_number
     else:
@@ -251,10 +253,11 @@ def disable_robots():
     msg = {"autonomous": False, "enabled": False}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
-def disable_robot(team_number):
+def disable_robot(args):
     '''
     Send message to Dawn to disable the robots of team
     '''
+    team_number = args["team_number"]
     msg = {"team_number": team_number, "autonomous": False, "enabled": False}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.SPECIFIC_ROBOT_STATE, msg)
 
@@ -273,10 +276,12 @@ def code_setup():
     msg = {"codes_solutions": code_solution}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
-def apply_code(alliance, answer):
+def apply_code(args):
     '''
     Send Scoreboard the effect if the answer is correct
     '''
+    alliance = args["alliance"]
+    answer = args["answer"]
     if (answer != None and answer in code_solution.values()):
         code = [k for k,v in code_solution.items() if v == answer][0]
         msg = {"alliance": alliance, "effect": code_effect[code]}
