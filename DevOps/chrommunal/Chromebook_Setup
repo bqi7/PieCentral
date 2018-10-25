@@ -1,0 +1,6 @@
+#!/bin/bash
+
+curl -LO https://github.com/pioneers/PieCentral/releases/download/dawn%2F2018.2.0/dawn-darwin-x64.zip
+unzip dawn-darwin-x64.zip
+rm dawn-darwin-x64.zip
+mv dawn-darwin-x64 ~/Desktop/
