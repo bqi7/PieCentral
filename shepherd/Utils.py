@@ -84,3 +84,8 @@ class EFFECTS():
     BLACKMAIL = "blackmail"
     SPOILED_CANDY = "spoiled_candy"
     ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
+
+class PERKS():
+    EMPTY = "empty"
+    BUBBLEGUM = "bubblegum"
+    # To be continued

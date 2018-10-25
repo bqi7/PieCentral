@@ -260,6 +260,12 @@ def apply_code(alliance, answer):
     else:
         msg = {"alliance": alliance}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
+
+def apply_perks(alliance, perk_1, perk_2, perk_3):
+    alliance.perk_1 = perk_1
+    alliance.perk_2 = perk_2
+    alliance.perk_3 = perk_3
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
