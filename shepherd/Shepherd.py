@@ -233,6 +233,31 @@ def enable_robots(autonomous):
 
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
+
+
+def disable_robots():
+    '''
+    Sends message to Dawn to disable all robots
+    '''
+    msg = {"autonomous": False, "enabled": False}
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
+
+
+
+###########################################
+# Game Specific Methods
+###########################################
+code_solution = {}
+code_effect = {}
+
+def disable_robot(args):
+    '''
+    Send message to Dawn to disable the robots of team
+    '''
+    team_number = args["team_number"]
+    msg = {"team_number": team_number, "autonomous": False, "enabled": False}
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.SPECIFIC_ROBOT_STATE, msg)
+
 def set_master_robot(args):
     '''
     Set the master robot of the alliance
@@ -245,27 +270,6 @@ def set_master_robot(args):
         team_number = alliance.team_2_number
     msg = {"alliance": alliance, "master": team_number}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
-
-def disable_robots():
-    '''
-    Sends message to Dawn to disable all robots
-    '''
-    msg = {"autonomous": False, "enabled": False}
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
-
-def disable_robot(args):
-    '''
-    Send message to Dawn to disable the robots of team
-    '''
-    team_number = args["team_number"]
-    msg = {"team_number": team_number, "autonomous": False, "enabled": False}
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.SPECIFIC_ROBOT_STATE, msg)
-
-###########################################
-# Game Specific Methods
-###########################################
-code_solution = {}
-code_effect = {}
 
 def code_setup():
     '''
@@ -291,12 +295,22 @@ def apply_code(args):
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
 
 def end_teleop(args):
+    blue_robots_disabled = false
+    gold_robots_disabled = false
     if PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]):
-        
+        extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
+        blue_robots_disabled = true
     elif PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
-        aaahhh
+        extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
+        gold_robots_disabled = false
     else:
         to_end()
+    if(gold_robots_disabled):
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_1_number})
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_2_number})
+    if(blue_robots_disabled):
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.BLUE].team_1_number})
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.BLUE].team_2_number})
 
 def alliance_perks(alliance):
     return (alliance.perk_1, alliance.perk_2, alliance.perk_3)
