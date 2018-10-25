@@ -25,5 +25,5 @@ def assign_code_effect():
     Assign each code to a random effect
     '''
     for i in range(16):
-        code_effect[codes[i]] = effect[random.randint(0,len(effect_list))]
+        code_effect[codes[i]] = effect_list[random.randint(0,len(effect_list))]
     return code_effect
