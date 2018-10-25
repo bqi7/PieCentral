@@ -108,6 +108,12 @@ def to_setup(args):
     print({"blue_score" : alliances[ALLIANCE_COLOR.BLUE].score,
            "gold_score" : alliances[ALLIANCE_COLOR.GOLD].score})
 
+def to_perk_selection(args):
+    global game_state
+    game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
+    game_state = STATE.PERK_SELCTION
+    print("ENTERING PERK SELECTION STATE")
+
 def to_auto(args):
     '''
     Move to the autonomous stage where robots should begin autonomously.
@@ -314,6 +320,12 @@ def apply_perks(args):
 setup_functions = {
     SHEPHERD_HEADER.SETUP_MATCH: to_setup,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection
+}
+
+perk_selection_functions = {
+    SHEPHERD_HEADER.RESET_MATCH : reset,
+    SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
     SHEPHERD_HEADER.START_NEXT_STAGE: to_auto
 }
 
