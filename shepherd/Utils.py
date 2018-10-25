@@ -18,6 +18,7 @@ class SHEPHERD_HEADER():
     LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
     CODE_APPLICATION = "code_application"
 
+    APPLY_PERKS = "apply_perks"
     GAME_PERKS = "game_perks"
     MASTER_ROBOT = "master_robot"
 
@@ -56,6 +57,7 @@ class SCOREBOARD_HEADER():
 
 # pylint: disable=invalid-name
 class CONSTANTS():
+    PERK_SELECTION_TIME = 15
     AUTO_TIME = 30
     TELEOP_TIME = 180
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
@@ -81,6 +83,7 @@ class TIMER_TYPES():
 # pylint: disable=invalid-name
 class STATE():
     SETUP = "setup"
+    PERK_SELCTION = "perk_selection"
     AUTO = "auto"
     WAIT = "wait"
     TELEOP = "teleop"
@@ -90,3 +93,8 @@ class EFFECTS():
     BLACKMAIL = "blackmail"
     SPOILED_CANDY = "spoiled_candy"
     ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
+
+class PERKS():
+    EMPTY = "empty"
+    BUBBLEGUM = "bubblegum"
+    # To be continued
