@@ -300,6 +300,13 @@ def end_teleop(args):
 
 def alliance_perks(alliance):
     return (alliance.perk_1, alliance.perk_2, alliance.perk_3)
+    
+def apply_perks(args):
+    alliance = args['alliance']
+    alliance.perk_1 = args['perk_1']
+    alliance.perk_2 = args['perk_2']
+    alliance.perk_3 = args['perk_3']
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
