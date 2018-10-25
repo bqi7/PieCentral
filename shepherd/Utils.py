@@ -13,11 +13,14 @@ class SHEPHERD_HEADER():
     SCORE_ADJUST = "score_adjust"
 
     STAGE_TIMER_END = "stage_timer_end"
+    END_EXTENDED_TELEOP = "end_extended_teleop"
 
     LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
     CODE_APPLICATION = "code_application"
 
     GAME_PERKS = "game_perks"
+    MASTER_ROBOT = "master_robot"
+
     FINAL_SCORE = "final_score"
 
 # pylint: disable=invalid-name

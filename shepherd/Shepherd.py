@@ -260,6 +260,17 @@ def apply_code(alliance, answer):
     else:
         msg = {"alliance": alliance}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
+
+def end_teleop(args):
+    if PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]):
+        
+    elif PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
+        aaahhh
+    else:
+        to_end()
+
+def alliance_perks(alliance):
+    return (alliance.perk_1, alliance.perk_2, alliance.perk_3)
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -284,7 +295,8 @@ wait_functions = {
 
 teleop_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
-    SHEPHERD_HEADER.STAGE_TIMER_END : to_end,
+    SHEPHERD_HEADER.STAGE_TIMER_END : end_teleop,
+    SHEPHERD_HEADER.END_EXTENDED_TELEOP: to_end
 }
 
 end_functions = {
