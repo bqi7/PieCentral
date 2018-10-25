@@ -1,22 +1,4 @@
 import random
-class Code:
-    def __init__(self, code, solution, perk):
-        self.code = code
-        self.solution = solution
-        self.perk = perk
-
-    @staticmethod
-    def look_up_by_solution(codes, solution):
-        for c in codes:
-            if c.solution == solution:
-                return c
-        return 'No matching Code object by solution'
-    @staticmethod
-    def look_up_by_code(codes, code):
-        for c in codes:
-            if c.code == code:
-                return c
-        return 'No matching Code object by code'
 
 codes = []
 solutions = []
@@ -25,6 +7,9 @@ code_effect = {}
 effect_list = list(Utils.EFFECT())
 
 def assign_code_solution():
+    '''
+    Generate 16 codes and create a code_solution dictionary
+    '''
     list_of_code = []
     for i in range(16):
         new_code = generate_code(list_of_code)
@@ -36,6 +21,9 @@ def assign_code_solution():
     return code_solution
 
 def assign_code_effect():
+    '''
+    Assign each code to a random effect
+    '''
     for i in range(16):
-        code_effect[codes[i]] = effect[random.randint(0,len(effect_list))]
+        code_effect[codes[i]] = effect_list[random.randint(0,len(effect_list))]
     return code_effect
