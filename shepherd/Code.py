@@ -18,6 +18,7 @@ class Code:
                 return c
         return 'No matching Code object by code'
 
+
 codes = []
 solutions = []
 code_solution = {}
