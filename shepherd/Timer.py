@@ -50,14 +50,13 @@ class Timer:
     globalResetCount = 0
     resetAllCount = 0
 
-    def __init__(self, timer_type, goal_name=None):
+    def __init__(self, timer_type):
         """
         timer_type - a Enum representing the type of timer that this is:
                         TIMER_TYPES.MATCH - represents the time of the current
         """
         self.active = False
         self.timer_type = timer_type
-        self.goal_name = goal_name
         self.endTime = None
         self.resetAllCount = Timer.globalResetCount
 
