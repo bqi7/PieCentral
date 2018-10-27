@@ -79,6 +79,8 @@ class LCM_TARGETS():
 # pylint: disable=invalid-name
 class TIMER_TYPES():
     MATCH = "match"
+    LAUNCH_BUTTON = "launch_button"
+    EXTENDED_TELEOP = "extended_teleop"
 
 # pylint: disable=invalid-name
 class STATE():
