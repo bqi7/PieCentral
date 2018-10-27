@@ -26,6 +26,8 @@ class busyThread(threading.Thread):
                 event = heapq.heappop(self.queue)
                 if event.timer_type == TIMER_TYPES.MATCH:
                     LCM.lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.STAGE_TIMER_END)
+                if event.timer_type == TIMER_TYPES.EXTENDED_TELEOP:
+                    LCM.lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.END_EXTENDED_TELEOP)
                 event.active = False
                 Timer.queueLock.release()
         for timer in self.queue:
