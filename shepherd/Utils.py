@@ -13,16 +13,23 @@ class SHEPHERD_HEADER():
     SCORE_ADJUST = "score_adjust"
 
     STAGE_TIMER_END = "stage_timer_end"
+
     ROBOT_OFF = "robot_off"
+
+    END_EXTENDED_TELEOP = "end_extended_teleop"
 
     LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
     CODE_APPLICATION = "code_application"
 
+    APPLY_PERKS = "apply_perks"
     GAME_PERKS = "game_perks"
+    MASTER_ROBOT = "master_robot"
+
     FINAL_SCORE = "final_score"
 
 # pylint: disable=invalid-name
-# class SENSOR_HEADER():
+class SENSOR_HEADER():
+    FAILED_POWERUP = "failed_powerup"
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
@@ -30,6 +37,8 @@ class DAWN_HEADER():
     HEARTBEAT = "heartbeat"
     CODES = "codes"
     DECODE = "decode"
+    MASTER = "master"
+    SPECIFIC_ROBOT_STATE = "specific_robot_state"
 
 # pylint: disable=invalid-name
 class UI_HEADER():
@@ -51,6 +60,7 @@ class SCOREBOARD_HEADER():
 
 # pylint: disable=invalid-name
 class CONSTANTS():
+    PERK_SELECTION_TIME = 15
     AUTO_TIME = 30
     TELEOP_TIME = 180
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
@@ -72,10 +82,13 @@ class LCM_TARGETS():
 # pylint: disable=invalid-name
 class TIMER_TYPES():
     MATCH = "match"
+    LAUNCH_BUTTON = "launch_button"
+    EXTENDED_TELEOP = "extended_teleop"
 
 # pylint: disable=invalid-name
 class STATE():
     SETUP = "setup"
+    PERK_SELCTION = "perk_selection"
     AUTO = "auto"
     WAIT = "wait"
     TELEOP = "teleop"
@@ -85,3 +98,8 @@ class EFFECTS():
     BLACKMAIL = "blackmail"
     SPOILED_CANDY = "spoiled_candy"
     ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
+
+class PERKS():
+    EMPTY = "empty"
+    BUBBLEGUM = "bubblegum"
+    # To be continued

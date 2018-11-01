@@ -108,6 +108,12 @@ def to_setup(args):
     print({"blue_score" : alliances[ALLIANCE_COLOR.BLUE].score,
            "gold_score" : alliances[ALLIANCE_COLOR.GOLD].score})
 
+def to_perk_selection(args):
+    global game_state
+    game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
+    game_state = STATE.PERK_SELCTION
+    print("ENTERING PERK SELECTION STATE")
+
 def to_auto(args):
     '''
     Move to the autonomous stage where robots should begin autonomously.
@@ -233,6 +239,8 @@ def enable_robots(autonomous):
 
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
+
+
 def disable_robots():
     '''
     Sends message to Dawn to disable all robots
@@ -240,19 +248,50 @@ def disable_robots():
     msg = {"autonomous": False, "enabled": False}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
 
+
+
 ###########################################
 # Game Specific Methods
 ###########################################
 code_solution = {}
 code_effect = {}
 
+def disable_robot(args):
+    '''
+    Send message to Dawn to disable the robots of team
+    '''
+    team_number = args["team_number"]
+    msg = {"team_number": team_number, "autonomous": False, "enabled": False}
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.SPECIFIC_ROBOT_STATE, msg)
+
+def set_master_robot(args):
+    '''
+    Set the master robot of the alliance
+    '''
+    alliance = args["alliance"]
+    team_name = args["team_name"]
+    if team_name == alliance.team_1_name:
+        team_number = alliance.team_1_number
+    else:
+        team_number = alliance.team_2_number
+    msg = {"alliance": alliance, "master": team_number}
+    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
+
 def code_setup():
+    '''
+    Set up code_solution and code_effect dictionaries and send code_solution to Dawn
+    '''
     code_solution = Code.assign_code_solution()
     code_effect = Code.assign_code_effect()
-    msg = code_solution
+    msg = {"codes_solutions": code_solution}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
-def apply_code(alliance, answer):
+def apply_code(args):
+    '''
+    Send Scoreboard the effect if the answer is correct
+    '''
+    alliance = args["alliance"]
+    answer = args["answer"]
     if (answer != None and answer in code_solution.values()):
         code = [k for k,v in code_solution.items() if v == answer][0]
         msg = {"alliance": alliance, "effect": code_effect[code]}
@@ -261,6 +300,35 @@ def apply_code(alliance, answer):
         msg = {"alliance": alliance}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
 
+
+def end_teleop(args):
+    blue_robots_disabled = false
+    gold_robots_disabled = false
+    if PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]):
+        extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
+        blue_robots_disabled = true
+    elif PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
+        extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
+        gold_robots_disabled = false
+    else:
+        to_end()
+    if(gold_robots_disabled):
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_1_number})
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_2_number})
+    if(blue_robots_disabled):
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.BLUE].team_1_number})
+        disable_robot({"team_number":alliances[ALLIANCE_COLOR.BLUE].team_2_number})
+
+def alliance_perks(alliance):
+    return (alliance.perk_1, alliance.perk_2, alliance.perk_3)
+    
+def apply_perks(args):
+    alliance = args['alliance']
+    alliance.perk_1 = args['perk_1']
+    alliance.perk_2 = args['perk_2']
+    alliance.perk_3 = args['perk_3']
+
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -268,6 +336,12 @@ def apply_code(alliance, answer):
 setup_functions = {
     SHEPHERD_HEADER.SETUP_MATCH: to_setup,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection
+}
+
+perk_selection_functions = {
+    SHEPHERD_HEADER.RESET_MATCH : reset,
+    SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
     SHEPHERD_HEADER.START_NEXT_STAGE: to_auto
 }
 
@@ -292,7 +366,9 @@ teleop_functions = {
     SHEPHERD_HEADER.STAGE_TIMER_END : to_end,
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button,
     SHEPHERD_HEADER.CODE_APPLICATION : code_application,
-    SHEPHERD_HEADER.ROBOT_OFF : robot_off
+    SHEPHERD_HEADER.ROBOT_OFF : robot_off,
+    SHEPHERD_HEADER.END_EXTENDED_TELEOP: to_end
+
 }
 
 end_functions = {
