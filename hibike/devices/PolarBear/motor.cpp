@@ -65,6 +65,7 @@ void drive(float target) {
 
 
 void clearFault() {
+	// WARNING THIS CODE WILL LITERALLY NUKE THE BOARD
   digitalWrite(INA, !digitalRead(INA));
   digitalWrite(INB, !digitalRead(INB));
 
