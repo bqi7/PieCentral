@@ -6,8 +6,7 @@ solutions = []
 code_solution = {}
 code_effect = {}
 effect_list = []
-list_of_code = []
-effect_list = list(Utils.EFFECT())
+effect_list = list(EFFECTS.ALL_EFFECTS)
 
 def generate_code(code_list):
     pass
@@ -26,6 +25,7 @@ def assign_code_solution():
     global effect_list
     list_of_code = []
     for i in range(16):
+        # pylint: disable=assignment-from-no-return
         new_code = generate_code(list_of_code)
         list_of_code.append(new_code)
     codes = list_of_code
