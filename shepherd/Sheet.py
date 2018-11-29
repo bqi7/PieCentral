@@ -1,15 +1,14 @@
-# pylint: skip-file
 """To Install: Run `pip install --upgrade google-api-python-client`"""
 
 from __future__ import print_function
 import os
 import csv
 from Utils import *
-import httplib2
-from apiclient import discovery
-from oauth2client import client
-from oauth2client import tools
-from oauth2client.file import Storage
+import httplib2 # pylint: disable=import-error
+from apiclient import discovery # pylint: disable=import-error
+from oauth2client import client # pylint: disable=import-error
+from oauth2client import tools # pylint: disable=import-error
+from oauth2client.file import Storage # pylint: disable=import-error
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json
@@ -74,7 +73,7 @@ def get_online_match(match_number):
     game_data = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=range_name).execute()
     row = 48
-    for i,j in enumerate(game_data['values']):
+    for i, j in enumerate(game_data['values']):
         if int(j[0]) == match_number:
             row = i
     match = game_data['values'][row]
@@ -115,7 +114,7 @@ def write_online_scores(match_number, blue_score, gold_score):
     game_data = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=range_name).execute()
     row = 47
-    for i,j in enumerate(game_data['values']):
+    for i, j in enumerate(game_data['values']):
         if int(j[0]) == match_number:
             row = i
 
@@ -123,4 +122,6 @@ def write_online_scores(match_number, blue_score, gold_score):
     game_scores = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=range_name).execute()
     game_scores['values'] = [[blue_score, gold_score]]
-    service.spreadsheets().values().update(spreadsheetId=spreadsheetId, range=range_name, body=game_scores, valueInputOption="RAW").execute()
+    service.spreadsheets().values().update(spreadsheetId=spreadsheetId,
+                                           range=range_name, body=game_scores,
+                                           valueInputOption="RAW").execute()

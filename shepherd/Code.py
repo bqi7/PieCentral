@@ -9,9 +9,11 @@ effect_list = []
 effect_list = list(EFFECTS.ALL_EFFECTS)
 
 def generate_code(code_list):
+    ##: TODO
     pass
 
 def decode(code):
+    ##: TODO
     pass
 
 def assign_code_solution():

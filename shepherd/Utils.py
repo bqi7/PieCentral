@@ -32,7 +32,7 @@ class SHEPHERD_HEADER():
         # TEAM_RETRIEVAL{}
 
 # pylint: disable=invalid-name
-class SENSOR_HEADER():
+class SENSORS_HEADER():
     FAILED_POWERUP = "failed_powerup"
 
 # pylint: disable=invalid-name
@@ -77,6 +77,7 @@ class CONSTANTS():
     TELEOP_TIME = 180
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
     CSV_FILE_NAME = "Sheets/schedule.csv"
+    TAFFY_TIME = 15
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():
@@ -114,4 +115,5 @@ class EFFECTS():
 class PERKS():
     EMPTY = "empty"
     BUBBLEGUM = "bubblegum"
+    TAFFY = "taffy"
     # To be continued
