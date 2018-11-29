@@ -26,6 +26,10 @@ class SHEPHERD_HEADER():
     MASTER_ROBOT = "master_robot"
 
     FINAL_SCORE = "final_score"
+    ASSIGN_TEAMS = "assign_teams"
+        # ASSIGN_TEAMS{g1num, g2num, b1num, b2num}
+    TEAM_RETRIEVAL = "team_retrieval"
+        # TEAM_RETRIEVAL{}
 
 # pylint: disable=invalid-name
 class SENSOR_HEADER():
@@ -34,11 +38,16 @@ class SENSOR_HEADER():
 # pylint: disable=invalid-name
 class DAWN_HEADER():
     ROBOT_STATE = "robot_state"
-    HEARTBEAT = "heartbeat"
     CODES = "codes"
+        # CODES{codes_solutions}
+    HEARTBEAT = "heartbeat"
     DECODE = "decode"
-    MASTER = "master"
+        # DECODE{alliance, tag}
     SPECIFIC_ROBOT_STATE = "specific_robot_state"
+        # SPECIFIC_ROBOT_STATE{team_number, autonomous, enabled}
+	MASTER = "master"
+	    # MASTER{alliance, team_number}
+
 
 # pylint: disable=invalid-name
 class UI_HEADER():
@@ -55,8 +64,11 @@ class SCOREBOARD_HEADER():
     ALL_INFO = "all_info"
 
     LAUNCH_BUTTON_TIMER_START = "launch_button_timer_start"
-    PERKS_SELECTED = "perks_selected"
-    APPLIED_EFFECT = "applied_effect"
+        # LAUNCH_BUTTON_TIMER_START{alliance, button}
+	PERKS_SELECTED = "perks_selected"
+        # PERKS_SELECTED{alliance, perk_1, perk_2, perk_3}
+	APPLIED_EFFECT = "applied_effect"
+        # APPLIED_EFFECT{alliance, effect}
 
 # pylint: disable=invalid-name
 class CONSTANTS():
