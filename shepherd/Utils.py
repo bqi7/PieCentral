@@ -46,7 +46,7 @@ class DAWN_HEADER():
     SPECIFIC_ROBOT_STATE = "specific_robot_state"
         # SPECIFIC_ROBOT_STATE{team_number, autonomous, enabled}
 	MASTER = "master"
-	    # MASTER{alliance, team_number}
+        # MASTER{alliance, team_number}
 
 
 # pylint: disable=invalid-name

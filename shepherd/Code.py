@@ -1,16 +1,17 @@
 import random
 
-codes = []
-solutions = []
-code_solution = {}
-code_effect = {}
-effect_list = list(Utils.EFFECT())
 
 def assign_code_solution():
     '''
     Generate 16 codes and create a code_solution dictionary
     '''
-    list_of_code = []
+    global codes
+    global olutions
+    global code_solution
+    global code_effect
+    global effect_list
+    effect_list = list(Utils.EFFECT())
+    global list_of_code =
     for i in range(16):
         new_code = generate_code(list_of_code)
         list_of_code.append(newcode)
