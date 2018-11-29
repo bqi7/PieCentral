@@ -45,8 +45,8 @@ class DAWN_HEADER():
         # DECODE{alliance, tag}
     SPECIFIC_ROBOT_STATE = "specific_robot_state"
         # SPECIFIC_ROBOT_STATE{team_number, autonomous, enabled}
-	MASTER = "master"
-	    # MASTER{alliance, team_number}
+    MASTER = "master"
+    	# MASTER{alliance, team_number}
 
 
 # pylint: disable=invalid-name
@@ -65,9 +65,9 @@ class SCOREBOARD_HEADER():
 
     LAUNCH_BUTTON_TIMER_START = "launch_button_timer_start"
         # LAUNCH_BUTTON_TIMER_START{alliance, button}
-	PERKS_SELECTED = "perks_selected"
+    PERKS_SELECTED = "perks_selected"
         # PERKS_SELECTED{alliance, perk_1, perk_2, perk_3}
-	APPLIED_EFFECT = "applied_effect"
+    APPLIED_EFFECT = "applied_effect"
         # APPLIED_EFFECT{alliance, effect}
 
 # pylint: disable=invalid-name

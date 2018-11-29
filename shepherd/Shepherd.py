@@ -281,6 +281,9 @@ def code_setup():
     '''
     Set up code_solution and code_effect dictionaries and send code_solution to Dawn
     '''
+    global code_solution
+    global code_effect
+
     code_solution = Code.assign_code_solution()
     code_effect = Code.assign_code_effect()
     msg = {"codes_solutions": code_solution}
@@ -293,7 +296,7 @@ def apply_code(args):
     alliance = args["alliance"]
     answer = args["answer"]
     if (answer != None and answer in code_solution.values()):
-        code = [k for k,v in code_solution.items() if v == answer][0]
+        code = [k for k, v in code_solution.items() if v == answer][0]
         msg = {"alliance": alliance, "effect": code_effect[code]}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
     else:
@@ -312,16 +315,16 @@ def end_teleop(args):
         gold_robots_disabled = false
     else:
         to_end()
-    if(gold_robots_disabled):
+    if gold_robots_disabled:
         disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_1_number})
         disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_2_number})
-    if(blue_robots_disabled):
+    if blue_robots_disabled:
         disable_robot({"team_number":alliances[ALLIANCE_COLOR.BLUE].team_1_number})
         disable_robot({"team_number":alliances[ALLIANCE_COLOR.BLUE].team_2_number})
 
 def alliance_perks(alliance):
     return (alliance.perk_1, alliance.perk_2, alliance.perk_3)
-    
+
 def apply_perks(args):
     alliance = args['alliance']
     alliance.perk_1 = args['perk_1']
