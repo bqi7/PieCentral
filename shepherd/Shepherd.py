@@ -295,7 +295,7 @@ def apply_code(args):
     '''
     alliance = args["alliance"]
     answer = args["answer"]
-    if (answer != None and answer in code_solution.values()):
+    if (answer is not None and answer in code_solution.values()):
         code = [k for k, v in code_solution.items() if v == answer][0]
         msg = {"alliance": alliance, "effect": code_effect[code]}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
@@ -305,16 +305,16 @@ def apply_code(args):
 
 
 def end_teleop(args):
-    blue_robots_disabled = false
-    gold_robots_disabled = false
+    blue_robots_disabled = False
+    gold_robots_disabled = False
     if PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]):
         extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
-        blue_robots_disabled = true
+        blue_robots_disabled = True
     elif PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
         extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
-        gold_robots_disabled = false
+        gold_robots_disabled = False
     else:
-        to_end()
+        to_end(args)
     if gold_robots_disabled:
         disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_1_number})
         disable_robot({"team_number":alliances[ALLIANCE_COLOR.GOLD].team_2_number})
@@ -331,6 +331,17 @@ def apply_perks(args):
     alliance.perk_2 = args['perk_2']
     alliance.perk_3 = args['perk_3']
 
+def launch_button_triggered(args):
+    ## TODO: This
+    pass
+
+def final_score(args):
+    ## TODO: This
+    pass
+
+def game_perks(args):
+    ## TODO: This
+    pass
 
 ###########################################
 # Event to Function Mappings for each Stage
@@ -351,9 +362,9 @@ perk_selection_functions = {
 auto_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.STAGE_TIMER_END : to_wait,
-    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button,
-    SHEPHERD_HEADER.CODE_APPLICATION : code_application,
-    SHEPHERD_HEADER.ROBOT_OFF : robot_off
+    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
+    SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
+    SHEPHERD_HEADER.ROBOT_OFF : disable_robot
 
     }
 
@@ -367,9 +378,9 @@ wait_functions = {
 teleop_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.STAGE_TIMER_END : to_end,
-    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button,
-    SHEPHERD_HEADER.CODE_APPLICATION : code_application,
-    SHEPHERD_HEADER.ROBOT_OFF : robot_off,
+    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
+    SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
+    SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
     SHEPHERD_HEADER.END_EXTENDED_TELEOP: to_end
 
 }
@@ -401,6 +412,8 @@ events = None
 ###########################################
 # Game Specific Variables
 ###########################################
+
+extended_teleop_timer = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 
 #nothing
 
