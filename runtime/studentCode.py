@@ -283,34 +283,3 @@ async def asyncSleepHelper2(sleepTestVal):
     sleepTestVal['test'] = True
     await Actions.sleep(.5)
     sleepTestVal['test'] = False
-
-###########################
-# Solar Scramble Functions 
-###########################   
-
-def next_power(num):
-    return num
-
-def reverse_digits(num):
-    return num
-
-def smallest_prime_fact(num):
-    return num
-
-def prime_factor(num):
-    return num
-
-def silly_base_two(num):
-    return num
-
-def most_common_digit(num):
-    return num
-
-def valid_isbn_ten(num):
-    return num
-
-def simd_four_square(num):
-    return num
-
-def double_caesar_cipher(key):
-    return key
