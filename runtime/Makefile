@@ -1,4 +1,10 @@
-.PHONY: install artifacts-install lint test artifacts
+.PHONY: build clean install artifacts-install lint test artifacts
+
+build:
+	python setup.py build_ext --inplace
+
+clean:
+	rm -f runtime/*.cpython-*.so runtime/*.c runtime/*.cpp runtime/*.cxx
 
 install:
 	cd build-deps && wget https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip

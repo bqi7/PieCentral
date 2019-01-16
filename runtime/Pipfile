@@ -9,7 +9,7 @@ python_version = "3.7"
 click = "==7.0"
 pyserial = "==3.4"
 pyudev = "==0.21.0"
-
+cython = "==0.29.2"
 # flatbuffers = "==1.10"
 # protobuf = "==3.6.1"
 # msgpack = "*"
@@ -19,7 +19,6 @@ pyudev = "==0.21.0"
 # aiofiles = "*"
 # uvloop = "*"
 # cobs = "*"
-
 # [dev-packages]
 # pylint = "==1.8.1"
 # yappi = "*"
