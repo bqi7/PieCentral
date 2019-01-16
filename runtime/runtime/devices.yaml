@@ -1,0 +1,221 @@
+# devices.yaml -- A description of all Smart Sensors.
+#
+# Each type of sensor is described as follows:
+#
+#   <name: str>
+#     id: <id: uint16_t>
+#     params:
+#       <param_name: str>:
+#         id: <id: uint16_t>
+#         type: <type: str, examples: float, uint32_t, bool>
+#         read: <read: bool, optional, default: true>
+#         write: <write: bool, optional, default: false>
+#         lower: <lower bound for numeric types, optional, default: -inf>
+#         upper: <upper bound for numeric types, optional, default: inf>
+#         virt_default: <optional>
+
+LimitSwitch:
+  id: 0
+  params:
+    switch0:
+      id: 0
+      type: bool
+    switch1:
+      id: 1
+      type: bool
+    switch2:
+      id: 2
+      type: bool
+
+LineFollower:
+  id: 1
+  params:
+    left:
+      id: 0
+      type: bool
+    center:
+      id: 1
+      type: bool
+    right:
+      id: 2
+      type: bool
+
+Potentiometer:
+  id: 2
+  params:
+    pot0:
+      id: 0
+      type: float
+    pot1:
+      id: 1
+      type: float
+    pot2:
+      id: 2
+      type: float
+
+Encoder:
+  id: 3
+  params:
+    rotation:
+      id: 0
+      type: int16_t
+
+BatteryBuzzer:
+  id: 4
+  params:
+    is_unsafe:
+      id: 0
+      type: bool
+    calibrated:
+      id: 1
+      type: bool
+    v_cell1:
+      id: 2
+      type: float
+    v_cell2:
+      id: 3
+      type: float
+    v_cell3:
+      id: 4
+      type: float
+    v_batt:
+      id: 5
+      type: float
+    dv_cell2:
+      id: 6
+      type: float
+    dv_cell3:
+      id: 7
+      type: float
+
+TeamFlag:
+  id: 5
+  params:
+    mode:
+      id: 0
+      type: bool
+      write: true
+    blue:
+      id: 1
+      type: bool
+      write: true
+    yellow:
+      id: 2
+      type: bool
+      write: true
+    led1:
+      id: 3
+      type: bool
+      write: true
+    led2:
+      id: 4
+      type: bool
+      write: true
+    led3:
+      id: 5
+      type: bool
+      write: true
+    led4:
+      id: 6
+      type: bool
+      write: true
+
+ServoControl:
+  id: 7
+  params:
+    servo0:
+      id: 0
+      type: float
+      write: true
+      lower: -1.0
+      upper: 1.0
+    servo1:
+      id: 1
+      type: float
+      write: true
+      lower: -1.0
+      upper: 1.0
+
+YogiBear:
+  id: 10
+  params:
+    duty_cycle:
+      id: 0
+      type: float
+      write: true
+      lower: -1.0
+      upper: 1.0
+    pid_pos_setpoint:
+      id: 1
+      type: float
+      read: false
+      write: true
+    pid_pos_kp:
+      id: 2
+      type: float
+      read: false
+      write: true
+      lower: 0.0
+    pid_pos_ki:
+      id: 3
+      type: float
+      read: false
+      write: true
+      lower: 0.0
+    pid_pos_kd:
+      id: 4
+      type: float
+      read: false
+      write: true
+      lower: 0.0
+    pid_vel_setpoint:
+      id: 5
+      type: float
+      read: false
+      write: true
+    pid_vel_kp:
+      id: 6
+      type: float
+      read: false
+      write: true
+    pid_vel_ki:
+      id: 7
+      type: float
+      read: false
+      write: true
+    pid_vel_kd:
+      id: 8
+      type: float
+      read: false
+      write: true
+    current_thresh:
+      id: 9
+      type: float
+      read: false
+      write: true
+      lower: 2.0
+      upper: 10.0
+    enc_pos:
+      id: 10
+      type: float
+      write: true
+    enc_vel:
+      id: 11
+      type: float
+    motor_current:
+      id: 12
+      type: float
+    deadband:
+      id: 13
+      type: float
+      write: true
+
+RFID:
+  id: 11
+  params:
+    id:
+      id: 0
+      type: uint32_t
+    tag_detect:
+      id: 1
+      type: uint8_t
