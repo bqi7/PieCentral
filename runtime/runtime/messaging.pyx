@@ -1,5 +1,9 @@
 # distutils: language = c++
 
+"""
+Runtime IPC module.
+"""
+
 from libc.string cimport strcpy
 from libc.stdint cimport uint8_t, uint64_t
 from posix.fcntl cimport O_CREAT, O_RDWR
@@ -7,27 +11,31 @@ from posix.stat cimport mode_t, S_IRUSR, S_IWUSR
 from posix.unistd cimport ftruncate
 from posix.types cimport off_t
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
-# from runtime.packet cimport ParameterType, parameter, size_of_type
+from cython.operator cimport dereference as deref
+from libcpp.string cimport string
+from runtime.messaging cimport RingBuffer
 
 
-cdef extern from "<sys/mman.h>":
-    int shm_open(const char *, int, mode_t)
-    int shm_unlink(const char *)
-    void *mmap(void *, size_t, int, int, int, off_t)
-    int munmap(void *, size_t)
-    enum: PROT_READ
-    enum: PROT_WRITE
-    enum: MAP_SHARED
+cdef class SharedRingBuffer:
+    DEFAULT_CAPACITY = 16 * 1024
+    cdef SharedMemoryBuffer shm
+    cdef RingBuffer *buf
 
+    def __cinit__(self, str name, size_t capacity = DEFAULT_CAPACITY):
+        self.shm = SharedMemoryBuffer(name, capacity)
+        self.buf = new RingBuffer(self.shm.mem_buf, capacity)
 
-class ReadDisabledError(Exception):
-    def __init__(self, sensor_name, param_name):
-        super().__init__(f'Cannot read parameter "{param_name}" of sensor "{sensor_name}".')
+    def __dealloc__(self):
+        del self.buf
 
+    def __len__(self):
+        return self.buf.size()
 
-class WriteDisabledError(Exception):
-    def __init__(self, sensor_name, param_name):
-        super().__init__(f'Cannot write parameter "{param_name}" of sensor "{sensor_name}".')
+    def __getitem__(self, Py_ssize_t index):
+        return deref(self.buf)[index]
+
+    cpdef extend(self, string buf):
+        self.buf.extend(buf)
 
 
 cdef class SharedMemoryBuffer:
