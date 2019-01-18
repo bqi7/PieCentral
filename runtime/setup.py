@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, Extension
 from Cython.Build import cythonize
 from runtime import __version__
 
@@ -41,9 +41,19 @@ setup(
     ],
     ext_modules=cythonize(
         [
-            'runtime/parsing.pyx',
+            Extension(
+                'runtime.packet',
+                ['runtime/packet.pyx'],
+                extra_compile_args=['-fopenmp'],
+                extra_link_args=['-fopenmp'],
+            ),
+            Extension(
+                'runtime.statemanager',
+                ['runtime/statemanager.pyx'],
+                extra_link_args=['-lrt'],
+            ),
         ],
-        nthreads=4,
         language_level=3,
+        nthreads=4,
     ),
 )

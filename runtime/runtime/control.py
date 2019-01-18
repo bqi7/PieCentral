@@ -9,6 +9,7 @@ import importlib
 import os
 import sys
 import runtime.logging
+from runtime.api import Robot
 from types import ModuleType
 
 LOGGER = runtime.logging.make_logger(__name__)
@@ -35,6 +36,9 @@ class StudentCode:
         self.module_name, _ = os.path.splitext(basename)
         self.module = importlib.import_module(self.module_name)
         LOGGER.debug('Imported student code module.', module_name=self.module_name)
+
+    def patch(self):
+        self.module.Robot = Robot
 
     def reload(self):
         self.module = importlib.reload(self.module)

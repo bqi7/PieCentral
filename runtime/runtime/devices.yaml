@@ -16,121 +16,101 @@
 
 LimitSwitch:
   id: 0
+  protocol: smartsensor
   params:
-    switch0:
-      id: 0
+    - name: switch0
       type: bool
-    switch1:
-      id: 1
+    - name: switch1
       type: bool
-    switch2:
-      id: 2
+    - name: switch2
       type: bool
 
 LineFollower:
   id: 1
+  protocol: smartsensor
   params:
-    left:
-      id: 0
+    - name: left
       type: bool
-    center:
-      id: 1
+    - name: center
       type: bool
-    right:
-      id: 2
+    - name: right
       type: bool
 
 Potentiometer:
   id: 2
+  protocol: smartsensor
   params:
-    pot0:
-      id: 0
+    - name: pot0
       type: float
-    pot1:
-      id: 1
+    - name: pot1
       type: float
-    pot2:
-      id: 2
+    - name: pot2
       type: float
 
 Encoder:
   id: 3
+  protocol: smartsensor
   params:
-    rotation:
-      id: 0
+    - name: rotation
       type: int16_t
 
 BatteryBuzzer:
   id: 4
+  protocol: smartsensor
   params:
-    is_unsafe:
-      id: 0
+    - name: is_unsafe
       type: bool
-    calibrated:
-      id: 1
+    - name: calibrated
       type: bool
-    v_cell1:
-      id: 2
+    - name: v_cell1
       type: float
-    v_cell2:
-      id: 3
+    - name: v_cell2
       type: float
-    v_cell3:
-      id: 4
+    - name: v_cell3
       type: float
-    v_batt:
-      id: 5
+    - name: v_batt
       type: float
-    dv_cell2:
-      id: 6
+    - name: dv_cell2
       type: float
-    dv_cell3:
-      id: 7
+    - name: dv_cell3
       type: float
 
 TeamFlag:
   id: 5
+  protocol: smartsensor
   params:
-    mode:
-      id: 0
+    - name: mode
       type: bool
       write: true
-    blue:
-      id: 1
+    - name: blue
       type: bool
       write: true
-    yellow:
-      id: 2
+    - name: yellow
       type: bool
       write: true
-    led1:
-      id: 3
+    - name: led1
       type: bool
       write: true
-    led2:
-      id: 4
+    - name: led2
       type: bool
       write: true
-    led3:
-      id: 5
+    - name: led3
       type: bool
       write: true
-    led4:
-      id: 6
+    - name: led4
       type: bool
       write: true
 
 ServoControl:
   id: 7
+  protocol: smartsensor
   params:
-    servo0:
-      id: 0
+    - name: servo0
       type: float
       write: true
       lower: -1.0
       upper: 1.0
-    servo1:
-      id: 1
+    - name: servo1
       type: float
       write: true
       lower: -1.0
@@ -138,84 +118,87 @@ ServoControl:
 
 YogiBear:
   id: 10
+  protocol: smartsensor
   params:
-    duty_cycle:
-      id: 0
+    - name: duty_cycle
       type: float
       write: true
       lower: -1.0
       upper: 1.0
-    pid_pos_setpoint:
-      id: 1
+    - name: pid_pos_setpoint
       type: float
       read: false
       write: true
-    pid_pos_kp:
-      id: 2
-      type: float
-      read: false
-      write: true
-      lower: 0.0
-    pid_pos_ki:
-      id: 3
+    - name: pid_pos_kp
       type: float
       read: false
       write: true
       lower: 0.0
-    pid_pos_kd:
-      id: 4
+    - name: pid_pos_ki
       type: float
       read: false
       write: true
       lower: 0.0
-    pid_vel_setpoint:
-      id: 5
+    - name: pid_pos_kd
       type: float
       read: false
       write: true
-    pid_vel_kp:
-      id: 6
+      lower: 0.0
+    - name: pid_vel_setpoint
       type: float
       read: false
       write: true
-    pid_vel_ki:
-      id: 7
+    - name: pid_vel_kp
       type: float
       read: false
       write: true
-    pid_vel_kd:
-      id: 8
+    - name: pid_vel_ki
       type: float
       read: false
       write: true
-    current_thresh:
-      id: 9
+    - name: pid_vel_kd
+      type: float
+      read: false
+      write: true
+    - name: current_thresh
       type: float
       read: false
       write: true
       lower: 2.0
       upper: 10.0
-    enc_pos:
-      id: 10
+    - name: enc_pos
       type: float
       write: true
-    enc_vel:
-      id: 11
+    - name: enc_vel
       type: float
-    motor_current:
-      id: 12
+    - name: motor_current
       type: float
-    deadband:
-      id: 13
+    - name: deadband
       type: float
       write: true
 
 RFID:
   id: 11
+  protocol: smartsensor
   params:
-    id:
-      id: 0
+    - name: id
       type: uint32_t
-    tag_detect:
-      id: 1
+    - name: tag_detect
       type: uint8_t
+
+Gamepad:
+  id: 12
+  protocol: gamepad
+  params:
+    - name: button_a
+      type: bool
+    - name: button_b
+      type: bool
+    - name: button_x
+      type: bool
+    - name: button_y
+      type: bool
+
+FieldControl:
+  id: 13
+  protocol: fieldcontrol
