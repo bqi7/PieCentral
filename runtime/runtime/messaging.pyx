@@ -90,3 +90,8 @@ cdef class SharedMemoryBuffer:
     def __setitem__(self, Py_ssize_t index, uint8_t byte):
         self._check_bounds(index)
         self.mem_buf[index] = byte
+
+
+cdef class SharedStruct(SharedMemoryBuffer):
+    def __cinit__(self, str name, str format):
+        pass

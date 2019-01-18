@@ -9,11 +9,11 @@ namespace ringbuffer {
     private:
         size_t capacity, start, end;
         uint8_t *data;
-        int64_t next_delimeter;
+        std::deque<size_t> delimeters;
         std::recursive_mutex lock;
         std::condition_variable_any data_ready;
-        inline size_t wrap_index(size_t pos);
-        size_t size_up_to_index(size_t index);
+        inline size_t wrap_index(size_t, size_t);
+        size_t size_range(size_t, size_t);
     public:
         RingBuffer(uint8_t *, size_t);
         size_t size(void);
