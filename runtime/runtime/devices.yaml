@@ -14,177 +14,161 @@
 #         upper: <upper bound for numeric types, optional, default: inf>
 #         virt_default: <optional>
 
-LimitSwitch:
-  id: 0
-  protocol: smartsensor
-  params:
-    - name: switch0
-      type: bool
-    - name: switch1
-      type: bool
-    - name: switch2
-      type: bool
-
-LineFollower:
-  id: 1
-  protocol: smartsensor
-  params:
-    - name: left
-      type: bool
-    - name: center
-      type: bool
-    - name: right
-      type: bool
-
-Potentiometer:
-  id: 2
-  protocol: smartsensor
-  params:
-    - name: pot0
-      type: float
-    - name: pot1
-      type: float
-    - name: pot2
-      type: float
-
-Encoder:
-  id: 3
-  protocol: smartsensor
-  params:
-    - name: rotation
-      type: int16_t
-
-BatteryBuzzer:
-  id: 4
-  protocol: smartsensor
-  params:
-    - name: is_unsafe
-      type: bool
-    - name: calibrated
-      type: bool
-    - name: v_cell1
-      type: float
-    - name: v_cell2
-      type: float
-    - name: v_cell3
-      type: float
-    - name: v_batt
-      type: float
-    - name: dv_cell2
-      type: float
-    - name: dv_cell3
-      type: float
-
-TeamFlag:
-  id: 5
-  protocol: smartsensor
-  params:
-    - name: mode
-      type: bool
-      write: true
-    - name: blue
-      type: bool
-      write: true
-    - name: yellow
-      type: bool
-      write: true
-    - name: led1
-      type: bool
-      write: true
-    - name: led2
-      type: bool
-      write: true
-    - name: led3
-      type: bool
-      write: true
-    - name: led4
-      type: bool
-      write: true
-
-ServoControl:
-  id: 7
-  protocol: smartsensor
-  params:
-    - name: servo0
-      type: float
-      write: true
-      lower: -1.0
-      upper: 1.0
-    - name: servo1
-      type: float
-      write: true
-      lower: -1.0
-      upper: 1.0
-
-YogiBear:
-  id: 10
-  protocol: smartsensor
-  params:
-    - name: duty_cycle
-      type: float
-      write: true
-      lower: -1.0
-      upper: 1.0
-    - name: pid_pos_setpoint
-      type: float
-      read: false
-      write: true
-    - name: pid_pos_kp
-      type: float
-      read: false
-      write: true
-      lower: 0.0
-    - name: pid_pos_ki
-      type: float
-      read: false
-      write: true
-      lower: 0.0
-    - name: pid_pos_kd
-      type: float
-      read: false
-      write: true
-      lower: 0.0
-    - name: pid_vel_setpoint
-      type: float
-      read: false
-      write: true
-    - name: pid_vel_kp
-      type: float
-      read: false
-      write: true
-    - name: pid_vel_ki
-      type: float
-      read: false
-      write: true
-    - name: pid_vel_kd
-      type: float
-      read: false
-      write: true
-    - name: current_thresh
-      type: float
-      read: false
-      write: true
-      lower: 2.0
-      upper: 10.0
-    - name: enc_pos
-      type: float
-      write: true
-    - name: enc_vel
-      type: float
-    - name: motor_current
-      type: float
-    - name: deadband
-      type: float
-      write: true
-
-RFID:
-  id: 11
-  protocol: smartsensor
-  params:
-    - name: id
-      type: uint32_t
-    - name: tag_detect
-      type: uint8_t
+smartsensor:
+  LimitSwitch:
+    id: 0
+    params:
+      - name: switch0
+        type: bool
+      - name: switch1
+        type: bool
+      - name: switch2
+        type: bool
+  LineFollower:
+    id: 1
+    params:
+      - name: left
+        type: bool
+      - name: center
+        type: bool
+      - name: right
+        type: bool
+  Potentiometer:
+    id: 2
+    params:
+      - name: pot0
+        type: float
+      - name: pot1
+        type: float
+      - name: pot2
+        type: float
+  Encoder:
+    id: 3
+    params:
+      - name: rotation
+        type: int16_t
+  BatteryBuzzer:
+    id: 4
+    params:
+      - name: is_unsafe
+        type: bool
+      - name: calibrated
+        type: bool
+      - name: v_cell1
+        type: float
+      - name: v_cell2
+        type: float
+      - name: v_cell3
+        type: float
+      - name: v_batt
+        type: float
+      - name: dv_cell2
+        type: float
+      - name: dv_cell3
+        type: float
+  TeamFlag:
+    id: 5
+    params:
+      - name: mode
+        type: bool
+        write: true
+      - name: blue
+        type: bool
+        write: true
+      - name: yellow
+        type: bool
+        write: true
+      - name: led1
+        type: bool
+        write: true
+      - name: led2
+        type: bool
+        write: true
+      - name: led3
+        type: bool
+        write: true
+      - name: led4
+        type: bool
+        write: true
+  ServoControl:
+    id: 7
+    params:
+      - name: servo0
+        type: float
+        write: true
+        lower: -1.0
+        upper: 1.0
+      - name: servo1
+        type: float
+        write: true
+        lower: -1.0
+        upper: 1.0
+  YogiBear:
+    id: 10
+    params:
+      - name: duty_cycle
+        type: float
+        write: true
+        lower: -1.0
+        upper: 1.0
+      - name: pid_pos_setpoint
+        type: float
+        read: false
+        write: true
+      - name: pid_pos_kp
+        type: float
+        read: false
+        write: true
+        lower: 0.0
+      - name: pid_pos_ki
+        type: float
+        read: false
+        write: true
+        lower: 0.0
+      - name: pid_pos_kd
+        type: float
+        read: false
+        write: true
+        lower: 0.0
+      - name: pid_vel_setpoint
+        type: float
+        read: false
+        write: true
+      - name: pid_vel_kp
+        type: float
+        read: false
+        write: true
+      - name: pid_vel_ki
+        type: float
+        read: false
+        write: true
+      - name: pid_vel_kd
+        type: float
+        read: false
+        write: true
+      - name: current_thresh
+        type: float
+        read: false
+        write: true
+        lower: 2.0
+        upper: 10.0
+      - name: enc_pos
+        type: float
+        write: true
+      - name: enc_vel
+        type: float
+      - name: motor_current
+        type: float
+      - name: deadband
+        type: float
+        write: true
+  RFID:
+    id: 11
+    params:
+      - name: id
+        type: uint32_t
+      - name: tag_detect
+        type: uint8_t
 
 Gamepad:
   id: 12
