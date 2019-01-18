@@ -60,9 +60,9 @@ namespace ringbuffer {
 
         size_t packet_len = this->size_up_to_index(this->next_delimeter);
         std::string str;
-        str.reserve(packet_len);
+        str.resize(packet_len);
         for (size_t pos = 0; pos < packet_len; pos++) {
-            str[pos] = this->data[this->wrap_index(pos)];
+            str.at(pos) = this->data[this->wrap_index(pos)];
         }
         this->start = this->wrap_index(packet_len + 1);
 

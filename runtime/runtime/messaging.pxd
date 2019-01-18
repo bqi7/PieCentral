@@ -22,6 +22,6 @@ cdef extern from "ringbuffer.cpp" namespace "ringbuffer":
     cdef cppclass RingBuffer:
         RingBuffer(uint8_t *, size_t) except +
         size_t size()
-        uint8_t operator[](size_t)
+        uint8_t operator[](size_t) except +
         void extend(string)
         string read()

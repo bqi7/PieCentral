@@ -42,14 +42,9 @@ setup(
     ext_modules=cythonize(
         [
             Extension(
-                'runtime.packet',
-                ['runtime/packet.pyx'],
-                extra_compile_args=['-fopenmp'],
-                extra_link_args=['-fopenmp'],
-            ),
-            Extension(
-                'runtime.statemanager',
-                ['runtime/statemanager.pyx'],
+                'runtime.messaging',
+                ['runtime/messaging.pyx'],
+                extra_compile_args=['-lrt'],
                 extra_link_args=['-lrt'],
             ),
         ],

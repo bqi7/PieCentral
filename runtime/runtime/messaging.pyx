@@ -37,6 +37,9 @@ cdef class SharedRingBuffer:
     cpdef extend(self, string buf):
         self.buf.extend(buf)
 
+    cpdef read(self):
+        return self.buf.read()
+
 
 cdef class SharedMemoryBuffer:
     _SHM_NAME_BASE = 'runtime-shm-buf'
