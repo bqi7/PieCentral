@@ -13,32 +13,7 @@ from posix.types cimport off_t
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cython.operator cimport dereference as deref
 from libcpp.string cimport string
-from runtime.messaging cimport RingBuffer
-
-
-cdef class SharedRingBuffer:
-    DEFAULT_CAPACITY = 16 * 1024
-    cdef SharedMemoryBuffer shm
-    cdef RingBuffer *buf
-
-    def __cinit__(self, str name, size_t capacity = DEFAULT_CAPACITY):
-        self.shm = SharedMemoryBuffer(name, capacity)
-        self.buf = new RingBuffer(self.shm.mem_buf, capacity)
-
-    def __dealloc__(self):
-        del self.buf
-
-    def __len__(self):
-        return self.buf.size()
-
-    def __getitem__(self, Py_ssize_t index):
-        return deref(self.buf)[index]
-
-    cpdef extend(self, string buf):
-        self.buf.extend(buf)
-
-    cpdef read(self):
-        return self.buf.read()
+from libc.errno cimport errno, ENOENT
 
 
 cdef class SharedMemoryBuffer:
@@ -46,13 +21,13 @@ cdef class SharedMemoryBuffer:
     cdef Py_ssize_t size
     cdef char *name
     cdef int fd
-    cdef uint8_t *mem_buf
+    cdef uint8_t *buf
 
     def __cinit__(self, str name, Py_ssize_t size):
         self.size = size
 
         full_name = self._SHM_NAME_BASE + '-' + name
-        self.name = <char *> PyMem_Malloc(self.size * (len(full_name) + 1))
+        self.name = <char *> PyMem_Malloc(len(full_name) + 1)
         if not self.name:
             raise MemoryError('Failed to allocate memory for shared memory object name.')
         strcpy(self.name, full_name.encode('utf-8'))
@@ -62,14 +37,16 @@ cdef class SharedMemoryBuffer:
             raise OSError('Failed to open shared memory object.')
         ftruncate(self.fd, size)
 
-        self.mem_buf = <uint8_t *> mmap(NULL, size, PROT_READ | PROT_WRITE,
-                                        MAP_SHARED, self.fd, 0)
+        self.buf = <uint8_t *> mmap(NULL, size, PROT_READ | PROT_WRITE,
+                                    MAP_SHARED, self.fd, 0)
 
     def __dealloc__(self):
         err = None
-        if munmap(self.mem_buf, self.size):
+        if munmap(self.buf, self.size):
             err = 'Failed to munmap buffer in memory.'
-        if shm_unlink(self.name):
+        # Ignore error if another buffer pointing at the same shared memory
+        # has already unlinked it.
+        if shm_unlink(self.name) and errno != ENOENT:
             err = 'Failed to unlink shared memory object.'
         PyMem_Free(self.name)
         if err:
@@ -85,13 +62,12 @@ cdef class SharedMemoryBuffer:
 
     def __getitem__(self, Py_ssize_t index):
         self._check_bounds(index)
-        return self.mem_buf[index]
+        return self.buf[index]
 
     def __setitem__(self, Py_ssize_t index, uint8_t byte):
         self._check_bounds(index)
-        self.mem_buf[index] = byte
+        self.buf[index] = byte
 
-
-cdef class SharedStruct(SharedMemoryBuffer):
-    def __cinit__(self, str name, str format):
-        pass
+    def __reduce__(self):
+        suffix = self.name.decode('utf-8')[len(self._SHM_NAME_BASE)+1 :]
+        return SharedMemoryBuffer, (suffix, self.size)

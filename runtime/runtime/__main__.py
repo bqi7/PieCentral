@@ -2,9 +2,15 @@
 The runtime command-line interface.
 """
 
+import os
 import click
 from runtime import __version__
 from runtime.control import bootstrap
+
+
+def get_module_path(filename):
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(module_dir, filename)
 
 
 @click.command()
@@ -17,15 +23,19 @@ from runtime.control import bootstrap
 @click.option('--tcp', default=1234, help='TCP port.')
 @click.option('--udp-send', default=1235, help='UDP send port.')
 @click.option('--udp-recv', default=1236, help='UDP receive port.')
-@click.option('-p', is_flag=True, help='Poll for hotplugged sensors. '
+@click.option('-p', '--poll', is_flag=True, help='Poll for hotplugged sensors. '
               'By default, sensors are detected asynchronously with udev. '
               'For non-Linux platforms without udev, this flag is always set.')
-@click.option('--hotplug-poll', default=0.04, help='Hotplug polling period.')
+@click.option('--poll-period', default=0.04, help='Hotplug polling period.')
 @click.option('-l', '--log-level', default='INFO', help='Lowest visible log level.',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']))
+@click.option('-d', '--device-schema', default=get_module_path('devices.yaml'),
+              help='Path to device schema.',
+              type=click.Path(exists=True, dir_okay=False))
 @click.option('-v', '--version', is_flag=True,
               help='Show the runtime version and exit.')
-@click.argument('student-code', type=click.Path(exists=True, dir_okay=False))
+@click.argument('student-code', default=get_module_path('studentcode.py'),
+                type=click.Path(exists=True, dir_okay=False))
 def cli(version, **options):
     """
     The PiE runtime daemon manages the state of a robot, controls student code
