@@ -14,17 +14,27 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cython.operator cimport dereference as deref
 from libcpp.string cimport string
 from libc.errno cimport errno, ENOENT
+from cpython cimport Py_buffer
 
 
 cdef class SharedMemoryBuffer:
+    """
+    A fixed-length binary buffer in shared memory.
+
+    This object supports the pickling and writeable buffer protocols.
+    """
     _SHM_NAME_BASE = 'runtime-shm-buf'
     cdef Py_ssize_t size
     cdef char *name
     cdef int fd
     cdef uint8_t *buf
+    cdef Py_ssize_t shape[1]
+    cdef Py_ssize_t strides[1]
 
     def __cinit__(self, str name, Py_ssize_t size):
         self.size = size
+        self.shape[0] = size
+        self.strides[0] = sizeof(uint8_t)
 
         full_name = self._SHM_NAME_BASE + '-' + name
         self.name = <char *> PyMem_Malloc(len(full_name) + 1)
@@ -56,7 +66,7 @@ cdef class SharedMemoryBuffer:
     def fileno(self):
         return self.fd
 
-    def _check_bounds(self, index):
+    cdef _check_bounds(self, index):
         if not 0 <= index < self.size:
             raise IndexError()
 
@@ -71,3 +81,19 @@ cdef class SharedMemoryBuffer:
     def __reduce__(self):
         suffix = self.name.decode('utf-8')[len(self._SHM_NAME_BASE)+1 :]
         return SharedMemoryBuffer, (suffix, self.size)
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        buffer.buf = <char *> self.buf
+        buffer.format = 'c'
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(uint8_t)
+        buffer.len = self.size
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = 0
+        buffer.shape = self.shape
+        buffer.strides = self.strides
+        buffer.suboffsets = NULL
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        pass
