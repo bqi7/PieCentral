@@ -6,6 +6,7 @@ import enum
 import os
 import json
 import multiprocessing
+from multiprocessing.connection import wait
 from multiprocessing.queues import Queue as BaseQueue
 from multiprocessing.managers import BaseManager
 import time
@@ -124,239 +125,122 @@ class MessageBusProcess(multiprocessing.Process):
         >>> child.start()
         >>> done.wait()
         True
-        >>> list(MessageBusProcess.consume())
-        ['OK!']
+        >>> MessageBusProcess.consume()
+        'OK!'
         >>> child.join()
         >>> child.close()
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, forward=True, **kwargs):
         conn_to_parent, conn_to_child = multiprocessing.Pipe()
         parent = multiprocessing.current_process()
         if not hasattr(parent, '_connections'):
-            parent._connections = []
+            parent._connections = {}
         terminated = multiprocessing.Event()
-        parent._connections.append((conn_to_child, terminated))
-        self._connections = [(conn_to_parent, terminated)]
+        parent._connections[conn_to_child] = terminated
+        self._connections = {conn_to_parent: terminated}
+        self._forward = forward
         super().__init__(*args, **kwargs)
 
     def close(self):
-        for _, terminated in getattr(self, '_connections', []):
+        for terminated in getattr(self, '_connections', {}).values():
             terminated.set()
         super().close()
 
     @staticmethod
     def get_connections():
         process = multiprocessing.current_process()
-        connections = getattr(process, '_connections', [])
-        valid_conn = lambda conn: not conn[1].is_set()
-        process._connections = list(filter(valid_conn, connections))
-        for conn, _ in process._connections:
-            yield conn
+        connections = getattr(process, '_connections', {})
+        process._connections = {
+            conn: terminated for conn, terminated in connections.items()
+            if not terminated.is_set()}
+        yield from process._connections
 
     @staticmethod
-    def broadcast(data):
+    def broadcast(payload):
         for conn in MessageBusProcess.get_connections():
-            conn.send(data)
+            conn.send(payload)
 
     @staticmethod
-    def consume():
-        for conn in MessageBusProcess.get_connections():
-            while conn.poll():
-                yield conn.recv()
+    def consume(timeout=None):
+        process = multiprocessing.current_process()
+        connections = list(MessageBusProcess.get_connections())
+        while connections:
+            try:
+                ready_connections = wait(connections, timeout)
+                if not ready_connections:
+                    break
+                conn, *_ = ready_connections
+                data = conn.recv()
+                for conn_forward in connections:
+                    if conn is not conn_forward:
+                        conn_forward.send(data)
+                return data
+            except EOFError:
+                del process._connections[conn]
+                connections = list(MessageBusProcess.get_connections())
 
 
-"""
-class MessageBus(BaseQueue):
-    def __init__(self, *args, **kwargs):
-        self.primary_pid = os.getpid()
-        super().__init__(*args, **kwargs)
+class SharedStore(dict):
+    """
+    A multi-process key-value store.
 
-    @property
-    def primary(self):
-        return self.primary_pid == os.getpid()
+    Internally, the store uses ``MessageBusProcess`` for broadcasting updates
+    by pipes. Generally speaking, the order of operations on the store is not
+    preserved.
 
-    def make_replica_process(self, target: Callable[[MessageBus, ...], ...],
-                             args=None, kwargs=None, name=None, daemon=None):
-        if not self.primary:
-            raise RuntimeError('Only primary process may create replicas.')
-        args, kwargs = (self,) + (args or ()), kwargs or {}
-        recv_conn, send_conn =
-        return multiprocessing.Process(target=target, args=args, kwargs=kwargs,
-                                       name=name, daemon=daemon)
+    Example:
 
-
-class SharedStore(UserDict, BaseQueue):
+        >>> def target(b1, b2, store):
+        ...     b1.wait()
+        ...     assert store['x'] == 1
+        ...     del store['x']
+        ...     b2.set()
+        >>> store = SharedStore()
+        >>> b1, b2 = multiprocessing.Event(), multiprocessing.Event()
+        >>> child = MessageBusProcess(target=target, args=(b1, b2, store))
+        >>> child.start()
+        >>> store['x'] = 1
+        >>> b1.set()
+        >>> b2.wait()
+        True
+        >>> 'x' in store
+        False
+    """
     class UpdateType(enum.Enum):
         SET = enum.auto()
-        UPDATE = enum.auto()
-        SUBSCRIBE = enum.auto()
-        UNSUBSCRIBE = enum.auto()
+        DELETE = enum.auto()
 
     def update(self):
-        pass
+        while True:
+            update = MessageBusProcess.consume(0)
+            if not update:
+                break
+            update_type, key, *data = update
+            if update_type is SharedStore.UpdateType.SET:
+                super().__setitem__(key, data[0])
+            elif update_type is SharedStore.UpdateType.DELETE:
+                super().__delitem__(key)
+            else:
+                cls_name = self.__class__.__name__
+                raise ValueError(f'Unknown {cls_name} update type "{update_type.name}".')
 
-    def __init__(self):
-        pass
+    def __getitem__(self, key):
+        self.update()
+        return super().__getitem__(key)
 
     def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-"""
+        self.update()
+        MessageBusProcess.broadcast((SharedStore.UpdateType.SET, key, value))
+        return super().__setitem__(key, value)
 
+    def __delitem__(self, key):
+        self.update()
+        MessageBusProcess.broadcast((SharedStore.UpdateType.DELETE, key))
+        return super().__delitem__(key)
 
-# import time
-# store = SharedStore()
-# def target(store):
-#     time.sleep(3)
-# child1 = multiprocessing.Process(target=target, args=(store,))
-# child1.start()
-# child2 = multiprocessing.Process(target=target, args=(store,))
-# child2.start()
-# child1.join()
-# child2.join()
-
-
-# class SharedStore(UserDict):
-#     """
-#     A multi-process key-value store.
-#
-#     The internal architecture follows the primary/replica model, where one
-#     process is designated to have an authoritative copy of the store. The
-#     replicas subscribe and publish changes to the primary. Changes made by one
-#     replica are broadcast to the other replicas. All communication is done over
-#     duplex pipes::
-#
-#                      +---------+
-#               +----->| Primary |<-----+
-#               |      +---------+      |
-#               V                       V
-#         +-----------+           +-----------+
-#         | Replica 1 |    ...    | Replica N |
-#         +-----------+           +-----------+
-#
-#     Example:
-#
-#         >>> store = SharedStore()
-#         >>> store['a', 'b', 0x100] = 1
-#         >>> def target(store):
-#         ...     assert not store.is_primary
-#         ...     assert store['a', 'b', 0x100] == 1
-#         ...     store['a', 'b', 0x101] = 2
-#         >>> child = multiprocessing.Process(target=target, args=(store,))
-#         >>> child.start()
-#         >>> child.join()
-#         >>> store['a', 'b', 0x101]
-#         2
-#     """
-#     class UpdateType(enum.Enum):
-#         SET = enum.auto()
-#         DELETE = enum.auto()
-#         SUBSCRIBE = enum.auto()
-#         UNSUBSCRIBE = enum.auto()
-#
-#     Update = namedtuple('Update', ['type', 'pid', 'data'])
-#
-#     def __init__(self):
-#         self.primary_pid = os.getpid()
-#         self.ready = multiprocessing.Event()
-#         self.update_queue = multiprocessing.Queue()
-#         self.update_thread = threading.Thread(target=self.update)
-#         self.update_thread.daemon = True
-#         self.update_thread.start()
-#         self.update_thread.join()
-#
-#     @property
-#     def primary(self):
-#         return os.getpid() == self.primary_pid
-#
-#     def _send_update(self, update_type, *data):
-#         if not self.primary:
-#             update = Update(update_type, os.getpid(), data)
-#             self.update_queue.put(update, block=False)
-#             self.ready.clear()
-#
-#     def update(self):
-#         if self.primary:
-#             while True:
-#                 update = self.update_queue.get()
-#         else:
-#             pass
-#
-#     """
-#     def __init__(self):
-#         self.primary_pid = os.getpid()
-#         self.ready = multiprocessing.Event()
-#         self.ready.set()
-#         self.update_queue = multiprocessing.Queue()
-#         self.connections = {}
-#         super().__init__()
-#
-#     @property
-#     def primary(self):
-#         return os.getpid() == self.primary_pid
-#
-#     def _send_update(self, update_type, *data):
-#         if not self.primary:
-#             update = Update(update_type, os.getpid(), data)
-#             self.update_queue.put(update)
-#             self.ready.clear()
-#
-#     def _apply_update(self, update):
-#         if update.type is UpdateType.SET:
-#             key, value = update.data
-#             self.data[key] = value
-#         elif update.type is Update.DELETE:
-#             key, *_ = update.data
-#             del self.data[key]
-#         else:
-#             raise ValueError(f'Cannot apply update with type "{update.type}".')
-#
-#     def _replica_update(self):
-#         if not hasattr(self, 'recv_conn'):
-#             self.recv_conn, send_conn = multiprocessing.Pipe(duplex=False)
-#             self._send_update(UpdateType.SUBSCRIBE, send_conn)
-#         self.ready.wait()
-#
-#     def _primary_update(self):
-#         while not self.update_queue.empty():
-#             try:
-#                 update = self.update.get(block=False)
-#             except queue.Empty:
-#                 break
-#             if update.type is UpdateType.SUBSCRIBE:
-#                 conn, *_ = update.data
-#                 self.connections[update.pid] = conn
-#             elif update.type is UpdateType.UNSUBSCRIBE:
-#                 del self.connections[update.pid]
-#             else:
-#                 self._apply_update(update)
-#
-#     def _broadcast(self, update):
-#         for pid, conn in self.connections.items():
-#             conn
-#
-#     def _update(self):
-#         if self.primary:
-#             self._primary_update()
-#         else:
-#             self._replica_update()
-#
-#     def __setitem__(self, key, value):
-#         self._update()
-#         super().__setitem__(key, value)
-#         self._send_update(UpdateType.SET, key, value)
-#
-#     def __getitem__(self, key):
-#         self._update()
-#         return super().__getitem__(key)
-#
-#     def __delitem__(self, key):
-#         self._update()
-#         super().__delitem__(key)
-#         self._send_update(UpdateType.DELETE, key)
-#
-#     def __del__(self):
-#         self._send_update(UpdateType.UNSUBSCRIBE)
-#     """
+    def __contains__(self, key):
+        self.update()
+        return super().__contains__(key)
 
 
 def load_schema(filename):
