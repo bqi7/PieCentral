@@ -1,6 +1,6 @@
 from collections import namedtuple, UserDict
 import ctypes
-from functools import lru_cache
+from functools import lru_cache, partial
 import enum
 
 import os
@@ -84,15 +84,136 @@ class DeviceStructure(ctypes.Structure):
     def make_shared_device(device_type):
         name = device_type.__name__ + '-' + str(uuid.uuid4())
         buf = SharedMemoryBuffer(name, ctypes.sizeof(device_type))
-        return device_type.from_buffer(buf)
+        device = device_type.from_buffer(buf)
+        device._buf = buf
+        return device
+
+    def __getstate__(self):
+        device_type = type(self)
+        return device_type.__name__, device_type._params_by_id, self._buf
+
+    def __setstate__(self, state):
+        pass
 
 
-YogiBear = DeviceStructure.make_device_type('YogiBear',
-    [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
-motor = DeviceStructure.make_shared_device(YogiBear)
-print(motor.duty_cycle)
-import time
-time.sleep(5)
+# YogiBear = DeviceStructure.make_device_type('YogiBear',
+#      [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
+# types = {'yogibear': }
+# motor = DeviceStructure.make_shared_device(types['yogibear'])
+# import pickle
+# print(pickle.dumps(motor))
+# motor2 = pickle.loads(pickle.dumps(motor))
+# print(motor.duty_cycle, motor2.duty_cycle)
+# motor2.duty_cycle = 0.5
+# print(motor.duty_cycle, motor2.duty_cycle)
+
+
+
+class MessageBusProcess(multiprocessing.Process):
+    """
+    A specialized process than can broadcast messages to all other processes on
+    the bus.
+
+    Example:
+
+        >>> def target(done):
+        ...     MessageBusProcess.broadcast('OK!')
+        ...     done.set()
+        >>> done = multiprocessing.Event()
+        >>> child = MessageBusProcess(target=target, args=(done,))
+        >>> child.start()
+        >>> done.wait()
+        True
+        >>> list(MessageBusProcess.consume())
+        ['OK!']
+        >>> child.join()
+        >>> child.close()
+    """
+    def __init__(self, *args, **kwargs):
+        conn_to_parent, conn_to_child = multiprocessing.Pipe()
+        parent = multiprocessing.current_process()
+        if not hasattr(parent, '_connections'):
+            parent._connections = []
+        terminated = multiprocessing.Event()
+        parent._connections.append((conn_to_child, terminated))
+        self._connections = [(conn_to_parent, terminated)]
+        super().__init__(*args, **kwargs)
+
+    def close(self):
+        for _, terminated in getattr(self, '_connections', []):
+            terminated.set()
+        super().close()
+
+    @staticmethod
+    def get_connections():
+        process = multiprocessing.current_process()
+        connections = getattr(process, '_connections', [])
+        valid_conn = lambda conn: not conn[1].is_set()
+        process._connections = list(filter(valid_conn, connections))
+        for conn, _ in process._connections:
+            yield conn
+
+    @staticmethod
+    def broadcast(data):
+        for conn in MessageBusProcess.get_connections():
+            conn.send(data)
+
+    @staticmethod
+    def consume():
+        for conn in MessageBusProcess.get_connections():
+            while conn.poll():
+                yield conn.recv()
+
+
+"""
+class MessageBus(BaseQueue):
+    def __init__(self, *args, **kwargs):
+        self.primary_pid = os.getpid()
+        super().__init__(*args, **kwargs)
+
+    @property
+    def primary(self):
+        return self.primary_pid == os.getpid()
+
+    def make_replica_process(self, target: Callable[[MessageBus, ...], ...],
+                             args=None, kwargs=None, name=None, daemon=None):
+        if not self.primary:
+            raise RuntimeError('Only primary process may create replicas.')
+        args, kwargs = (self,) + (args or ()), kwargs or {}
+        recv_conn, send_conn =
+        return multiprocessing.Process(target=target, args=args, kwargs=kwargs,
+                                       name=name, daemon=daemon)
+
+
+class SharedStore(UserDict, BaseQueue):
+    class UpdateType(enum.Enum):
+        SET = enum.auto()
+        UPDATE = enum.auto()
+        SUBSCRIBE = enum.auto()
+        UNSUBSCRIBE = enum.auto()
+
+    def update(self):
+        pass
+
+    def __init__(self):
+        pass
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+"""
+
+
+# import time
+# store = SharedStore()
+# def target(store):
+#     time.sleep(3)
+# child1 = multiprocessing.Process(target=target, args=(store,))
+# child1.start()
+# child2 = multiprocessing.Process(target=target, args=(store,))
+# child2.start()
+# child1.join()
+# child2.join()
+
 
 # class SharedStore(UserDict):
 #     """
@@ -126,7 +247,6 @@ time.sleep(5)
 #         >>> store['a', 'b', 0x101]
 #         2
 #     """
-#     """
 #     class UpdateType(enum.Enum):
 #         SET = enum.auto()
 #         DELETE = enum.auto()
@@ -135,16 +255,31 @@ time.sleep(5)
 #
 #     Update = namedtuple('Update', ['type', 'pid', 'data'])
 #
-#     @staticmethod
-#     def update(store):
-#         pass
-#
 #     def __init__(self):
 #         self.primary_pid = os.getpid()
+#         self.ready = multiprocessing.Event()
 #         self.update_queue = multiprocessing.Queue()
-#         self.update_thread = threading.Thread(target=self.update, args=(self,))
+#         self.update_thread = threading.Thread(target=self.update)
+#         self.update_thread.daemon = True
 #         self.update_thread.start()
-#     """
+#         self.update_thread.join()
+#
+#     @property
+#     def primary(self):
+#         return os.getpid() == self.primary_pid
+#
+#     def _send_update(self, update_type, *data):
+#         if not self.primary:
+#             update = Update(update_type, os.getpid(), data)
+#             self.update_queue.put(update, block=False)
+#             self.ready.clear()
+#
+#     def update(self):
+#         if self.primary:
+#             while True:
+#                 update = self.update_queue.get()
+#         else:
+#             pass
 #
 #     """
 #     def __init__(self):
@@ -224,15 +359,6 @@ time.sleep(5)
 #     """
 
 
-# class MessageBus:
-
-class SharedStore(BaseQueue):
-    pass
-
-
-# s[0, 1, 2]
-
-
 def load_schema(filename):
     _, extension = os.path.splitext(filename)
     with open(filename) as schema_file:
@@ -243,10 +369,3 @@ def load_schema(filename):
         else:
             raise Exception('Unknown schema file format of "{schema_filename}".')
     return schema
-
-
-
-
-# motor_type = DeviceStructure.make_device_type('YogiBear',
-#             [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
-# motor = multiprocessing.Value(motor_type)
