@@ -9,6 +9,5 @@ function progress(timeleft, timetotal, $element) {
 };
 
 function startOverdrive() {
-    $('#overdrive').innerHTML = 'OVERDRIVE!!!';
-    progress(5, 120, $('#progressBar'));
+    progress(30, 30, $('#progressBar'));
 }
