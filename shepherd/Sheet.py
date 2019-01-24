@@ -1,14 +1,17 @@
 """To Install: Run `pip install --upgrade google-api-python-client`"""
 
 from __future__ import print_function
+
 import os
 import csv
-from Utils import *
+
 import httplib2 # pylint: disable=import-error
 from apiclient import discovery # pylint: disable=import-error
 from oauth2client import client # pylint: disable=import-error
 from oauth2client import tools # pylint: disable=import-error
 from oauth2client.file import Storage # pylint: disable=import-error
+
+from Utils import *
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json

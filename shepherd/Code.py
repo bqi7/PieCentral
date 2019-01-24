@@ -19,9 +19,8 @@ def assign_code_solution():
     '''
     Generate 16 codes and create a code_solution dictionary
     '''
-    list_of_code = []
-    codes.empty()
-    solutions.empty()
+    codes.clear()
+    solutions.clear()
     for i in range(16):
         # pylint: disable=assignment-from-no-return
         new_code = generate_code(codes)
