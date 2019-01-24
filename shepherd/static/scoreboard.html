@@ -133,7 +133,7 @@
     </div>
     <button onclick="startOverdrive()">Click this</button>
 
-    <div>
+    <!--<div class="container">
         <div class="square">
             <img/>
         </div>
@@ -144,7 +144,19 @@
             <path id="loader" transform="translate(125, 125) scale(.84)"/>
         </svg>
         <button onclick="draw()">Click this instead</button>
+    </div>-->
+    
+    <div class="container">
+        <div class="row justify-content-center">
+            <div><img id="blueTwist" src="Blank.png" alt="Blue is Twisted" style="width:448px;height:252px;"></div>
+            <div><img id="goldTwist" src="Blank.png" alt="Gold is Twisted" style="width:448px;height:252px;"></div>
+        </div>
     </div>
+    
+    <button onclick="blueTwist()">Blue Twist</button>
+    <button onclick="blueClear()">Blue Clear</button>
+    <button onclick="goldTwist()">Gold Twist</button>
+    <button onclick="goldClear()">Gold Clear</button>
 
 </body>
 

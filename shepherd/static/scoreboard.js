@@ -54,3 +54,19 @@ function draw() {
   }
   setTimeout(draw, 20); // Redraw
 };
+
+function blueTwist() {
+   $('#blueTwist').attr('src', 'BlueTwisted.png');
+}
+
+function blueClear() {
+   $('#blueTwist').attr('src', 'Blank.png');
+}
+
+function goldTwist() {
+   $('#goldTwist').attr('src', 'GoldTwisted.png');
+}
+
+function goldClear() {
+   $('#goldTwist').attr('src', 'Blank.png');
+}
