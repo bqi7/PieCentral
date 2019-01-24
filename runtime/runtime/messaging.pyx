@@ -4,17 +4,19 @@
 Runtime IPC module.
 """
 
-from libc.string cimport strcpy
-from libc.stdint cimport uint8_t, uint64_t
-from posix.fcntl cimport O_CREAT, O_RDWR
-from posix.stat cimport mode_t, S_IRUSR, S_IWUSR
-from posix.unistd cimport ftruncate
-from posix.types cimport off_t
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
-from cython.operator cimport dereference as deref
-from libcpp.string cimport string
 from libc.errno cimport errno, ENOENT
+from libc.string cimport strcpy
+from libc.stdint cimport uint8_t
+from libcpp.string cimport string
+
+from posix.fcntl cimport O_CREAT, O_RDWR
+from posix.stat cimport S_IRUSR, S_IWUSR
+from posix.unistd cimport ftruncate
+
+from cython.operator cimport dereference as deref
 from cpython cimport Py_buffer
+from cpython.buffer cimport PyBUF_ND
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 
 cdef class SharedMemoryBuffer:
@@ -29,12 +31,12 @@ cdef class SharedMemoryBuffer:
     cdef int fd
     cdef uint8_t *buf
     cdef Py_ssize_t shape[1]
-    cdef Py_ssize_t strides[1]
+    cdef Py_ssize_t ref_count
 
     def __cinit__(self, str name, Py_ssize_t size):
         self.size = size
         self.shape[0] = size
-        self.strides[0] = sizeof(uint8_t)
+        self.ref_count = 0
 
         full_name = self._SHM_NAME_BASE + '-' + name
         self.name = <char *> PyMem_Malloc(len(full_name) + 1)
@@ -51,16 +53,21 @@ cdef class SharedMemoryBuffer:
                                     MAP_SHARED, self.fd, 0)
 
     def __dealloc__(self):
-        err = None
+        errors = []
         if munmap(self.buf, self.size):
-            err = 'Failed to munmap buffer in memory.'
+            errors.append('Failed to munmap buffer in memory.')
         # Ignore error if another buffer pointing at the same shared memory
-        # has already unlinked it.
+        # has already unlinked it. It is fine to open and unlink the same
+        # shared memory object multiple times.
         if shm_unlink(self.name) and errno != ENOENT:
-            err = 'Failed to unlink shared memory object.'
+            errors.append('Failed to unlink shared memory object.')
+        # Violating this condition means there are serious memory issues.
+        if self.ref_count > 0:
+            errors.append('One or more memory views are still in use.')
+
         PyMem_Free(self.name)
-        if err:
-            raise OSError(err)
+        if errors:
+            raise OSError(' '.join(errors))
 
     @property
     def fileno(self):
@@ -83,17 +90,20 @@ cdef class SharedMemoryBuffer:
         return SharedMemoryBuffer, (suffix, self.size)
 
     def __getbuffer__(self, Py_buffer *buffer, int flags):
+        if not (flags & PyBUF_ND):
+            raise BufferError()
         buffer.buf = <char *> self.buf
         buffer.format = 'c'
         buffer.internal = NULL
         buffer.itemsize = sizeof(uint8_t)
-        buffer.len = self.size
+        buffer.len = buffer.itemsize * self.size
         buffer.ndim = 1
         buffer.obj = self
         buffer.readonly = 0
         buffer.shape = self.shape
-        buffer.strides = self.strides
+        buffer.strides = NULL
         buffer.suboffsets = NULL
+        self.ref_count += 1
 
     def __releasebuffer__(self, Py_buffer *buffer):
-        pass
+        self.ref_count -= 1

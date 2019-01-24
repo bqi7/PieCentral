@@ -12,9 +12,12 @@ import time
 import yaml
 import queue
 import threading
+import uuid
 
 from numbers import Real
 from typing import List, Tuple
+
+from runtime.messaging import SharedMemoryBuffer
 
 
 Parameter = namedtuple('Parameter',
@@ -28,9 +31,9 @@ class DeviceStructure(ctypes.Structure):
 
     Example:
 
-        >>> motor_type = DeviceStructure.make_device_type('YogiBear',
+        >>> YogiBear = DeviceStructure.make_device_type('YogiBear',
         ...     [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
-        >>> motor = multiprocessing.Value(motor_type, lock=False)
+        >>> motor = multiprocessing.Value(YogiBear, lock=False)
         >>> start = time.time()
         >>> motor.duty_cycle = -0.9
         >>> motor.last_modified('duty_cycle') - start < 0.1  # Updated recently?
@@ -77,6 +80,19 @@ class DeviceStructure(ctypes.Structure):
             '_params_by_id': params
         })
 
+    @staticmethod
+    def make_shared_device(device_type):
+        name = device_type.__name__ + '-' + str(uuid.uuid4())
+        buf = SharedMemoryBuffer(name, ctypes.sizeof(device_type))
+        return device_type.from_buffer(buf)
+
+
+YogiBear = DeviceStructure.make_device_type('YogiBear',
+    [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
+motor = DeviceStructure.make_shared_device(YogiBear)
+print(motor.duty_cycle)
+import time
+time.sleep(5)
 
 # class SharedStore(UserDict):
 #     """
