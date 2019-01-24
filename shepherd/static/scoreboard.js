@@ -70,11 +70,6 @@ function goldTwist() {
 function goldClear() {
    $('#goldTwist').attr('src', 'Blank.png');
 }
-/**
-* The setTimeout({},0) is a workaround for what appears to be a bug in StackSnippets.
-* It should not be required. See JSFiddle version.
-*/
-
 function timer() { 
 
   var time = 30; /* how long the timer will run (seconds) */
@@ -85,7 +80,7 @@ function timer() {
   $('.circle_animation').css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
 
   var interval = setInterval(function() {
-      $('h2').text(i);
+      $('h2').text(30 - i);
       if (i == time) {  	
         clearInterval(interval);
         return;
