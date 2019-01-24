@@ -9,21 +9,12 @@ from Utils import *
 import Code
 import Sheet
 
+__version__ = (1, 0, 0)
+
 
 ###########################################
 # Evergreen Methods
 ###########################################
-
-version = "1.0.1"
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--version', help='Prints out the Shepherd version number.',
-                    action='store_true')
-flags = parser.parse_args()
-
-if flags.version:
-    print(version)
-    exit()
 
 def start():
     '''
@@ -404,6 +395,7 @@ perk_selection_functions = {
 
 game_state = STATE.END
 game_timer = Timer(TIMER_TYPES.MATCH)
+extended_teleop_timer = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 
 match_number = -1
 alliances = {ALLIANCE_COLOR.GOLD: None, ALLIANCE_COLOR.BLUE: None}
@@ -413,9 +405,22 @@ events = None
 # Game Specific Variables
 ###########################################
 
-extended_teleop_timer = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 
 #nothing
 
+
+def main():
+    parser = argparse.ArgumentParser(description='PiE field control')
+    parser.add_argument('--version', help='Prints out the Shepherd version number.',
+                        action='store_true')
+    flags = parser.parse_args()
+
+    if flags.version:
+        print('.'.join(map(str, __version__)))
+    else:
+        start()
+
+
+
 if __name__ == '__main__':
-    start()
+    main()
