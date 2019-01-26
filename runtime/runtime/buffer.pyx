@@ -1,7 +1,7 @@
 # distutils: language = c++
 
 """
-Runtime IPC module.
+Runtime buffer module.
 """
 
 from libc.errno cimport errno, ENOENT
@@ -21,7 +21,7 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 cdef class SharedMemoryBuffer:
     """
-    A fixed-length binary buffer in shared memory.
+    A fixed-length binary buffer.
 
     This object supports the pickling and writeable buffer protocols.
     """
@@ -107,3 +107,27 @@ cdef class SharedMemoryBuffer:
 
     def __releasebuffer__(self, Py_buffer *buffer):
         self.ref_count -= 1
+
+
+cdef class BinaryRingBuffer:
+    DEFAULT_CAPACITY = 16 * 1024
+    cdef RingBuffer *buf
+
+    def __cinit__(self, size_t capacity = DEFAULT_CAPACITY):
+        self.buf = new RingBuffer(capacity)
+
+    def __dealloc__(self):
+        del self.buf
+
+    def __len__(self):
+        return self.buf.size()
+
+    def __getitem__(self, index):
+        return deref(self.buf)[index]
+
+    cpdef extend(self, string buf):
+        self.buf.extend(buf)
+
+    cpdef read(self):
+        """ Reads the next zero-delimited sequence, blocking if necessary. """
+        return self.buf.read()

@@ -1,6 +1,6 @@
 import unittest
 import multiprocessing
-from runtime.messaging import SharedMemoryBuffer
+from runtime.buffer import SharedMemoryBuffer
 
 
 class TestSharedMemory(unittest.TestCase):

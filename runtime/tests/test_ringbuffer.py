@@ -1,11 +1,11 @@
 import unittest
 import multiprocessing
-from runtime.messaging import SharedRingBuffer
+from runtime.buffer import BinaryRingBuffer
 
 
 class TestRingBuffer(unittest.TestCase):
     def setUp(self):
-        self.buf = SharedRingBuffer('test-ringbuffer', 8)
+        self.buf = BinaryRingBuffer(8)
 
     def tearDown(self):
         del self.buf

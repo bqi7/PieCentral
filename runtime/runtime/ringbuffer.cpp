@@ -4,10 +4,14 @@
 #include "ringbuffer.h"
 
 namespace ringbuffer {
-    RingBuffer::RingBuffer(uint8_t *data, size_t capacity) {
-        this->data = data;
+    RingBuffer::RingBuffer(size_t capacity) {
+        this->data = (uint8_t *) malloc(capacity * sizeof(uint8_t));
         this->start = this->end = 0;
         this->capacity = capacity;
+    }
+
+    RingBuffer::~RingBuffer() {
+        free(this->data);
     }
 
     size_t RingBuffer::size_range(size_t start, size_t end) {

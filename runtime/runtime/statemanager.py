@@ -18,7 +18,7 @@ import uuid
 from numbers import Real
 from typing import List, Tuple
 
-from runtime.messaging import SharedMemoryBuffer
+from runtime.buffer import SharedMemoryBuffer
 
 
 Parameter = namedtuple('Parameter',
@@ -171,9 +171,10 @@ class MessageBusProcess(multiprocessing.Process):
                     break
                 conn, *_ = ready_connections
                 data = conn.recv()
-                for conn_forward in connections:
-                    if conn is not conn_forward:
-                        conn_forward.send(data)
+                if getattr(process, '_forward', False):
+                    for conn_forward in connections:
+                        if conn is not conn_forward:
+                            conn_forward.send(data)
                 return data
             except EOFError:
                 del process._connections[conn]
@@ -241,6 +242,14 @@ class SharedStore(dict):
     def __contains__(self, key):
         self.update()
         return super().__contains__(key)
+
+
+class StateManager(SharedStore):
+    def __init__(self):
+        pass
+
+    def load_schema():
+        pass
 
 
 def load_schema(filename):

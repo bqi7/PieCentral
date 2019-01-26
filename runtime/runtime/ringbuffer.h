@@ -15,7 +15,8 @@ namespace ringbuffer {
         inline size_t wrap_index(size_t, size_t);
         size_t size_range(size_t, size_t);
     public:
-        RingBuffer(uint8_t *, size_t);
+        RingBuffer(size_t);
+        ~RingBuffer();
         size_t size(void);
         uint8_t operator[](size_t);
         void extend(std::string);
