@@ -3,6 +3,7 @@ import ctypes
 from functools import lru_cache, partial
 import enum
 
+import asyncio
 import os
 import json
 import multiprocessing
@@ -18,7 +19,9 @@ import uuid
 from numbers import Real
 from typing import List, Tuple
 
+from cobs import cobs
 from runtime.buffer import SharedMemoryBuffer
+from runtime.util import read_conf_file, RuntimeException
 
 
 Parameter = namedtuple('Parameter',
@@ -97,168 +100,139 @@ class DeviceStructure(ctypes.Structure):
         pass
 
 
-# YogiBear = DeviceStructure.make_device_type('YogiBear',
-#      [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
-# types = {'yogibear': }
-# motor = DeviceStructure.make_shared_device(types['yogibear'])
-# import pickle
-# print(pickle.dumps(motor))
-# motor2 = pickle.loads(pickle.dumps(motor))
-# print(motor.duty_cycle, motor2.duty_cycle)
-# motor2.duty_cycle = 0.5
-# print(motor.duty_cycle, motor2.duty_cycle)
+class SharedStoreRequest(enum.Enum):
+    GET = enum.auto()
+    SET = enum.auto()
+    DEL = enum.auto()
 
 
+COBS_DELIMETER = '\x00'
 
-class MessageBusProcess(multiprocessing.Process):
-    """
-    A specialized process than can broadcast messages to all other processes on
-    the bus.
 
-    Example:
+class SharedStoreServer(UserDict):
+    def __init__(self, addr, data=None, name=None, daemon=True):
+        self.addr, self.name, self.daemon = addr, name, daemon
+        self.ready = threading.Event()
+        super().__init__(data or {})
 
-        >>> def target(done):
-        ...     MessageBusProcess.broadcast('OK!')
-        ...     done.set()
-        >>> done = multiprocessing.Event()
-        >>> child = MessageBusProcess(target=target, args=(done,))
-        >>> child.start()
-        >>> done.wait()
-        True
-        >>> MessageBusProcess.consume()
-        'OK!'
-        >>> child.join()
-        >>> child.close()
-    """
-    def __init__(self, *args, forward=True, **kwargs):
-        conn_to_parent, conn_to_child = multiprocessing.Pipe()
-        parent = multiprocessing.current_process()
-        if not hasattr(parent, '_connections'):
-            parent._connections = {}
-        terminated = multiprocessing.Event()
-        parent._connections[conn_to_child] = terminated
-        self._connections = {conn_to_parent: terminated}
-        self._forward = forward
-        super().__init__(*args, **kwargs)
+    def start(self):
+        self.thread = threading.Thread(name=self.name, daemon=self.daemon,
+                                       target=self.bootstrap_thread)
+        self.thread.start()
+        self.ready.wait()
+
+    def bootstrap_thread(self):
+        try:
+            return asyncio.run(self.start_server())
+        except asyncio.CancelledError:
+            return
+
+    async def start_server(self):
+        self.server = await asyncio.start_unix_server(self.handle, self.addr)
+        self.ready.set()
+        async with self.server:
+            await self.server.serve_forever()
+
+    async def read(self, reader, buf):
+        pass
+
+    async def write(self, writer, buf):
+        pass
+
+    async def handle(self, reader, writer):
+        loop = self.server.get_loop()
+        # done, pending = await asyncio.wait(, loop=loop, return_when=asyncio.FIRST_COMPLETED)
+        """
+        print('Created!')
+        while True:
+            try:
+                packet = await reader.readuntil(COBS_DELIMETER)
+                decoded_data = cobs.decode(packet[:-len(COBS_DELIMETER)])
+                print(decoded_data)
+                await writer.drain()
+            except pickle.PickleError:
+                writer.write(cobs.encode(pickle.dumps()))
+                writer.write(COBS_DELIMETER)
+            except asyncio.IncompleteReadError:
+                break
+        """
+
+    def stop(self):
+        self.ready.wait()
+        if self.server.is_serving():
+            self.server.close()
+            asyncio.run_coroutine_threadsafe(self.server.wait_closed(),
+                                             self.server.get_loop())
+            self.thread.join()
+            self.ready.clear()
+
+
+class SharedStoreClient(UserDict):
+    def __init__(self, addr):
+        self.addr = addr
+        self.loop = asyncio.new_event_loop()
+        open_coro = asyncio.open_unix_connection(self.addr)
+        self.reader, self.writer = self.loop.run_until_complete(open_coro)
+        super().__init__()
 
     def close(self):
-        for terminated in getattr(self, '_connections', {}).values():
-            terminated.set()
-        super().close()
-
-    @staticmethod
-    def get_connections():
-        process = multiprocessing.current_process()
-        connections = getattr(process, '_connections', {})
-        process._connections = {
-            conn: terminated for conn, terminated in connections.items()
-            if not terminated.is_set()}
-        yield from process._connections
-
-    @staticmethod
-    def broadcast(payload):
-        for conn in MessageBusProcess.get_connections():
-            conn.send(payload)
-
-    @staticmethod
-    def consume(timeout=None):
-        process = multiprocessing.current_process()
-        connections = list(MessageBusProcess.get_connections())
-        while connections:
-            try:
-                ready_connections = wait(connections, timeout)
-                if not ready_connections:
-                    break
-                conn, *_ = ready_connections
-                data = conn.recv()
-                if getattr(process, '_forward', False):
-                    for conn_forward in connections:
-                        if conn is not conn_forward:
-                            conn_forward.send(data)
-                return data
-            except EOFError:
-                del process._connections[conn]
-                connections = list(MessageBusProcess.get_connections())
-
-
-class SharedStore(dict):
-    """
-    A multi-process key-value store.
-
-    Internally, the store uses ``MessageBusProcess`` for broadcasting updates
-    by pipes. Generally speaking, the order of operations on the store is not
-    preserved.
-
-    Example:
-
-        >>> def target(b1, b2, store):
-        ...     b1.wait()
-        ...     assert store['x'] == 1
-        ...     del store['x']
-        ...     b2.set()
-        >>> store = SharedStore()
-        >>> b1, b2 = multiprocessing.Event(), multiprocessing.Event()
-        >>> child = MessageBusProcess(target=target, args=(b1, b2, store))
-        >>> child.start()
-        >>> store['x'] = 1
-        >>> b1.set()
-        >>> b2.wait()
-        True
-        >>> 'x' in store
-        False
-    """
-    class UpdateType(enum.Enum):
-        SET = enum.auto()
-        DELETE = enum.auto()
-
-    def update(self):
-        while True:
-            update = MessageBusProcess.consume(0)
-            if not update:
-                break
-            update_type, key, *data = update
-            if update_type is SharedStore.UpdateType.SET:
-                super().__setitem__(key, data[0])
-            elif update_type is SharedStore.UpdateType.DELETE:
-                super().__delitem__(key)
-            else:
-                cls_name = self.__class__.__name__
-                raise ValueError(f'Unknown {cls_name} update type "{update_type.name}".')
+        if not self.writer.is_closing() and not self.loop.is_closed():
+            self.writer.close()
+            self.loop.run_until_complete(self.writer.wait_closed())
+            self.loop.close()
+        else:
+            raise RuntimeException('Cannot close client more than once.')
 
     def __getitem__(self, key):
-        self.update()
-        return super().__getitem__(key)
-
-    def __setitem__(self, key, value):
-        self.update()
-        MessageBusProcess.broadcast((SharedStore.UpdateType.SET, key, value))
-        return super().__setitem__(key, value)
-
-    def __delitem__(self, key):
-        self.update()
-        MessageBusProcess.broadcast((SharedStore.UpdateType.DELETE, key))
-        return super().__delitem__(key)
-
-    def __contains__(self, key):
-        self.update()
-        return super().__contains__(key)
+        pass
 
 
+server = SharedStoreServer('./test')
+server.start()
+client = SharedStoreClient('./test')
+import time
+time.sleep(3)
+client.close()
+server.stop()
+
+
+"""
+import time, random
+async def target(addr, wait):
+    # for _ in range(3):
+    reader, writer = await asyncio.open_unix_connection(addr)
+    await asyncio.sleep(2)
+    writer.write(cobs.encode(b'\x00\x01') + b'\x00')
+    await asyncio.sleep(wait)
+    writer.write(cobs.encode(b'\x01') + b'\x00')
+    writer.close()
+    await writer.wait_closed()
+    print('Closed client')
+bus = MessageBus()
+print('Bus initialized!')
+child1 = multiprocessing.Process(target=lambda addr: asyncio.run(target(addr, 2)), args=(bus.addr,))
+child1.start()
+child2 = multiprocessing.Process(target=lambda addr: asyncio.run(target(addr, 1)), args=(bus.addr,))
+child2.start()
+child1.join()
+child2.join()
+bus.close()
+# help(bus.server)
+"""
+
+
+
+"""
 class StateManager(SharedStore):
-    def __init__(self):
-        pass
+    DEVICES_KEY = ''
 
-    def load_schema():
-        pass
+    def __init__(self, schema):
+        for protocol, devices in schema.items():
+            for device_name, device in devices.items():
+                pass
 
-
-def load_schema(filename):
-    _, extension = os.path.splitext(filename)
-    with open(filename) as schema_file:
-        if extension in ('.yml', '.yaml'):
-            schema = yaml.load(schema_file)
-        elif extension == '.json':
-            schema = json.load(schema_file)
-        else:
-            raise Exception('Unknown schema file format of "{schema_filename}".')
-    return schema
+    @classmethod
+    def load_from_schema(cls, filename: str):
+        schema = read_conf_file(filename)
+        return StateManager()
+"""

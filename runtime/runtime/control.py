@@ -30,12 +30,13 @@ class EventLoop:
 class StudentCode:
     def __init__(self, path: str):
         self.path = os.path.abspath(os.path.expanduser(path))
-        sys.path.append(self.path)
         dirname, basename = os.path.split(self.path)
+        sys.path.append(dirname)
         LOGGER.debug(f'Added "{dirname}" to `sys.path`.')
+
         self.module_name, _ = os.path.splitext(basename)
         self.module = importlib.import_module(self.module_name)
-        LOGGER.debug('Imported student code module.', module_name=self.module_name)
+        LOGGER.debug('Imported student code module.', module=self.module_name)
 
     def patch(self):
         self.module.Robot = Robot

@@ -42,8 +42,8 @@ setup(
     ext_modules=cythonize(
         [
             Extension(
-                'runtime.messaging',
-                ['runtime/messaging.pyx'],
+                'runtime.buffer',
+                ['runtime/buffer.pyx'],
                 extra_compile_args=['-lrt'],
                 extra_link_args=['-lrt'],
             ),
