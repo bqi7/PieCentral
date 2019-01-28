@@ -29,9 +29,8 @@ class TestSharedStore(unittest.TestCase):
             self.check_set_watch(client, self.server, 'k', 1)
 
     def test_server_set_watch(self):
-        # with SharedStoreClient(self.name) as client:
-        #     self.check_set_watch(self.server, client, 'k', 1)
-        pass
+        with SharedStoreClient(self.name) as client:
+            self.check_set_watch(self.server, client, 'k', 1)
 
     def test_server_restart(self):
         self.assertEqual(threading.active_count(), 2)

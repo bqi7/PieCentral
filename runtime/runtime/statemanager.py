@@ -109,8 +109,8 @@ class SharedStore(UserDict, abc.ABC):
     The underlying implementation uses UNIX sockets configured in a primary-
     replica arrangement to facilitate interprocess communication. The primary
     process should run a ``SharedStoreServer`` that holds an authoritative copy
-    of the data. ``SharedStoreClient``s can broadcast mutations (set or delete
-    keys) to or request missing keys from the server::
+    of the data. ``SharedStoreClient``s can broadcast mutations to (set or
+    delete keys) or request missing keys from the server::
 
                    +--------+
              +---->| Server |<----+
@@ -121,31 +121,48 @@ class SharedStore(UserDict, abc.ABC):
         +----------+         +----------+
 
     A background thread watches for changes from the other end of each
-    connection. Due to the unreliability of thread scheduling, accesses to the
-    store may arrive in any order. For example, a replica may use a key after
-    it was deleted by another replica, but before the update propogated through
-    the server.
+    connection. Due to the unpredictability of thread scheduling, accesses to
+    the store may arrive in any order. For example, a replica may use a key
+    after it was deleted by another replica, but before the update propogated
+    through the server.
 
     Updates (including keys and values) are serialized using the ``pickle``
     module, then encoded using COBS to delimit packets with null bytes. This
     store should not be used for high-throughput applications; consider using
-    shared memory instead.
+    shared memory instead. Shared store objects support the context management
+    protocol for automatic resource cleanup.
+
+    Attributes:
+        addr: The UNIX socket address this object should serve or connect to.
+        data: The initial data used to populate this store.
+        name: The background thread name.
     """
     class Command(enum.Flag):
+        """
+        Command types. Every message starts with a command type and the key
+        operated on. Messages follow one of these formats:
+            * `(GET, <key>)`: Requests a key from the server. The server should
+              send back at most one `SET`, and exactly one `ACK`.
+            * `(ACK, <key>, <found>)`: Acknowledgement from server to client.
+            * `(ACK,)`: The server is ready to broadcast messages.
+            * `(SET, <key>, <value>)`: Key set by sender. Bidirectional.
+            * `(DEL, <key>)`: Key deleted by sender. Bidirectional.
+        """
         GET = enum.auto()
         ACK = enum.auto()
         SET = enum.auto()
         DEL = enum.auto()
         MUTATE = SET | DEL
     delimeter = b'\x00'
+    cleanup_timeout = 10
 
-    def __init__(self, addr, data=None, name=None, daemon=True):
-        self.addr, self.name, self.daemon = addr, name, daemon
+    def __init__(self, addr: str, data: dict = None, name: str = None):
+        self.addr, self.name = addr, name
         self.loop_ready, self.watchers = threading.Event(), {}
         super().__init__(data or {})
 
     def start(self):
-        self.thread = threading.Thread(name=self.name, daemon=self.daemon,
+        self.thread = threading.Thread(name=self.name, daemon=True,
                                        target=self.bootstrap_thread)
         self.thread.start()
 
@@ -159,7 +176,7 @@ class SharedStore(UserDict, abc.ABC):
 
         Create a new event loop. When the root task is cancelled by calling
         ``stop``, all tasks are cancelled but allowed to finish by cleaning up
-        open resources.
+        open resources. Tasks should not block ``asyncio.CancelledError``.
         """
         try:
             self.loop = asyncio.new_event_loop()
@@ -175,6 +192,7 @@ class SharedStore(UserDict, abc.ABC):
                 if not task.cancelled():
                     self.loop.call_soon_threadsafe(task.cancel)
             tasks = asyncio.gather(*tasks, return_exceptions=True)
+            tasks = asyncio.wait_for(tasks, self.cleanup_timeout)
             self.loop.run_until_complete(tasks)
             self.loop.run_until_complete(self.loop.shutdown_asyncgens())
             self.loop.stop()
@@ -210,9 +228,11 @@ class SharedStore(UserDict, abc.ABC):
         return data
 
     def watch(self, key, coro):
+        """ Register a coroutine that should be called whenever a key mutates. """
         self.watchers[key] = coro
 
     def unwatch(self, key):
+        """ Unregister a watcher coroutine. """
         if key in self.watchers:
             del self.watchers[key]
 
@@ -240,6 +260,16 @@ class SharedStore(UserDict, abc.ABC):
 
 
 class SharedStoreServer(SharedStore):
+    """
+    A shared key-value store server.
+
+    Attributes:
+        buf_lock (asyncio.Lock): Synchronizes access to the update buffer
+            table. Note that the individual buffers themselves are allowed to
+            mutate without the lock.
+        update_buffers (dict): Map from randomly generated client IDs to
+            buffers holding messages to be written to replicas.
+    """
     def __init__(self, *args, buf_max_size=1024, **kwargs):
         self.server_ready = threading.Event()
         self.buf_lock, self.buf_max_size = asyncio.Lock(), buf_max_size
@@ -267,8 +297,8 @@ class SharedStoreServer(SharedStore):
         super().stop()
         os.unlink(self.addr)
 
-    async def read(self, reader, key):
-        buf = self.update_buffers[key]
+    async def read(self, reader: asyncio.StreamReader, client_id: str):
+        buf = self.update_buffers[client_id]
         while True:
             try:
                 command, store_key, *_ = data = await self.recv_update(reader)
@@ -280,35 +310,36 @@ class SharedStoreServer(SharedStore):
                     await buf.put((SharedStore.Command.ACK, store_key, found))
                 elif command & SharedStore.Command.MUTATE:
                     async with self.buf_lock:
-                        for update_key, buf in self.update_buffers.items():
-                            if update_key != key:
+                        for buf_client_id, buf in self.update_buffers.items():
+                            if buf_client_id != client_id:
                                 await buf.put(data)
             except pickle.PickleError:
                 continue
 
-    async def write(self, writer, key):
-        buf = self.update_buffers[key]
+    async def write(self, writer: asyncio.StreamWriter, client_id: str):
+        buf = self.update_buffers[client_id]
         while True:
             try:
                 await self.cobs_write(writer, await buf.get())
             except pickle.PickleError:
                 continue
 
-    async def handle(self, reader, writer):
+    async def handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         try:
-            key = str(uuid.uuid4())
+            client_id = str(uuid.uuid4())
             async with self.buf_lock:
-                self.update_buffers[key] = asyncio.Queue(maxsize=self.buf_max_size)
+                self.update_buffers[client_id] = asyncio.Queue(maxsize=self.buf_max_size)
+            await self.cobs_write(writer, (SharedStore.Command.ACK,))
 
-            tasks = {self.read(reader, key), self.write(writer, key)}
+            tasks = {self.read(reader, client_id), self.write(writer, client_id)}
             done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
             for task in pending:
                 task.cancel()
         finally:
             writer.close()
             async with self.buf_lock:
-                if key in self.update_buffers:
-                    del self.update_buffers[key]
+                if client_id in self.update_buffers:
+                    del self.update_buffers[client_id]
 
     async def send_set(self, key, value):
         async with self.buf_lock:
@@ -332,6 +363,9 @@ class SharedStoreServer(SharedStore):
 
 
 class SharedStoreClient(SharedStore):
+    """
+    A shared key-value store client.
+    """
     def __init__(self, *args, **kwargs):
         self.writer_ready = threading.Event()
         self.req_lock, self.res_recv = threading.Lock(), threading.Event()
@@ -342,9 +376,16 @@ class SharedStoreClient(SharedStore):
         super().start()
         self.writer_ready.wait()
 
+    async def wait_for_ack(self, reader):
+        while True:
+            command, *_ = data = await self.cobs_read(reader)
+            if command is SharedStore.Command.ACK:
+                return data
+
     async def main(self):
         try:
             reader, self.writer = await asyncio.open_unix_connection(self.addr)
+            await self.wait_for_ack(reader)
             self.writer_ready.set()
             while True:
                 try:
@@ -381,18 +422,6 @@ class SharedStoreClient(SharedStore):
         self.loop_ready.wait()
         task = self.cobs_write(self.writer, (SharedStore.Command.DEL, key))
         asyncio.run_coroutine_threadsafe(task, self.loop)
-
-
-# import time
-# with SharedStoreServer('./tmp') as server:
-#     with SharedStoreClient('./tmp') as client:
-#         async def recv(store, key):
-#             print(store, key)
-#         client.watch('x', recv)
-#         server['x'] = 1
-#         # time.sleep(0.1)
-#         print(client.get('x'))
-
 
 """
 class StateManager(SharedStore):
