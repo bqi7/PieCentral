@@ -14,7 +14,7 @@ class TestSharedStore(unittest.TestCase):
     def tearDown(self):
         self.server.stop()
 
-    def check_set(self, sender, receiver, key, value):
+    def check_set_watch(self, sender, receiver, key, value):
         async def recv(store, recv_key):
             self.assertEqual(key, recv_key)
             self.assertEqual(store[key], value)
@@ -24,14 +24,14 @@ class TestSharedStore(unittest.TestCase):
         sender[key] = value
         done.wait()
 
-    def test_client_set(self):
-        # with SharedStoreClient(self.name) as client:
-        #     self.check_set(client, self.server, 'k', 1)
-        pass
-
-    def test_server_set(self):
+    def test_client_set_watch(self):
         with SharedStoreClient(self.name) as client:
-            self.check_set(self.server, client, 'k', 1)
+            self.check_set_watch(client, self.server, 'k', 1)
+
+    def test_server_set_watch(self):
+        # with SharedStoreClient(self.name) as client:
+        #     self.check_set_watch(self.server, client, 'k', 1)
+        pass
 
     def test_server_restart(self):
         self.assertEqual(threading.active_count(), 2)

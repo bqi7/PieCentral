@@ -104,11 +104,39 @@ class DeviceStructure(ctypes.Structure):
 
 class SharedStore(UserDict, abc.ABC):
     """
-    Base class for shared store.
+    Base class for a shared key-value store.
+
+    The underlying implementation uses UNIX sockets configured in a primary-
+    replica arrangement to facilitate interprocess communication. The primary
+    process should run a ``SharedStoreServer`` that holds an authoritative copy
+    of the data. ``SharedStoreClient``s can broadcast mutations (set or delete
+    keys) to or request missing keys from the server::
+
+                   +--------+
+             +---->| Server |<----+
+             |     +--------+     |
+             V                    V
+        +----------+         +----------+
+        | Client 1 |   ...   | Client N |
+        +----------+         +----------+
+
+    A background thread watches for changes from the other end of each
+    connection. Due to the unreliability of thread scheduling, accesses to the
+    store may arrive in any order. For example, a replica may use a key after
+    it was deleted by another replica, but before the update propogated through
+    the server.
+
+    Updates (including keys and values) are serialized using the ``pickle``
+    module, then encoded using COBS to delimit packets with null bytes. This
+    store should not be used for high-throughput applications; consider using
+    shared memory instead.
     """
-    class Command(enum.Enum):
+    class Command(enum.Flag):
+        GET = enum.auto()
+        ACK = enum.auto()
         SET = enum.auto()
         DEL = enum.auto()
+        MUTATE = SET | DEL
     delimeter = b'\x00'
 
     def __init__(self, addr, data=None, name=None, daemon=True):
@@ -123,9 +151,16 @@ class SharedStore(UserDict, abc.ABC):
 
     @abc.abstractmethod
     async def main(self):
-        pass
+        """ The main task. """
 
     def bootstrap_thread(self):
+        """
+        Bootstrap the background thread by adding the main task to a new event loop.
+
+        Create a new event loop. When the root task is cancelled by calling
+        ``stop``, all tasks are cancelled but allowed to finish by cleaning up
+        open resources.
+        """
         try:
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
@@ -169,13 +204,9 @@ class SharedStore(UserDict, abc.ABC):
     async def recv_update(self, reader):
         command, key, *value = data = await self.cobs_read(reader)
         if command is SharedStore.Command.SET:
-            super().__setitem__(key, value[0])
+            SharedStore.__setitem__(self, key, value[0])
         elif command is SharedStore.Command.DEL:
-            super().__delitem__(key)
-        watch_coro = self.watchers.get(key)
-        if watch_coro:
-            self.loop_ready.wait()
-            asyncio.create_task(watch_coro(self, key))
+            SharedStore.__delitem__(self, key)
         return data
 
     def watch(self, key, coro):
@@ -184,6 +215,21 @@ class SharedStore(UserDict, abc.ABC):
     def unwatch(self, key):
         if key in self.watchers:
             del self.watchers[key]
+
+    def _trigger_watch(self, key):
+        watch_coro = self.watchers.get(key)
+        if watch_coro:
+            self.loop_ready.wait()
+            if self.loop.is_running():
+                asyncio.run_coroutine_threadsafe(watch_coro(self, key), self.loop)
+
+    def __setitem__(self, key, value):
+        self._trigger_watch(key)
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        self._trigger_watch(key)
+        super().__delitem__(key)
 
     def __enter__(self):
         self.start()
@@ -222,13 +268,21 @@ class SharedStoreServer(SharedStore):
         os.unlink(self.addr)
 
     async def read(self, reader, key):
+        buf = self.update_buffers[key]
         while True:
             try:
-                data = await self.recv_update(reader)
-                async with self.buf_lock:
-                    for update_key, buf in self.update_buffers.items():
-                        if update_key != key:
-                            await buf.put(data)
+                command, store_key, *_ = data = await self.recv_update(reader)
+                if command is SharedStore.Command.GET:
+                    found = store_key in self
+                    if found:
+                        value = super().__getitem__(store_key)
+                        await buf.put((SharedStore.Command.SET, store_key, value))
+                    await buf.put((SharedStore.Command.ACK, store_key, found))
+                elif command & SharedStore.Command.MUTATE:
+                    async with self.buf_lock:
+                        for update_key, buf in self.update_buffers.items():
+                            if update_key != key:
+                                await buf.put(data)
             except pickle.PickleError:
                 continue
 
@@ -267,19 +321,21 @@ class SharedStoreServer(SharedStore):
                 await buf.put((SharedStore.Command.DEL, key))
 
     def __setitem__(self, key, value):
+        super().__setitem__(key, value)
         self.loop_ready.wait()
         asyncio.run_coroutine_threadsafe(self.send_set(key, value), self.loop)
-        return super().__setitem__(key, value)
 
     def __delitem__(self, key, value):
+        super().__delitem__(key)
         self.loop_ready.wait()
         asyncio.run_coroutine_threadsafe(self.send_del(key), self.loop)
-        return super().__delitem__(key)
 
 
 class SharedStoreClient(SharedStore):
     def __init__(self, *args, **kwargs):
         self.writer_ready = threading.Event()
+        self.req_lock, self.res_recv = threading.Lock(), threading.Event()
+        self.res_recv.set()
         super().__init__(*args, **kwargs)
 
     def start(self):
@@ -292,7 +348,9 @@ class SharedStoreClient(SharedStore):
             self.writer_ready.set()
             while True:
                 try:
-                    await self.recv_update(reader)
+                    command, key, *_ = await self.recv_update(reader)
+                    if command is SharedStore.Command.ACK and not self.res_recv.is_set():
+                        self.res_recv.set()
                 except pickle.PickleError:
                     continue
         finally:
@@ -300,27 +358,40 @@ class SharedStoreClient(SharedStore):
                 self.writer.close()
                 self.writer_ready.clear()
 
+    def __getitem__(self, key):
+        if key not in self:
+            self.writer_ready.wait()
+            with self.req_lock:
+                self.res_recv.clear()
+                task = self.cobs_write(self.writer, (SharedStore.Command.GET, key))
+                asyncio.run_coroutine_threadsafe(task, self.loop)
+                self.res_recv.wait()
+        return super().__getitem__(key)
+
     def __setitem__(self, key, value):
+        super().__setitem__(key, value)
         self.writer_ready.wait()
         self.loop_ready.wait()
         task = self.cobs_write(self.writer, (SharedStore.Command.SET, key, value))
         asyncio.run_coroutine_threadsafe(task, self.loop)
-        return super().__setitem__(key, value)
 
     def __delitem__(self, key):
+        super().__delitem__(key)
         self.writer_ready.wait()
         self.loop_ready.wait()
         task = self.cobs_write(self.writer, (SharedStore.Command.DEL, key))
         asyncio.run_coroutine_threadsafe(task, self.loop)
-        return super().__delitem__(key)
 
 
 # import time
 # with SharedStoreServer('./tmp') as server:
 #     with SharedStoreClient('./tmp') as client:
-#         client['x'] = 1
-#         time.sleep(0.1)
-#         print(server.get('x'))
+#         async def recv(store, key):
+#             print(store, key)
+#         client.watch('x', recv)
+#         server['x'] = 1
+#         # time.sleep(0.1)
+#         print(client.get('x'))
 
 
 """
