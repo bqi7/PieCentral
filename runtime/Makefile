@@ -4,7 +4,8 @@ build:
 	python setup.py build_ext --inplace
 
 clean:
-	rm -f runtime/*.cpython-*.so runtime/*.c runtime/*.cpp runtime/*.cxx
+	rm -f runtime/*.cpython-*.so runtime/*.c
+	rm -f runtime/messaging.cpp runtime/statemanager.cpp
 
 install:
 	cd build-deps && wget https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
@@ -16,13 +17,15 @@ artifacts-install:
 	$(nop)
 
 lint:
-	pylint --load-plugins=$(shell pwd)/lints ansible.py runtime.py statemanager.py studentapi.py runtimeUtil.py fakedawn.py hibikesimulator.py
+	pylint runtime/statemanager.py
+#	pylint --load-plugins=$(shell pwd)/lints ansible.py runtime.py statemanager.py studentapi.py runtimeUtil.py fakedawn.py hibikesimulator.py
 
 test:
-	cd ../DevOps/frankfurter/scripts/update && ./create_update -p
-	protoc -I=../ansible-protos --python_out=. ../ansible-protos/*.proto
-	python3 runtime.py --test
-	python3 runtime.py --test optionalTestsWork
+	pytest runtime/logging.py runtime/statemanager.py runtime/util.py tests
+#	cd ../DevOps/frankfurter/scripts/update && ./create_update -p
+#	protoc -I=../ansible-protos --python_out=. ../ansible-protos/*.proto
+#	python3 runtime.py --test
+#	python3 runtime.py --test optionalTestsWork
 
 artifacts:
 	cp ../DevOps/frankfurter/build/*.tar.gz ../artifacts

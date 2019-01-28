@@ -6,10 +6,12 @@ verify_ssl = true
 python_version = "3.7"
 
 [packages]
-click = "==7.0"
-pyserial = "==3.4"
-pyudev = "==0.21.0"
-cython = "==0.29.2"
+click = "~=7.0"
+pyserial = "~=3.4"
+pyudev = "~=0.21"
+cython = "~=0.29"
+pyyaml = "~=3.13"
+
 # flatbuffers = "==1.10"
 # protobuf = "==3.6.1"
 # msgpack = "*"
@@ -22,3 +24,9 @@ cython = "==0.29.2"
 # [dev-packages]
 # pylint = "==1.8.1"
 # yappi = "*"
+cobs = "~=1.1"
+
+[dev-packages]
+pylint = "~=2.2"
+pytest = "~=4.1"
+pytest-timeout = "~=1.3"

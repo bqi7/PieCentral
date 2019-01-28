@@ -1,105 +1,16 @@
-from collections import namedtuple, UserDict
-import ctypes
-from functools import lru_cache, partial
+from collections import UserDict
 import enum
 
 import abc
 import asyncio
 import os
-import json
-import multiprocessing
-from multiprocessing.connection import wait
-from multiprocessing.queues import Queue as BaseQueue
-from multiprocessing.managers import BaseManager
-import time
-import yaml
-import queue
 import threading
 import uuid
 import pickle
 
-from numbers import Real
-from typing import List, Tuple
-
 from cobs import cobs
 from runtime.buffer import SharedMemoryBuffer, BinaryRingBuffer
-from runtime.util import read_conf_file, RuntimeException
-
-
-Parameter = namedtuple('Parameter',
-                       ['name', 'type', 'lower', 'upper', 'read', 'write'],
-                       defaults=[float('-inf'), float('inf'), True, False])
-
-
-class DeviceStructure(ctypes.Structure):
-    """
-    A struct representing a device (for example, a Smart Sensor).
-
-    Example:
-
-        >>> YogiBear = DeviceStructure.make_device_type('YogiBear',
-        ...     [Parameter('duty_cycle', ctypes.c_float, -1, 1)])
-        >>> motor = multiprocessing.Value(YogiBear, lock=False)
-        >>> start = time.time()
-        >>> motor.duty_cycle = -0.9
-        >>> motor.last_modified('duty_cycle') - start < 0.1  # Updated recently?
-        True
-        >>> motor.duty_cycle = -1.1
-        Traceback (most recent call last):
-          ...
-        ValueError: Assigned invalid value -1.1 to "YogiBear.duty_cycle" (not in bounds).
-    """
-    TIMESTAMP_SUFFIX = '_ts'
-
-    @staticmethod
-    def _get_timestamp_name(param_name: str):
-        return param_name + DeviceStructure.TIMESTAMP_SUFFIX
-
-    def last_modified(self, param_name: str) -> float:
-        return getattr(self, DeviceStructure._get_timestamp_name(param_name))
-
-    def __setattr__(self, param_name: str, value):
-        """ Validate and assign the parameter's value, and update its timestamp. """
-        if isinstance(value, Real):
-            param = self._params[param_name]
-            if not param.lower <= value <= param.upper:
-                cls_name = self.__class__.__name__
-                raise ValueError(f'Assigned invalid value {value} to '
-                                 f'"{cls_name}.{param_name}" (not in bounds).')
-        super().__setattr__(DeviceStructure._get_timestamp_name(param_name), time.time())
-        super().__setattr__(param_name, value)
-
-    def __getitem__(self, param_id):
-        return self.__class__._params_by_id[param_id]
-
-    @staticmethod
-    def make_device_type(dev_name: str, params: List[Parameter]) -> type:
-        """ Produce a named struct type. """
-        fields = {}
-        for param in params:
-            fields[param.name] = param.type
-            timestamp_name = DeviceStructure._get_timestamp_name(param.name)
-            fields[timestamp_name] = ctypes.c_double
-        return type(dev_name, (DeviceStructure,), {
-            '_fields_': list(fields.items()),
-            '_params': {param.name: param for param in params},
-            '_params_by_id': params
-        })
-
-    @staticmethod
-    def make_shared_device(device_type):
-        name = device_type.__name__ + '-' + str(uuid.uuid4())
-        buf = SharedMemoryBuffer(name, ctypes.sizeof(device_type))
-        device = device_type.from_buffer(buf)
-        device._buf = buf
-        return device
-
-    def __getstate__(self):
-        device_type = type(self)
-        return device_type.__name__, device_type._params_by_id, self._buf
-
-    def __setstate__(self, state):
-        pass
+from runtime.util import read_conf_file
 
 
 class SharedStore(UserDict, abc.ABC):
@@ -145,8 +56,8 @@ class SharedStore(UserDict, abc.ABC):
               send back at most one `SET`, and exactly one `ACK`.
             * `(ACK, <key>, <found>)`: Acknowledgement from server to client.
             * `(ACK,)`: The server is ready to broadcast messages.
-            * `(SET, <key>, <value>)`: Key set by sender. Bidirectional.
-            * `(DEL, <key>)`: Key deleted by sender. Bidirectional.
+            * `(SET, <key>, <value>)`: Key set by sender. Duplex.
+            * `(DEL, <key>)`: Key deleted by sender. Duplex.
         """
         GET = enum.auto()
         ACK = enum.auto()
@@ -159,7 +70,11 @@ class SharedStore(UserDict, abc.ABC):
     def __init__(self, addr: str, data: dict = None, name: str = None):
         self.addr, self.name = addr, name
         self.loop_ready, self.watchers = threading.Event(), {}
+        self.loop = asyncio.new_event_loop()
         super().__init__(data or {})
+
+    def __del__(self):
+        self.loop.close()
 
     def start(self):
         self.thread = threading.Thread(name=self.name, daemon=True,
@@ -179,7 +94,6 @@ class SharedStore(UserDict, abc.ABC):
         open resources. Tasks should not block ``asyncio.CancelledError``.
         """
         try:
-            self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
             self.main_task = self.loop.create_task(self.main())
             self.loop_ready.set()
@@ -196,7 +110,6 @@ class SharedStore(UserDict, abc.ABC):
             self.loop.run_until_complete(tasks)
             self.loop.run_until_complete(self.loop.shutdown_asyncgens())
             self.loop.stop()
-            self.loop.close()
             self.loop_ready.clear()
 
     def stop(self):
@@ -332,7 +245,7 @@ class SharedStoreServer(SharedStore):
             await self.cobs_write(writer, (SharedStore.Command.ACK,))
 
             tasks = {self.read(reader, client_id), self.write(writer, client_id)}
-            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+            _, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
             for task in pending:
                 task.cancel()
         finally:
@@ -343,12 +256,12 @@ class SharedStoreServer(SharedStore):
 
     async def send_set(self, key, value):
         async with self.buf_lock:
-            for update_key, buf in self.update_buffers.items():
+            for buf in self.update_buffers.values():
                 await buf.put((SharedStore.Command.SET, key, value))
 
     async def send_del(self, key):
         async with self.buf_lock:
-            for update_key, buf in self.update_buffers.items():
+            for buf in self.update_buffers.values():
                 await buf.put((SharedStore.Command.DEL, key))
 
     def __setitem__(self, key, value):
@@ -356,7 +269,7 @@ class SharedStoreServer(SharedStore):
         self.loop_ready.wait()
         asyncio.run_coroutine_threadsafe(self.send_set(key, value), self.loop)
 
-    def __delitem__(self, key, value):
+    def __delitem__(self, key):
         super().__delitem__(key)
         self.loop_ready.wait()
         asyncio.run_coroutine_threadsafe(self.send_del(key), self.loop)
@@ -389,7 +302,7 @@ class SharedStoreClient(SharedStore):
             self.writer_ready.set()
             while True:
                 try:
-                    command, key, *_ = await self.recv_update(reader)
+                    command, *_ = await self.recv_update(reader)
                     if command is SharedStore.Command.ACK and not self.res_recv.is_set():
                         self.res_recv.set()
                 except pickle.PickleError:
@@ -423,11 +336,15 @@ class SharedStoreClient(SharedStore):
         task = self.cobs_write(self.writer, (SharedStore.Command.DEL, key))
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
-"""
-class StateManager(SharedStore):
+
+class StateManager:
     DEVICES_KEY = ''
 
-    def __init__(self, schema):
+    def __init__(self, addr, schema):
+        if not os.path.exists(addr):
+            self.store = SharedStoreServer(addr)
+        else:
+            self.store = SharedSToreClient(addr)
         for protocol, devices in schema.items():
             for device_name, device in devices.items():
                 pass
@@ -436,4 +353,3 @@ class StateManager(SharedStore):
     def load_from_schema(cls, filename: str):
         schema = read_conf_file(filename)
         return StateManager()
-"""
