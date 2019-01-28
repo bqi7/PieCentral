@@ -16,11 +16,6 @@ import uvloop
 
 
 import hibike_message as hm
-try:
-    import hibike_packet
-    USING_PACKET_EXTENSION = True
-except ImportError:
-    USING_PACKET_EXTENSION = False
 
 __all__ = ["hibike_process"]
 
@@ -131,11 +126,7 @@ class SmartSensorProtocol(asyncio.Protocol):
 
         self.transport = None
         self._ready = asyncio.Event(loop=event_loop)
-        if USING_PACKET_EXTENSION:
-            # pylint: disable=no-member
-            self.serial_buf = hibike_packet.RingBuffer()
-        else:
-            self.serial_buf = bytearray()
+        self.serial_buf = bytearray()
 
         event_loop.create_task(self.register_sensor(event_loop, devices, pending))
         event_loop.create_task(self.send_messages())
@@ -220,31 +211,21 @@ class SmartSensorProtocol(asyncio.Protocol):
         """
         self.transport.abort()
 
-    if USING_PACKET_EXTENSION:
-        def data_received(self, data):
-            self.serial_buf.extend(data)
-            # pylint: disable=no-member
-            maybe_packet = hibike_packet.process_buffer(self.serial_buf)
-            if maybe_packet is not None:
-                message_id, payload = maybe_packet
-                message = hm.HibikeMessage(message_id, payload)
-                self.read_queue.put_nowait(message)
-    else:
-        def data_received(self, data):
-            self.serial_buf.extend(data)
-            zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
-            if zero_loc != -1:
-                self.serial_buf = self.serial_buf[zero_loc:]
-                packet = hm.parse_bytes(self.serial_buf)
-                if packet != None:
-                    # Chop off a byte so we don't output this packet again
-                    self.serial_buf = self.serial_buf[1:]
-                    self.read_queue.put_nowait(packet)
-                elif self.serial_buf.count(self.PACKET_BOUNDARY) > 1:
-                    # If there's another packet in the buffer
-                    # we can safely jump to it for the next iteration
-                    new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
-                    self.serial_buf = self.serial_buf[new_packet:]
+    def data_received(self, data):
+        self.serial_buf.extend(data)
+        zero_loc = self.serial_buf.find(self.PACKET_BOUNDARY)
+        if zero_loc != -1:
+            self.serial_buf = self.serial_buf[zero_loc:]
+            packet = hm.parse_bytes(self.serial_buf)
+            if packet != None:
+                # Chop off a byte so we don't output this packet again
+                self.serial_buf = self.serial_buf[1:]
+                self.read_queue.put_nowait(packet)
+            elif self.serial_buf.count(self.PACKET_BOUNDARY) > 1:
+                # If there's another packet in the buffer
+                # we can safely jump to it for the next iteration
+                new_packet = self.serial_buf[1:].find(self.PACKET_BOUNDARY) + 1
+                self.serial_buf = self.serial_buf[new_packet:]
 
     def connection_lost(self, exc):
         if self.uid is not None:
