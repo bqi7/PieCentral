@@ -103,14 +103,17 @@ class DeviceStructure(ctypes.Structure):
 
 
 class SharedStore(UserDict, abc.ABC):
+    """
+    Base class for shared store.
+    """
     class Command(enum.Enum):
         SET = enum.auto()
         DEL = enum.auto()
-
     delimeter = b'\x00'
 
     def __init__(self, addr, data=None, name=None, daemon=True):
         self.addr, self.name, self.daemon = addr, name, daemon
+        self.loop_ready, self.watchers = threading.Event(), {}
         super().__init__(data or {})
 
     def start(self):
@@ -127,8 +130,9 @@ class SharedStore(UserDict, abc.ABC):
             self.loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop)
             self.main_task = self.loop.create_task(self.main())
+            self.loop_ready.set()
             self.loop.run_until_complete(self.main_task)
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, asyncio.IncompleteReadError):
             pass
         finally:
             tasks = asyncio.all_tasks(self.loop)
@@ -140,12 +144,17 @@ class SharedStore(UserDict, abc.ABC):
             self.loop.run_until_complete(self.loop.shutdown_asyncgens())
             self.loop.stop()
             self.loop.close()
+            self.loop_ready.clear()
 
     def stop(self):
         if hasattr(self, 'main_task') and not self.main_task.cancelled():
-            self.loop.call_soon_threadsafe(self.main_task.cancel)
+            if self.loop.is_running():
+                self.loop.call_soon_threadsafe(self.main_task.cancel)
         if hasattr(self, 'thread'):
             self.thread.join()
+
+    def is_running(self):
+        return self.loop_ready.set() and self.loop.is_running()
 
     async def cobs_write(self, writer, data):
         packet = cobs.encode(pickle.dumps(data))
@@ -163,35 +172,54 @@ class SharedStore(UserDict, abc.ABC):
             super().__setitem__(key, value[0])
         elif command is SharedStore.Command.DEL:
             super().__delitem__(key)
+        watch_coro = self.watchers.get(key)
+        if watch_coro:
+            self.loop_ready.wait()
+            asyncio.create_task(watch_coro(self, key))
         return data
+
+    def watch(self, key, coro):
+        self.watchers[key] = coro
+
+    def unwatch(self, key):
+        if key in self.watchers:
+            del self.watchers[key]
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
 
 
 class SharedStoreServer(SharedStore):
     def __init__(self, *args, buf_max_size=1024, **kwargs):
-        self.ready = threading.Event()
+        self.server_ready = threading.Event()
         self.buf_lock, self.buf_max_size = asyncio.Lock(), buf_max_size
         self.update_buffers = {}
         super().__init__(*args, **kwargs)
 
     def start(self):
         super().start()
-        self.ready.wait()
+        self.server_ready.wait()
 
     async def main(self):
         self.server = await asyncio.start_unix_server(self.handle, self.addr)
         async with self.server:
-            self.ready.set()
+            self.server_ready.set()
             await self.server.serve_forever()
 
     def stop(self):
-        self.ready.wait()
+        self.server_ready.wait()
         if self.server.is_serving():
             try:
                 self.server.close()
-            except TypeError:  # HACK
+            except TypeError:
                 pass
-        self.ready.clear()
+        self.server_ready.clear()
         super().stop()
+        os.unlink(self.addr)
 
     async def read(self, reader, key):
         while True:
@@ -239,58 +267,60 @@ class SharedStoreServer(SharedStore):
                 await buf.put((SharedStore.Command.DEL, key))
 
     def __setitem__(self, key, value):
+        self.loop_ready.wait()
         asyncio.run_coroutine_threadsafe(self.send_set(key, value), self.loop)
         return super().__setitem__(key, value)
 
     def __delitem__(self, key, value):
+        self.loop_ready.wait()
         asyncio.run_coroutine_threadsafe(self.send_del(key), self.loop)
         return super().__delitem__(key)
 
 
 class SharedStoreClient(SharedStore):
     def __init__(self, *args, **kwargs):
+        self.writer_ready = threading.Event()
         super().__init__(*args, **kwargs)
+
+    def start(self):
+        super().start()
+        self.writer_ready.wait()
 
     async def main(self):
         try:
             reader, self.writer = await asyncio.open_unix_connection(self.addr)
+            self.writer_ready.set()
             while True:
                 try:
                     await self.recv_update(reader)
                 except pickle.PickleError:
                     continue
         finally:
-            self.writer.close()
+            if hasattr(self, 'writer'):
+                self.writer.close()
+                self.writer_ready.clear()
 
     def __setitem__(self, key, value):
+        self.writer_ready.wait()
+        self.loop_ready.wait()
         task = self.cobs_write(self.writer, (SharedStore.Command.SET, key, value))
         asyncio.run_coroutine_threadsafe(task, self.loop)
         return super().__setitem__(key, value)
 
     def __delitem__(self, key):
+        self.writer_ready.wait()
+        self.loop_ready.wait()
         task = self.cobs_write(self.writer, (SharedStore.Command.DEL, key))
         asyncio.run_coroutine_threadsafe(task, self.loop)
         return super().__delitem__(key)
 
 
-import time
-server = SharedStoreServer('./test')
-server.start()
-client = SharedStoreClient('./test')
-client.start()
-time.sleep(0.05)
-server['x'] = 1
-time.sleep(0.05)
-print(client['x'])
-client['x'] = 2
-time.sleep(0.05)
-print(server['x'])
-del client['x']
-time.sleep(0.1)
-assert 'x' not in server
-client.stop()
-server.stop()
-
+# import time
+# with SharedStoreServer('./tmp') as server:
+#     with SharedStoreClient('./tmp') as client:
+#         client['x'] = 1
+#         time.sleep(0.1)
+#         print(server.get('x'))
 
 
 """
