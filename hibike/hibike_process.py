@@ -182,7 +182,7 @@ class SmartSensorProtocol(asyncio.Protocol):
                 hm.send(self.transport, hm.make_disable())
             elif instruction == "heartResp":
                 uid = args[0]
-                hm.send(self.transport, hm.make_heartbeat_response(self.read_queue.qsize()))
+                hm.send(self.transport, hm.make_heartbeat_response())
 
     async def recv_messages(self):
         """
