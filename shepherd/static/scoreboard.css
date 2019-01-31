@@ -32,8 +32,26 @@ svg {
   transform: rotate(-90deg);
 }
 
-.circle_animation {
-stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
-stroke-dashoffset: 440;
-transition: all 1s linear;
+.circle_animation1 {
+  stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
+  stroke-dashoffset: 440;
+  transition: all 1s linear;
 }
+
+.circle_animation2 {
+  stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
+  stroke-dashoffset: 440;
+  transition: all 1s linear;
+}
+
+.circle_animation3 {
+  stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
+  stroke-dashoffset: 440;
+  transition: all 1s linear;
+}
+
+.circle_animation4 {
+  stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
+  stroke-dashoffset: 440;
+  transition: all 1s linear;
+  }
