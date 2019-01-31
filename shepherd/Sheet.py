@@ -6,7 +6,7 @@ import os
 import csv
 
 import httplib2 # pylint: disable=import-error
-from apiclient import discovery # pylint: disable=import-error,no-name-in-module
+from googleapiclient import discovery # pylint: disable=import-error,no-name-in-module
 from oauth2client import client # pylint: disable=import-error
 from oauth2client import tools # pylint: disable=import-error
 from oauth2client.file import Storage # pylint: disable=import-error

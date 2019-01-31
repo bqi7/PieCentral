@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e3e831efbeffa9617379d6cbd69d89aa9cb5df0c321dbd90498c1e7436bd70a6"
+            "sha256": "c7aa14c75608be492b0fe995d62fb88f4a403193e89ddf388463d6388ff7fcf9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -15,13 +15,6 @@
         ]
     },
     "default": {
-        "apiclient": {
-            "hashes": [
-                "sha256:49d1b5a6eb36281461a931243c142ea57cffcfd125ae399bf59421cccf6836c4",
-                "sha256:e97b1bb13646df12284a8915c99728f380fb9a3edbeb2c20927cf47afd73d0ac"
-            ],
-            "version": "==1.0.3"
-        },
         "astroid": {
             "hashes": [
                 "sha256:35b032003d6a863f5dcd7ec11abd5cd5893428beaa31ab164982403bcb311f22",
@@ -56,14 +49,6 @@
                 "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
             ],
             "version": "==7.0"
-        },
-        "colorama": {
-            "hashes": [
-                "sha256:05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d",
-                "sha256:f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "version": "==0.4.1"
         },
         "google-api-python-client": {
             "hashes": [
