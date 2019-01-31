@@ -69,30 +69,105 @@ function goldTwist() {
 function goldClear() {
    $('#goldTwist').attr('src', 'Blank.png');
 }
-/**
-* The setTimeout({},0) is a workaround for what appears to be a bug in StackSnippets.
-* It should not be required. See JSFiddle version.
-*/
 
-function timer() { 
+function runTimer1() {
+  setTimeout(timer1, 0)
+}
 
-  var time = 30; /* how long the timer will run (seconds) */
+
+function runTimer2() {
+  setTimeout(timer2, 0)
+}
+
+function runTimer3() {
+  setTimeout(timer3, 0)
+}
+
+function runTimer4() {
+  setTimeout(timer4, 0)
+}
+function timer1() { 
+  /* how long the timer will run (seconds) */
+  var time = 30;
   var initialOffset = '440';
-  var i = 1
+  var i = 1;
 
   /* Need initial run as interval hasn't yet occured... */
-  $('.circle_animation').css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
+  $('.circle_animation1').css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
 
   var interval = setInterval(function() {
-      $('h2').text(i);
+      $('.timer1').text(time - i);
       if (i == time) {  	
         clearInterval(interval);
         return;
       }
-      $('.circle_animation').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
+      $('.circle_animation1').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
       i++;  
   }, 1000);
 
 }
 
-setTimeout(timer, 0)
+function timer2() { 
+  /* how long the timer will run (seconds) */
+  var time = 30;
+  var initialOffset = '440';
+  var i = 1;
+
+  /* Need initial run as interval hasn't yet occured... */
+  $('.circle_animation2').css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
+
+  var interval = setInterval(function() {
+      $('.timer2').text(time - i);
+      if (i == time) {  	
+        clearInterval(interval);
+        return;
+      }
+      $('.circle_animation2').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
+      i++;  
+  }, 1000);
+
+}
+
+function timer3() { 
+  /* how long the timer will run (seconds) */
+  var time = 30;
+  var initialOffset = '440';
+  var i = 1;
+
+  /* Need initial run as interval hasn't yet occured... */
+  $('.circle_animation3').css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
+
+  var interval = setInterval(function() {
+      $('.timer3').text(time - i);
+      if (i == time) {  	
+        clearInterval(interval);
+        return;
+      }
+      $('.circle_animation3').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
+      i++;  
+  }, 1000);
+
+}
+
+function timer4() { 
+  /* how long the timer will run (seconds) */
+  var time = 30;
+  var initialOffset = '440';
+  var i = 1;
+
+  /* Need initial run as interval hasn't yet occured... */
+  $('.circle_animation4').css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
+
+  var interval = setInterval(function() {
+      $('.timer4').text(time - i);
+      if (i == time) {  	
+        clearInterval(interval);
+        return;
+      }
+      $('.circle_animation4').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
+      i++;  
+  }, 1000);
+
+}
+
+
