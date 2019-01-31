@@ -11,9 +11,11 @@ bool motorEnabled = false;
 float deadBand = 0.05;
 
 void motorSetup() {
-  pinMode(current_pin,INPUT);
-  pinMode(INA, OUTPUT);
-  pinMode(INB, OUTPUT);
+  pinMode(feedback,INPUT);
+  pinMode(PWM1, OUTPUT);
+  pinMode(PWM2, OUTPUT);
+  pinMode(INV, OUTPUT);
+  digitalWrite(INV, LOW);
 
   motorEnable();
   //pinMode(PWM, OUTPUT);
@@ -21,13 +23,13 @@ void motorSetup() {
 
 void motorEnable() {
   clearFault();
-  pinMode(enable_pin, INPUT); //pin is pulled up, so put in high impedance state instead of writing high
+  // pinMode(enable_pin, INPUT); //pin is pulled up, so put in high impedance state instead of writing high
   motorEnabled = true;
 }
 
 void motorDisable() {
-  pinMode(enable_pin, OUTPUT);
-  digitalWrite(enable_pin, LOW);
+  // pinMode(enable_pin, OUTPUT);
+  // digitalWrite(enable_pin, LOW);
   disablePID();
   resetPID();
   resetEncoder();
@@ -42,40 +44,28 @@ bool isMotorEnabled() {
 
 //returns current in amps
 float readCurrent() {
-  return (analogRead(current_pin) / 33.0); //Number was generated based on a few tests across multiple boards. Valid for majority of good boards
+  return (analogRead(feedback) / 33.0); //Number was generated based on a few tests across multiple boards. Valid for majority of good boards
 }
 
-//takes a value from -1 to 1 inclusive and writes to the motor and sets the INA and INB pins for direction
+//takes a value from -1 to 1 inclusive and writes to the motor and sets the PWM1 and PWM2 pins for direction
 void drive(float target) {
-
+  digitalWrite(PWM1, HIGH);
+  digitalWrite(PWM2, HIGH);
   if (target < -deadBand) {
-    digitalWrite(INA, LOW);
-    digitalWrite(INB, HIGH);
-    target = target * -1;
+    digitalWrite(PWM1, LOW);
+    Timer1.pwm(PWM1, (int) (target * 1023));
   } else if (target > deadBand) {
-    digitalWrite(INA, HIGH);
-    digitalWrite(INB, LOW);
+    digitalWrite(PWM2, LOW);
+    Timer1.pwm(PWM2, (int) (target * 1023));
   } else {
     target = 0;
   }
-
-  Timer1.pwm(PWM, (int) (target * 1023));
-
 }
 
 
 void clearFault() {
-	// WARNING THIS CODE WILL LITERALLY NUKE THE BOARD
-  digitalWrite(INA, !digitalRead(INA));
-  digitalWrite(INB, !digitalRead(INB));
-
-  digitalWrite(INA, !digitalRead(INA));
-  digitalWrite(INB, !digitalRead(INB));
-
-  Timer1.pwm(PWM, 0);
-  pinMode(enable_pin, OUTPUT);
-  digitalWrite(enable_pin, LOW);
-  pinMode(enable_pin, INPUT);
+  digitalWrite(PWM1, HIGH);
+  digitalWrite(PWM2, HIGH);
 }
 
 void setDeadBand(float range) {

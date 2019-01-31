@@ -14,7 +14,7 @@
 
 #define PWM1 			6 //now used to drive the thingy, used to be INA and INB
 #define PWM2			9
-#define feedback 		A3		 //indicator for safety
+#define feedback 		A3		 //indicator for safety, possible new current_pin?
 #define LED_RED 		2 //leds are just pin changes
 #define LED_YELLOW 		3
 #define LED_GREEN 		4
