@@ -44,7 +44,7 @@ bool isMotorEnabled() {
 
 //returns current in amps
 float readCurrent() {
-  return (analogRead(feedback) / 33.0); //Number was generated based on a few tests across multiple boards. Valid for majority of good boards
+  return (analogRead(feedback) / 0.0024); //Number was generated based on a few tests across multiple boards. Valid for majority of good boards
 }
 
 //takes a value from -1 to 1 inclusive and writes to the motor and sets the PWM1 and PWM2 pins for direction
