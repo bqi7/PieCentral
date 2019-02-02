@@ -1,7 +1,7 @@
 #include <TimerOne.h> //arduino libraries go in <
 #include "current_limit.h"
 #include "motor.h" //our own motor.h
-#include "YogiBear.h"
+#include "PolarBear.h"
 #include "pid.h"
 
 //code that does current limiting.

@@ -1,5 +1,5 @@
-#ifndef YOGIBEAR_H
-#define YOGIBEAR_H
+#ifndef POLARBEAR_H
+#define POLARBEAR_H
 
 #include "hibike_device.h" //to get the hibike framework
 
@@ -36,4 +36,4 @@ void resetPWMInput();
 void resetDriveMode();
 uint8_t readDriveMode();
 
-#endif /* YOGIBEAR_H */
+#endif /* POLARBEAR_H */

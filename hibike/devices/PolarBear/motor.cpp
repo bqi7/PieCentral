@@ -1,7 +1,7 @@
 #include "TimerOne.h"
 #include "motor.h"
 #include "pindefs.h"
-#include "YogiBear.h"
+#include "PolarBear.h"
 #include "pid.h"
 #include "encoder.h"
 

@@ -1,4 +1,4 @@
-#include "YogiBear.h"
+#include "PolarBear.h"
 #include "pid.h"
 #include "encoder.h"
 #include "current_limit.h"
@@ -8,7 +8,7 @@
 
 //////////////// DEVICE UID ///////////////////
 hibike_uid_t UID = {
-YOGI_BEAR,                      // Device Type
+POLAR_BEAR,                      // Device Type
 0x01,                      // Year
 UID_RANDOM,     // ID
 };

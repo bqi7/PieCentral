@@ -2,7 +2,7 @@
 #include <FlexiTimer2.h>
 #include "pid.h"
 #include "encoder.h"
-#include "YogiBear.h"
+#include "PolarBear.h"
 
 float PIDPos = 0;
 float PIDPosKP = 1;
