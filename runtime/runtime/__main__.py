@@ -32,6 +32,8 @@ def get_module_path(filename):
 @click.option('-d', '--device-schema', default=get_module_path('devices.yaml'),
               help='Path to device schema.',
               type=click.Path(exists=True, dir_okay=False))
+@click.option('--decoders', default=2, help='Number of decoder threads.')
+@click.option('--encoders', default=2, help='Number of encoder threads.')
 @click.option('-v', '--version', is_flag=True,
               help='Show the runtime version and exit.')
 @click.argument('student-code', default=get_module_path('studentcode.py'),

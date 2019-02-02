@@ -1,7 +1,10 @@
+#include <chrono>
+#include <deque>
 #include <mutex>
 #include <condition_variable>
-#include <deque>
 #include "ringbuffer.h"
+
+#define DEFAULT_TIMEOUT 10000
 
 namespace ringbuffer {
     RingBuffer::RingBuffer(size_t capacity) {
@@ -23,7 +26,7 @@ namespace ringbuffer {
     size_t RingBuffer::size(void) {
         std::lock_guard<std::recursive_mutex> guard(this->lock);
         return this->size_range(this->start, this->end);
-    };
+    }
 
     inline size_t RingBuffer::wrap_index(size_t base, size_t pos) {
         return (base + pos) % this->capacity;
@@ -34,7 +37,7 @@ namespace ringbuffer {
         if (pos < this->size())
             return this->data[this->wrap_index(this->start, pos)];
         throw std::out_of_range("RingBuffer: Accessing out-of-bounds index.");
-    };
+    }
 
     void RingBuffer::extend(std::string str) {
         {
@@ -57,9 +60,13 @@ namespace ringbuffer {
 
     std::string RingBuffer::read(void) {
         std::unique_lock<std::recursive_mutex> locked(this->lock);
-        this->data_ready.wait(locked, [this] {
+        std::chrono::microseconds timeout(DEFAULT_TIMEOUT);
+        bool ready = this->data_ready.wait_for(locked, timeout, [this] {
             return !this->delimeters.empty();
         });
+        if (!ready) {
+            throw std::runtime_error("RingBuffer: Read timed out.");
+        }
 
         size_t next_delimeter = this->delimeters.front();
         this->delimeters.pop_front();

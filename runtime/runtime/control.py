@@ -8,9 +8,10 @@ from enum import Enum, auto
 import importlib
 import os
 import sys
+from types import ModuleType
 import runtime.logging
 from runtime.api import Robot
-from types import ModuleType
+from runtime.statemanager import StateManager
 
 LOGGER = runtime.logging.make_logger(__name__)
 
@@ -51,4 +52,6 @@ def run_student_code(module_file):
 
 def bootstrap(options):
     runtime.logging.initialize(options['log_level'])
-    student_code = StudentCode(options['student_code'])
+    with StateManager():
+        student_code = StudentCode(options['student_code'])
+        pass

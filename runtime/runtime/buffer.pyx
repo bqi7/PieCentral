@@ -8,11 +8,9 @@ from libc.errno cimport errno, ENOENT
 from libc.string cimport strcpy
 from libc.stdint cimport uint8_t
 from libcpp.string cimport string
-
-from posix.fcntl cimport O_CREAT, O_RDWR
-from posix.stat cimport S_IRUSR, S_IWUSR
 from posix.unistd cimport ftruncate
 
+cimport cython
 from cython.operator cimport dereference as deref
 from cpython cimport Py_buffer
 from cpython.buffer cimport PyBUF_ND
@@ -53,21 +51,21 @@ cdef class SharedMemoryBuffer:
                                     MAP_SHARED, self.fd, 0)
 
     def __dealloc__(self):
-        errors = []
+        message = None
         if munmap(self.buf, self.size):
-            errors.append('Failed to munmap buffer in memory.')
+            message = 'Failed to munmap buffer in memory.'
         # Ignore error if another buffer pointing at the same shared memory
         # has already unlinked it. It is fine to open and unlink the same
         # shared memory object multiple times.
         if shm_unlink(self.name) and errno != ENOENT:
-            errors.append('Failed to unlink shared memory object.')
+            message = 'Failed to unlink shared memory object.'
         # Violating this condition means there are serious memory issues.
         if self.ref_count > 0:
-            errors.append('One or more memory views are still in use.')
+            message = 'One or more memory views are still in use.'
 
         PyMem_Free(self.name)
-        if errors:
-            raise OSError(' '.join(errors))
+        if message:
+            raise OSError(message)
 
     @property
     def fileno(self):
@@ -109,6 +107,7 @@ cdef class SharedMemoryBuffer:
         self.ref_count -= 1
 
 
+@cython.final
 cdef class BinaryRingBuffer:
     DEFAULT_CAPACITY = 16 * 1024
     cdef RingBuffer *buf
@@ -125,9 +124,9 @@ cdef class BinaryRingBuffer:
     def __getitem__(self, index):
         return deref(self.buf)[index]
 
-    cpdef extend(self, string buf):
+    cpdef void extend(self, string buf) nogil:
         self.buf.extend(buf)
 
-    cpdef read(self):
+    cpdef string read(self) nogil:
         """ Reads the next zero-delimited sequence, blocking if necessary. """
         return self.buf.read()

@@ -1,3 +1,7 @@
+"""
+Runtime state management and interprocess communication.
+"""
+
 from collections import UserDict
 import enum
 
@@ -337,19 +341,31 @@ class SharedStoreClient(SharedStore):
         asyncio.run_coroutine_threadsafe(task, self.loop)
 
 
-class StateManager:
-    DEVICES_KEY = ''
+class StateManager(abc.ABC):
+    DEVICES_KEY
 
-    def __init__(self, addr, schema):
-        if not os.path.exists(addr):
-            self.store = SharedStoreServer(addr)
-        else:
-            self.store = SharedSToreClient(addr)
-        for protocol, devices in schema.items():
-            for device_name, device in devices.items():
-                pass
 
-    @classmethod
-    def load_from_schema(cls, filename: str):
-        schema = read_conf_file(filename)
-        return StateManager()
+class StateManagerServer(SharedStoreServer, StateManager):
+    pass
+
+
+class StateManagerServer(SharedStoreClient, StateManager):
+    pass
+
+
+# class StateManager(SharedStoreClient):
+#     DEVICES_KEY = ''
+#
+#     def __init__(self, addr, schema):
+#         if not os.path.exists(addr):
+#             self.store = SharedStoreServer(addr)
+#         else:
+#             self.store = SharedStoreClient(addr)
+#         for protocol, devices in schema.items():
+#             for device_name, device in devices.items():
+#                 pass
+#
+#     @classmethod
+#     def load_from_schema(cls, addr: str, filename: str):
+#         schema = read_conf_file(filename)
+#         return StateManager(addr, schema)
