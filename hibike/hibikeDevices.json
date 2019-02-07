@@ -54,7 +54,7 @@
                                                      ]
     },
 
-    {"id": 9,     "name": "PolarBear",      "params": [
+    {"id": 12,     "name": "PolarBear",      "params": [
                                                           {"number": 0  , "name": "duty_cycle"          , "type": "float"    , "read": true , "write": true  },
                                                           {"number": 1  , "name": "pid_pos_setpoint"    , "type": "float"    , "read": false , "write": true  },
                                                           {"number": 2  , "name": "pid_pos_kp"          , "type": "float"    , "read": false , "write": true  },
