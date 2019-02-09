@@ -92,6 +92,8 @@ class Robot(StudentAPI):
         "ServoControl": ["servo0", "servo1"],
         "YogiBear": ["duty_cycle", "pid_pos_setpoint", "pid_pos_kp", "pid_pos_ki",
                      "pid_pos_kd", "current_thresh", "enc_pos"],
+        "PolarBear": ["duty_cycle", "pid_pos_setpoint", "pid_pos_kp", "pid_pos_ki",
+                     "pid_pos_kd", "current_thresh", "enc_pos"],
     }
     deviceName_to_readParams = {
         "LimitSwitch": ["switch0", "switch1", "switch2"],
@@ -99,6 +101,7 @@ class Robot(StudentAPI):
         "Potentiometer": ["pot0", "pot1", "pot2"],
         "ServoControl": ["servo0", "servo1"],
         "YogiBear": ["duty_cycle", "enc_pos", "enc_vel"],
+        "PolarBear": ["duty_cycle", "enc_pos", "enc_vel"],
         "RFID": ["id", "tag_detect"],
     }
     param_to_valid_values = {
@@ -257,7 +260,7 @@ class Robot(StudentAPI):
         try:
             # TODO: Implement sensor mappings, right now uid is the number (or string of number)
             device = int(name)
-            return self.peripherals[device]
+            return device
         except (ValueError, KeyError) as exc:
             raise StudentAPIKeyError('Device not found: ' + str(name)) from exc
 
