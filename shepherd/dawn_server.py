@@ -26,8 +26,10 @@ def receiver():
             print("RECEIVED:", event)
             if eventDict["header"] == DAWN_HEADER.ROBOT_STATE:
                 socketio.emit(DAWN_HEADER.ROBOT_STATE, event)
-            # else:
-                # socketio.emit(DAWN_HEADER.CODES, event)
+            elif eventDict["header"] == DAWN_HEADER.CODES:
+                socketio.emit(DAWN_HEADER.CODES, event)
+            elif eventDict["header"] == DAWN_HEADER.MASTER:
+                socketio.emit(DAWN_HEADER.MASTER, event)
         socketio.emit(DAWN_HEADER.HEARTBEAT, json.dumps({"heartbeat" : 1}))
         socketio.sleep(1)
 
