@@ -1,8 +1,15 @@
-var socket = io('http://127.0.0.1:5000');
-
+//var socket = io('http://127.0.0.1:5000');
+var overTimer = true;
+var stageTimer = true;
 socket.on('connect', function(data) {
     socket.emit('join', 'scoreboard');
   });
+
+socket.on('stage_timer_start', function(secondsInStage) {
+    time = JSON.parse(secondsInStage.time)
+    maintimer = true
+    stageTimerStart(time)
+})
 
 socket.on('launch_button_timer_start', function(allianceButton) {
     alliance = JSON.parse(allianceButton).alliance
@@ -22,19 +29,53 @@ socket.on('launch_button_timer_start', function(allianceButton) {
     }
     });
 
+socket.on("reset_timers", function() {
+  overTimer = false
+  clearTimeout(timer1)
+  clearTimeout(timer2)
+  clearTimeout(timer3)
+  clearTimeout(timer4)
+})
+
+function testing() {
+  overTimer = false;
+  stageTimer = false;
+}
+
+function stageTimerStart(timeleft) {
+  if(timeleft >= 0){ 
+    setTimeout(function() {
+      $('#stage-timer').html(Math.floor(timeleft/60) + ":"+ timeleft%60)
+      if(stageTimer) {
+        stageTimerStart(timeleft - 1);
+      } else {
+        stageTimerStart(0)
+        $('#stage-timer').html("0:0")
+      }
+  }, 1000);
+  }
+}
+
 function progress(timeleft, timetotal, $element) {
     var progressBarWidth = timeleft * $element.width() / timetotal;
     $element.find('div').animate({ width: progressBarWidth }, 500).html(Math.floor(timeleft/60) + ":"+ timeleft%60);
     if(timeleft > 0) {
         setTimeout(function() {
-            progress(timeleft - 1, timetotal, $element);
+            if(overTimer) {
+              progress(timeleft - 1, timetotal, $element);
+            } else {
+              progress(0, 0, $element)
+              $element.find('div').animate({ width: 0 }, 500).html("")
+              $('#overdriveText').css('color', 'white');
+
+            }
         }, 1000);
     }
 };
 
-function startOverdrive() {
-    $('#overdrive').innerHTML = 'OVERDRIVE!!!';
-    progress(5, 120, $('#progressBar'));
+function startOverdrive(time) {
+    $('#overdriveText').css('color', '#000000');
+    progress(time, time, $('#progressBar'));
 }
 
 var a = 0
@@ -113,6 +154,7 @@ function runTimer4() {
 }
 function timer1() { 
   /* how long the timer will run (seconds) */
+  
   var time = 30;
   var initialOffset = '440';
   var i = 1;
@@ -122,8 +164,10 @@ function timer1() {
 
   var interval = setInterval(function() {
       $('.timer1').text(time - i);
-      if (i == time) {  	
+      if (i == time || !timer1) {  	
         clearInterval(interval);
+        $('.timer1').text(30);
+        $('.circle_animation1').css('stroke-dashoffset', '440')
         return;
       }
       $('.circle_animation1').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
@@ -145,6 +189,8 @@ function timer2() {
       $('.timer2').text(time - i);
       if (i == time) {  	
         clearInterval(interval);
+        $('.timer2').text(30);
+        $('.circle_animation2').css('stroke-dashoffset', '440')
         return;
       }
       $('.circle_animation2').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
@@ -166,6 +212,8 @@ function timer3() {
       $('.timer3').text(time - i);
       if (i == time) {  	
         clearInterval(interval);
+        $('.timer3').text(30);
+        $('.circle_animation3').css('stroke-dashoffset', '440')
         return;
       }
       $('.circle_animation3').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
@@ -187,6 +235,8 @@ function timer4() {
       $('.timer4').text(time - i);
       if (i == time) {  	
         clearInterval(interval);
+        $('.timer4').text(30);
+        $('.circle_animation4').css('stroke-dashoffset', '440')
         return;
       }
       $('.circle_animation4').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));

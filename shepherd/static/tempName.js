@@ -22,4 +22,7 @@ socket.on('launch_button_timer_start', function(allianceButton) {
     }
     });
 
-socket.on('stage_timer_start', )
+socket.on('stage_timer_start', function(secondsInStage) {
+    time = JSON.parse(secondsInStage.time)
+    startOverdrive(time)
+})
