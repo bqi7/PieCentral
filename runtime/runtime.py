@@ -374,7 +374,7 @@ def terminate_process(process_name):
     if process_name not in ALL_PROCESSES:
         return
     process = ALL_PROCESSES.pop(process_name)
-    # process.terminate() # ******************************************** MIGHT NEED TO CHANGE: (make sure that processes aren't sharing queues and pipes)
+    process.terminate() # ******************************************** MIGHT NEED TO CHANGE: (make sure that processes aren't sharing queues and pipes)
                         # https://docs.python.org/3/library/multiprocessing.html?highlight=multiprocessing#multiprocessing.Process.terminate
     process.join(3) # Give process 3 seconds to terminate
     if process.exitcode != None: # process has terminated
