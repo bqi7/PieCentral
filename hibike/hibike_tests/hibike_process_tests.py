@@ -17,7 +17,6 @@ from hibike_tests.utils import AsyncTestCase
 import hibike_message as hm
 from hibike_tester import Hibike
 
-
 def add_runtime_to_path():
     """
     Enable import of runtime modules.
@@ -138,7 +137,7 @@ class ReadWriteTests(unittest.TestCase):
     READ_WRITE_DELAY = 0.25
     # Reads and writes can ocasionally fail; for reliability,
     # do them multiple times
-    READ_WRITE_ATTEMPTS = 8
+    READ_WRITE_ATTEMPTS = 10
 
     def setUp(self):
         spawn_virtual_devices(self.VIRTUAL_DEVICE_TYPES)

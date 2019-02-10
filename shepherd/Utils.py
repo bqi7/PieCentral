@@ -1,9 +1,5 @@
 # pylint: disable=invalid-name
 class SHEPHERD_HEADER():
-    GOAL_SCORE = "goal_score"
-    GOAL_BID = "goal_bid"
-    POWERUP_APPLICATION = "powerup_application"
-
     START_NEXT_STAGE = "start_next_stage"
     RESET_CURRENT_STAGE = "reset_current_stage"
     RESET_MATCH = "reset_match"
@@ -16,28 +12,45 @@ class SHEPHERD_HEADER():
     GET_SCORES = "get_scores"
     SCORE_ADJUST = "score_adjust"
 
-    GENERATE_RFID = "generate_rfid"
-
-    BID_TIMER_END = "bid_timer_end"
     STAGE_TIMER_END = "stage_timer_end"
-    CODE_COOLDOWN_END = "code_cooldown_end"
+
+    ROBOT_OFF = "robot_off"
+
+    END_EXTENDED_TELEOP = "end_extended_teleop"
+
+    LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
+    CODE_APPLICATION = "code_application"
+
+    APPLY_PERKS = "apply_perks"
+    GAME_PERKS = "game_perks"
+    MASTER_ROBOT = "master_robot"
+
+    FINAL_SCORE = "final_score"
+    ASSIGN_TEAMS = "assign_teams"
+        # ASSIGN_TEAMS{g1num, g2num, b1num, b2num}
+    TEAM_RETRIEVAL = "team_retrieval"
+        # TEAM_RETRIEVAL{}
 
 # pylint: disable=invalid-name
-class SENSOR_HEADER():
-    CODE_RESULT = "code_result"
-    GOAL_OWNERS = "bid_owners"
-    TEAM_SCORE = "team_score"
-    BID_PRICE = "bid_price"
+class SENSORS_HEADER():
+    FAILED_POWERUP = "failed_powerup"
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
     ROBOT_STATE = "robot_state"
     CODES = "codes"
+        # CODES{codes_solutions}
     HEARTBEAT = "heartbeat"
+    DECODE = "decode"
+        # DECODE{alliance, tag}
+    SPECIFIC_ROBOT_STATE = "specific_robot_state"
+        # SPECIFIC_ROBOT_STATE{team_number, autonomous, enabled}
+    MASTER = "master"
+    	# MASTER{alliance, team_number}
+
 
 # pylint: disable=invalid-name
 class UI_HEADER():
-    RFID_LIST = "rfid_list"
     TEAMS_INFO = "teams_info"
     SCORES = "scores"
 
@@ -45,37 +58,26 @@ class UI_HEADER():
 class SCOREBOARD_HEADER():
     SCORE = "score"
     TEAMS = "teams"
-    BID_TIMER = "bid_timer"
-    BID_AMOUNT = "bid_amount"
-    GOAL_OWNED = "bid_win"
     STAGE = "stage"
     STAGE_TIMER_START = "stage_timer_start"
-    POWERUPS = "powerups"
-    ALLIANCE_MULTIPLIER = "alliance_multiplier"
     RESET_TIMERS = "reset_timers"
-    BID_TIMER_START = "bid_timer_start"
     ALL_INFO = "all_info"
+
+    LAUNCH_BUTTON_TIMER_START = "launch_button_timer_start"
+        # LAUNCH_BUTTON_TIMER_START{alliance, button}
+    PERKS_SELECTED = "perks_selected"
+        # PERKS_SELECTED{alliance, perk_1, perk_2, perk_3}
+    APPLIED_EFFECT = "applied_effect"
+        # APPLIED_EFFECT{alliance, effect}
 
 # pylint: disable=invalid-name
 class CONSTANTS():
+    PERK_SELECTION_TIME = 15
     AUTO_TIME = 30
     TELEOP_TIME = 180
-    BID_TIME_INCREASE = 2
-    BID_TIME_INITIAL = 5
-    TWO_X_DURATION = 30
-    ZERO_X_DURATION = 30
-    CODE_COOLDOWN = 60
-    BID_INCREASE_CONSTANT = 1.1
-    GOAL_BASE_VALUE = 1
-    GOAL_LOW_VALUE = 5
-    GOAL_MED_VALUE = 10
-    GOAL_HIGH_VALUE = 25
-    GOAL_LOW_COST = 20
-    GOAL_MED_COST = 40
-    GOAL_HIGH_COST = 100
-    MULTIPLIER_INCREASES = [1.1, 1.25, 1.5]
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
     CSV_FILE_NAME = "Sheets/schedule.csv"
+    TAFFY_TIME = 15
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():
@@ -92,31 +94,26 @@ class LCM_TARGETS():
 
 # pylint: disable=invalid-name
 class TIMER_TYPES():
-    BID = "bid"
     MATCH = "match"
-    CODE_COOLDOWN = "code_cooldown"
-    DURATION = "duration"
-
-# pylint: disable=invalid-name
-class POWERUP_TYPES():
-    ZERO_X = "zero_x"
-    TWO_X = "two_x"
-    STEAL = "steal"
-
-# pylint: disable=invalid-name
-class GOAL():
-    A = "a"
-    B = "b"
-    C = "c"
-    D = "d"
-    E = "e"
-    BLUE = "blue_goal"
-    GOLD = "gold_goal"
+    LAUNCH_BUTTON = "launch_button"
+    EXTENDED_TELEOP = "extended_teleop"
 
 # pylint: disable=invalid-name
 class STATE():
     SETUP = "setup"
+    PERK_SELCTION = "perk_selection"
     AUTO = "auto"
     WAIT = "wait"
     TELEOP = "teleop"
     END = "end"
+
+class EFFECTS():
+    BLACKMAIL = "blackmail"
+    SPOILED_CANDY = "spoiled_candy"
+    ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
+
+class PERKS():
+    EMPTY = "empty"
+    BUBBLEGUM = "bubblegum"
+    TAFFY = "taffy"
+    # To be continued
