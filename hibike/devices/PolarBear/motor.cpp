@@ -18,18 +18,14 @@ void motorSetup() {
   digitalWrite(INV, LOW);
 
   motorEnable();
-  //pinMode(PWM, OUTPUT);
 }
 
 void motorEnable() {
   clearFault();
-  // pinMode(enable_pin, INPUT); //pin is pulled up, so put in high impedance state instead of writing high
   motorEnabled = true;
 }
 
 void motorDisable() {
-  // pinMode(enable_pin, OUTPUT);
-  // digitalWrite(enable_pin, LOW);
   disablePID();
   resetPID();
   resetEncoder();
@@ -50,17 +46,17 @@ float readCurrent() {
 //takes a value from -1 to 1 inclusive and writes to the motor and sets the PWM1 and PWM2 pins for direction
 void drive(float target) {
   if (target < -deadBand) {
-    digitalWrite(PWM2, HIGH);
-    digitalWrite(PWM1, LOW);
-    Timer1.pwm(PWM1, (int) (-1 * target * 1023));
-  } else if (target > deadBand) {
     digitalWrite(PWM1, HIGH);
-    digitalWrite(PWM2, LOW);
-    Timer1.pwm(PWM2, (int) (target * 1023));
+    analogWrite(PWM2, (int) (-1 * target * 1023));
+    // Timer1.pwm(PWM2, (int) (-1 * target * 1023));
+  } else if (target > deadBand) {;
+    digitalWrite(PWM2, HIGH);
+    analogWrite(PWM1, (int) (target * 1023));
+    // Timer1.pwm(PWM1, (int) (target * 1023));
   } else {
-    target = 0;
-    digitalWrite(PWM1, HIGH);
     digitalWrite(PWM2, HIGH);
+    digitalWrite(PWM1, HIGH);
+    target = 0;
   }
 }
 
