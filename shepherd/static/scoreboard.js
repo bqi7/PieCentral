@@ -1,4 +1,4 @@
-//var socket = io('http://127.0.0.1:5000');
+var socket = io('http://127.0.0.1:5000');
 var overTimer = true;
 var stageTimer = true;
 var timerUno = true;
@@ -6,7 +6,7 @@ var timerDos = true;
 var timerThres = true;
 var timerQuatro = true;
 
-/* socket.on('connect', function(data) {
+socket.on('connect', function(data) {
     socket.emit('join', 'scoreboard');
   });
 
@@ -40,12 +40,21 @@ socket.on("reset_timers", function() {
   timerDos = false;
   timerThres = false;
   timerQuatro = false;
-}) */
+})
 
 socket.on("overdrive_start", function() {
   overTimer = true;
   startOverdrive(30);
 })
+
+socket.on("score", function(scores) {
+  blueScore = JSON.parse(scores).blue_score;
+  goldScore = JSON.parse(scores).gold_score;
+  $('#blue-score').html(blueScore);
+  $('#gold-score').html(goldScore);
+})
+
+
 
 function testing() {
   overTimer = false;
@@ -64,31 +73,35 @@ function stageTimerStart(timeleft) {
 function runStageTimer(timeleft) {
   if(timeleft >= 0){ 
     setTimeout(function() {
-      $('#stage-timer').html(Math.floor(timeleft/60) + ":"+ timeleft%60)
+      $('#stage-timer').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60))
       if(stageTimer) {
         stageTimerStart(timeleft - 1);
       } else {
         stageTimerStart(0)
-        $('#stage-timer').html("0:0")
+        $('#stage-timer').html("0:00")
       }
   }, 1000);
   }
 }
 
+function pad(number) { 
+  return (number < 10 ? '0' : '') + number
+}
+
 function progress(timeleft, timetotal, $element) {
     var progressBarWidth = timeleft * $element.width() / timetotal;
-    $element.find('div').animate({ width: progressBarWidth }, 500).html(Math.floor(timeleft/60) + ":"+ timeleft%60);
+    $element.find('div').animate({ width: progressBarWidth }, 500).html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
     if(timeleft > 0) {
         setTimeout(function() {
             if(overTimer) {
               progress(timeleft - 1, timetotal, $element);
             } else {
               progress(0, 0, $element)
-              $element.find('div').animate({ width: 0 }, 500).html("")
-              $('#overdriveText').css('color', 'white');
-
             }
         }, 1000);
+    } else {
+      $element.find('div').animate({ width: 0 }, 500).html("")
+      $('#overdriveText').css('color', 'white');
     }
 };
 
