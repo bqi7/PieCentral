@@ -140,6 +140,12 @@ def to_teleop(args):
 
     Timer.reset_all()
     game_timer.start_timer(CONSTANTS.TELEOP_TIME)
+    overdrive_time = random.randint(0,CONSTANTS.TELEOP_TIME -
+                                      CONSTANTS.OVERDRIVE_TIME)
+    overdrive_timer.start_timer(overdrive_time)
+    print("overdrive will happen at " + overdrive_time // 60 + ":" +
+          overdrive_time % 60)
+
     enable_robots(False)
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
              {"time" : CONSTANTS.TELEOP_TIME})
@@ -338,6 +344,10 @@ def game_perks(args):
     ## TODO: This
     pass
 
+def overdrive_triggered(args):
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TRIGGER_OVERDRIVE)
+    print("overdrive is active for the next 30 seconds")
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -376,7 +386,8 @@ teleop_functions = {
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
-    SHEPHERD_HEADER.END_EXTENDED_TELEOP: to_end
+    SHEPHERD_HEADER.END_EXTENDED_TELEOP : to_end,
+    SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered
 
 }
 
@@ -405,7 +416,7 @@ events = None
 # Game Specific Variables
 ###########################################
 
-
+overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
 #nothing
 
 
