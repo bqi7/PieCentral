@@ -5,9 +5,8 @@ from Utils import *
 
 def sender():
     input_to_header = {
-        "score" : SHEPHERD_HEADER.GOAL_SCORE,
-        "bid"   : SHEPHERD_HEADER.GOAL_BID,
-        "code"  : SHEPHERD_HEADER.POWERUP_APPLICATION,
+        "launch"   : SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED,
+        "code"  : SHEPHERD_HEADER.CODE_APPLICATION,
     }
 
     input_to_alliance = {
@@ -15,40 +14,31 @@ def sender():
         "blue"  : ALLIANCE_COLOR.BLUE,
     }
 
-    input_to_goal = {
-        "a"     : GOAL.A,
-        "b"     : GOAL.B,
-        "c"     : GOAL.C,
-        "d"     : GOAL.D,
-        "e"     : GOAL.E,
-        "gold"  : GOAL.GOLD,
-        "blue"  : GOAL.BLUE,
+    input_to_launch = {
+        "1"     : 1,
+        "2"     : 2,
+        "3"     : 3,
+        "4"     : 4,
     }
 
     while True:
-        new_input = input_to_header.get(input("Command: score bid code "))
-        if new_input in (SHEPHERD_HEADER.GOAL_SCORE, SHEPHERD_HEADER.GOAL_BID):
-            goal_letter = input_to_goal.get(input("Goal Letter: a b c d e blue gold "))
+        new_input = input_to_header.get(input("Command: launch code "))
+        if new_input == SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED:
             alliance = input_to_alliance.get(input("Alliance: blue gold "))
-            if goal_letter is None or alliance is None:
+            button_num = input_to_goal.get(input("Launch button: 1 2"))
+            if button_num is None or alliance is None:
                 print("Invalid input")
                 continue
-            if new_input == SHEPHERD_HEADER.GOAL_SCORE:
-                for _ in range(0):
-                    lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance,
-                                                               "goal" : goal_letter})
-            lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance, "goal" : goal_letter})
+            lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance, "button" : button_num})
 
-        elif new_input == SHEPHERD_HEADER.POWERUP_APPLICATION:
-            goal_letter = input_to_goal.get(input("Goal Letter: a b c d e blue gold "))
+        elif new_input == SHEPHERD_HEADER.CODE_APPLICATION: # {alliance, result}
             alliance = input_to_alliance.get(input("Alliance: blue gold "))
             code = input("Code: ")
-            if goal_letter is None or alliance is None or code is None:
+            if alliance is None or code is None:
                 print("Invalid input")
                 continue
             lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance,
-                                                       "goal" : goal_letter,
-                                                       "code" : code})
+                                                       "result" : code})
         else:
             print("Invalid input")
 

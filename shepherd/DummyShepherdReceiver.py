@@ -1,21 +1,22 @@
 import queue
-import random as rand
+# import random as rand
 from LCM import *
 from Utils import *
 
 def receiver():
+    overdrive = True
     events = queue.Queue()
     lcm_start_read(LCM_TARGETS.SHEPHERD, events)
     while True:
         event = events.get(True)
         print("got event")
-        if event[0] == SHEPHERD_HEADER.GENERATE_RFID:
-            s = []
-            for _ in range(6):
-                s.append(rand.randrange(10))
-            x = {"RFID_list": s}
-            lcm_send(LCM_TARGETS.UI, UI_HEADER.RFID_LIST, x)
-            print("Sent RFIDs")
+        # if event[0] == SHEPHERD_HEADER.GENERATE_RFID:
+        #     s = []
+        #     for _ in range(6):
+        #         s.append(rand.randrange(10))
+        #     x = {"RFID_list": s}
+        #     lcm_send(LCM_TARGETS.UI, UI_HEADER.RFID_LIST, x)
+        #     print("Sent RFIDs")
         if event[0] == SHEPHERD_HEADER.GET_SCORES:
             x = {"blue_score": rand.randrange(100), "gold_score": rand.randrange(100)}
             lcm_send(LCM_TARGETS.UI, UI_HEADER.SCORES, x)
@@ -37,6 +38,9 @@ def receiver():
             print("reset stage")
         if event[0] == SHEPHERD_HEADER.RESET_MATCH:
             print("reset match")
+        if overdrive:
+            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START, {})
+            overdrive = False
 
 if __name__ == "__main__":
     receiver()
