@@ -15,7 +15,7 @@ socket.on('connect', function(data) {
   });
 
 socket.on('stage_timer_start', function(secondsInStage) {
-    time = JSON.parse(secondsInStage.time)
+    time = JSON.parse(secondsInStage).time
     stageTimerStart(time)
 })
 
