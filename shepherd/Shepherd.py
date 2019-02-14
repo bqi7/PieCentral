@@ -326,6 +326,10 @@ def launch_button_triggered(args):
     ## TODO: This
     pass
 
+def auto_launch_button_triggered(args):
+    ## TODO: add ten score, mark button as dirty, sent to sc (both things)
+    pass
+
 def final_score(args):
     ## TODO: This
     pass
@@ -353,7 +357,7 @@ perk_selection_functions = {
 auto_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.STAGE_TIMER_END : to_wait,
-    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
+    SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : auto_launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot
 
@@ -383,10 +387,6 @@ end_functions = {
     SHEPHERD_HEADER.SETUP_MATCH : to_setup,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
     SHEPHERD_HEADER.FINAL_SCORE : final_score
-}
-
-perk_selection_functions = {
-    SHEPHERD_HEADER.GAME_PERKS : game_perks
 }
 
 ###########################################

@@ -22,7 +22,6 @@ class SHEPHERD_HEADER():
     CODE_APPLICATION = "code_application"
 
     APPLY_PERKS = "apply_perks"
-    GAME_PERKS = "game_perks"
     MASTER_ROBOT = "master_robot"
 
     FINAL_SCORE = "final_score"
@@ -94,9 +93,10 @@ class LCM_TARGETS():
 
 # pylint: disable=invalid-name
 class TIMER_TYPES():
-    MATCH = "match"
-    LAUNCH_BUTTON = "launch_button"
-    EXTENDED_TELEOP = "extended_teleop"
+    MATCH = {"TYPE":"match", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.STAGE_TIMER_END}
+    EXTENDED_TELEOP = {"TYPE":"extended_teleop", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.END_EXTENDED_TELEOP}
+    OVERDRIVE_DELAY = {"TYPE":"overdrive_delay", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.}#TODO
+    LAUNCH_BUTTON = {"TYPE":"extended_teleop", "NEEDS_FUNCTION": False}
 
 # pylint: disable=invalid-name
 class STATE():
