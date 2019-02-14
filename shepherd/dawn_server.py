@@ -15,6 +15,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
 socketio = SocketIO(app)
 
+@socketio.on('dawn-to-server-alliance-codes')
+def ui_to_server_setup_match(alliance_codes):
+    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.CODE_APPLICATION, json.loads(alliance_codes))
+
 def receiver():
     events = gevent.queue.Queue()
     lcm_start_read(str.encode(LCM_TARGETS.DAWN), events, put_json=True)
