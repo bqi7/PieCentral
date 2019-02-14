@@ -1,13 +1,17 @@
 //var socket = io('http://127.0.0.1:5000');
 var overTimer = true;
 var stageTimer = true;
-socket.on('connect', function(data) {
+var timerUno = true;
+var timerDos = true;
+var timerThres = true;
+var timerQuatro = true;
+
+/* socket.on('connect', function(data) {
     socket.emit('join', 'scoreboard');
   });
 
 socket.on('stage_timer_start', function(secondsInStage) {
     time = JSON.parse(secondsInStage.time)
-    maintimer = true
     stageTimerStart(time)
 })
 
@@ -16,33 +20,48 @@ socket.on('launch_button_timer_start', function(allianceButton) {
     button = JSON.parse(allianceButton).button
     if (alliance == "blue"){
         if (button == 1) {
-            timer1()
+            runTimer1();
         } else {
-            timer2()
+            runTimer2();
         }
     } else {
         if (button == 1) {
-            timer3()
+            runTimer3();
         } else {
-            timer4()
+            runTimer4();
         }
     }
     });
 
 socket.on("reset_timers", function() {
-  overTimer = false
-  clearTimeout(timer1)
-  clearTimeout(timer2)
-  clearTimeout(timer3)
-  clearTimeout(timer4)
+  overTimer = false;
+  stageTimer = false;
+  timerUno = false;
+  timerDos = false;
+  timerThres = false;
+  timerQuatro = false;
+}) */
+
+socket.on("overdrive_start", function() {
+  overTimer = true;
+  startOverdrive(30);
 })
 
 function testing() {
   overTimer = false;
   stageTimer = false;
+  timerUno = false;
+  timerDos = false;
+  timerThres = false;
+  timerQuatro = false;
 }
 
 function stageTimerStart(timeleft) {
+  stageTimer = true;
+  runStageTimer(timeleft);
+}
+
+function runStageTimer(timeleft) {
   if(timeleft >= 0){ 
     setTimeout(function() {
       $('#stage-timer').html(Math.floor(timeleft/60) + ":"+ timeleft%60)
@@ -74,7 +93,8 @@ function progress(timeleft, timetotal, $element) {
 };
 
 function startOverdrive(time) {
-    $('#overdriveText').css('color', '#000000');
+    overTimer = true;
+    $('#overdriveText').css('color', 'pink');
     progress(time, time, $('#progressBar'));
 }
 
@@ -137,19 +157,23 @@ function goldClear() {
 }
 
 function runTimer1() {
+  timerUno = true;
   setTimeout(timer1, 0)
 }
 
 
 function runTimer2() {
+  timerDos = true;
   setTimeout(timer2, 0)
 }
 
 function runTimer3() {
+  timerThres = true;
   setTimeout(timer3, 0)
 }
 
 function runTimer4() {
+  timerQuatro = true;
   setTimeout(timer4, 0)
 }
 function timer1() { 
@@ -164,10 +188,10 @@ function timer1() {
 
   var interval = setInterval(function() {
       $('.timer1').text(time - i);
-      if (i == time || !timer1) {  	
+      if (i == time||!timerUno) {  	
         clearInterval(interval);
         $('.timer1').text(30);
-        $('.circle_animation1').css('stroke-dashoffset', '440')
+        $('.circle_animation1').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation1').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
@@ -187,10 +211,10 @@ function timer2() {
 
   var interval = setInterval(function() {
       $('.timer2').text(time - i);
-      if (i == time) {  	
+      if (i == time || !timerDos) {  	
         clearInterval(interval);
         $('.timer2').text(30);
-        $('.circle_animation2').css('stroke-dashoffset', '440')
+        $('.circle_animation2').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation2').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
@@ -210,10 +234,10 @@ function timer3() {
 
   var interval = setInterval(function() {
       $('.timer3').text(time - i);
-      if (i == time) {  	
+      if (i == time||!timerThres) {  	
         clearInterval(interval);
         $('.timer3').text(30);
-        $('.circle_animation3').css('stroke-dashoffset', '440')
+        $('.circle_animation3').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation3').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
@@ -233,10 +257,10 @@ function timer4() {
 
   var interval = setInterval(function() {
       $('.timer4').text(time - i);
-      if (i == time) {  	
+      if (i == time || !timerQuatro) {  	
         clearInterval(interval);
         $('.timer4').text(30);
-        $('.circle_animation4').css('stroke-dashoffset', '440')
+        $('.circle_animation4').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation4').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
