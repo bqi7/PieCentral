@@ -5,6 +5,10 @@ var timerUno = true;
 var timerDos = true;
 var timerThres = true;
 var timerQuatro = true;
+var goldSpoiledNumber = 1;
+var blueSpoiledNumber = 1;
+var isBlueTwisted = false;
+var isGoldTwisted = false;
 
 /* socket.on('connect', function(data) {
     socket.emit('join', 'scoreboard');
@@ -47,6 +51,28 @@ socket.on("overdrive_start", function() {
   startOverdrive(30);
 })
 
+socket.on("applied_effect", effectHandler)
+
+function effectHandler(data) {
+  alliance = JSON.parse(data).alliance
+  effect = JSON.parse(data).effect
+  if (alliance == "blue"){
+      if (effect == "blackmail") {
+          blueTwist();
+      } else {
+          blueSpoiledNumber += 1
+           $('#blueSpoiledNumber').html(blueSpoiledNumber)
+      }
+  } else {
+      if (effect == "blackmail") {
+          goldTwist();
+      } else {
+          goldSpoiledNumber += 1
+          $('#goldSpoiledNumber').html(goldSpoiledNumber)
+      }
+  }
+}
+
 function testing() {
   overTimer = false;
   stageTimer = false;
@@ -62,7 +88,7 @@ function stageTimerStart(timeleft) {
 }
 
 function runStageTimer(timeleft) {
-  if(timeleft >= 0){ 
+  if(timeleft >= 0){
     setTimeout(function() {
       $('#stage-timer').html(Math.floor(timeleft/60) + ":"+ timeleft%60)
       if(stageTimer) {
@@ -115,10 +141,10 @@ function draw() {
     , x = Math.sin( r ) * 15000
   , y = Math.cos( r ) * - 15000
   , mid = ( a > 180 ) ? 1 : 0
-    , anim = 
-        'M 0 0 v -15000 A 15000 15000 1 ' 
-           + mid + ' 1 ' 
-           +  x  + ' ' 
+    , anim =
+        'M 0 0 v -15000 A 15000 15000 1 '
+           + mid + ' 1 '
+           +  x  + ' '
            +  y  + ' z';
   //[x,y].forEach(function( d ){
   //  d = Math.round( d * 1e3 ) / 1e3;
@@ -141,19 +167,11 @@ function draw() {
 };
 
 function blueTwist() {
-   $('#blueTwist').attr('src', 'BlueTwisted.png');
-}
-
-function blueClear() {
-   $('#blueTwist').attr('src', 'Blank.png');
+   $('#blueTwist').attr('src', 'Twisted.png');
 }
 
 function goldTwist() {
-   $('#goldTwist').attr('src', 'GoldTwisted.png');
-}
-
-function goldClear() {
-   $('#goldTwist').attr('src', 'Blank.png');
+   $('#goldTwist').attr('src', 'Twisted.png');
 }
 
 function runTimer1() {
@@ -176,9 +194,9 @@ function runTimer4() {
   timerQuatro = true;
   setTimeout(timer4, 0)
 }
-function timer1() { 
+function timer1() {
   /* how long the timer will run (seconds) */
-  
+
   var time = 30;
   var initialOffset = '440';
   var i = 1;
@@ -188,19 +206,19 @@ function timer1() {
 
   var interval = setInterval(function() {
       $('.timer1').text(time - i);
-      if (i == time||!timerUno) {  	
+      if (i == time||!timerUno) {
         clearInterval(interval);
         $('.timer1').text(30);
         $('.circle_animation1').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation1').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
-      i++;  
+      i++;
   }, 1000);
 
 }
 
-function timer2() { 
+function timer2() {
   /* how long the timer will run (seconds) */
   var time = 30;
   var initialOffset = '440';
@@ -211,19 +229,19 @@ function timer2() {
 
   var interval = setInterval(function() {
       $('.timer2').text(time - i);
-      if (i == time || !timerDos) {  	
+      if (i == time || !timerDos) {
         clearInterval(interval);
         $('.timer2').text(30);
         $('.circle_animation2').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation2').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
-      i++;  
+      i++;
   }, 1000);
 
 }
 
-function timer3() { 
+function timer3() {
   /* how long the timer will run (seconds) */
   var time = 30;
   var initialOffset = '440';
@@ -234,19 +252,19 @@ function timer3() {
 
   var interval = setInterval(function() {
       $('.timer3').text(time - i);
-      if (i == time||!timerThres) {  	
+      if (i == time||!timerThres) {
         clearInterval(interval);
         $('.timer3').text(30);
         $('.circle_animation3').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation3').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
-      i++;  
+      i++;
   }, 1000);
 
 }
 
-function timer4() { 
+function timer4() {
   /* how long the timer will run (seconds) */
   var time = 30;
   var initialOffset = '440';
@@ -257,16 +275,14 @@ function timer4() {
 
   var interval = setInterval(function() {
       $('.timer4').text(time - i);
-      if (i == time || !timerQuatro) {  	
+      if (i == time || !timerQuatro) {
         clearInterval(interval);
         $('.timer4').text(30);
         $('.circle_animation4').css('stroke-dashoffset', '0')
         return;
       }
       $('.circle_animation4').css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
-      i++;  
+      i++;
   }, 1000);
 
 }
-
-
