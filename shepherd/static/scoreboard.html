@@ -109,7 +109,7 @@
               <p>
           </div>
           <div class="row-sm">
-            <h3 id="stage-timer" style="text-align: center;">0:30</h3>
+            <h3 id="stage-timer" style="text-align: center; font-size:60px">0:0</h3>
           </div>
         </div>
       </div>
@@ -146,12 +146,14 @@
       </div>
     </div>
   </div>
+  <div id="overdriveText" style="text-align:center; font-size:48px; color: white">OVERDRIVE!!!!</div>
   <div class="container">
     <div id="progressBar">
       <div class="bar"></div>
     </div>
   </div>
-  <button onclick="startOverdrive()">Click this</button>
+  <button onclick="stageTimerStart(100)">START</button>
+  <button onclick="startOverdrive(30)">Click this</button>
 
 
   <div>
@@ -218,7 +220,7 @@
         <button onclick="blueClear()">Blue Clear</button>
         <button onclick="goldTwist()">Gold Twist</button>
         <button onclick="goldClear()">Gold Clear</button>
-
+        <button onclick="testing()">Reset Timers</button>
 </body>
 
 </html>
