@@ -45,6 +45,19 @@ def receiver():
             elif event[0] == SCOREBOARD_HEADER.STAGE_TIMER_START:
                 socketio.emit(SCOREBOARD_HEADER.STAGE_TIMER_START,
                               json.dumps(event[1], ensure_ascii=False))
+
+            elif event[0] == SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START:
+                socketio.emit(SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START,
+                              json.dumps(event[1], ensure_ascii=False))
+
+            elif event[0] == SCOREBOARD_HEADER.PERKS_SELECTED:
+                socketio.emit(SCOREBOARD_HEADER.PERKS_SELECTED,
+                              json.dumps(event[1], ensure_ascii=False))
+
+            elif event[0] == SCOREBOARD_HEADER.APPLIED_EFFECT:
+                socketio.emit(SCOREBOARD_HEADER.APPLIED_EFFECT,
+                              json.dumps(event[1], ensure_ascii=False))
+                              
             #if event[0] == SCOREBOARD_HEADER.ALL_INFO):
             #    socketio.emit('server-to-gui-all-info', json.dumps(event[1], ensure_ascii=False))
         socketio.sleep(0.1)
