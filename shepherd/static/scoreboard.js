@@ -1,4 +1,4 @@
-var socket = io('http://127.0.0.1:5000');
+var socket = io('http://127.0.0.1:5500');
 var overTimer = true;
 var stageTimer = true;
 var timerUno = true;
@@ -51,9 +51,10 @@ socket.on("overdrive_start", function() {
   startOverdrive(30);
 })
 
-socket.on("applied_effect", effectHandler)
 
-function effectHandler(data) {
+
+socket.on("applied_effect", function(data) {
+  console.log('?')
   alliance = JSON.parse(data).alliance
   effect = JSON.parse(data).effect
   if (alliance == "blue"){
@@ -71,7 +72,8 @@ function effectHandler(data) {
           $('#goldSpoiledNumber').html(goldSpoiledNumber)
       }
   }
-}
+})
+
 
 socket.on("score", function(scores) {
   blueScore = JSON.parse(scores).blue_score;

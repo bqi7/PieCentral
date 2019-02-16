@@ -13,7 +13,7 @@ PORT = 5000
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode="gevent")
 
 @app.route('/')
 def hello_world():

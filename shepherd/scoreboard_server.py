@@ -17,11 +17,11 @@ socketio = SocketIO(app, async_mode='gevent')
 
 @app.route('/')
 def hello():
-    return "go to /Scoreboard.html"
+    return "go to /scoreboard.html"
 
-@app.route('/Scoreboard.html/')
+@app.route('/scoreboard.html/')
 def scoreboard():
-    return render_template('Scoreboard.html')
+    return render_template('scoreboard.html')
 
 def receiver():
 
@@ -55,6 +55,7 @@ def receiver():
                               json.dumps(event[1], ensure_ascii=False))
 
             elif event[0] == SCOREBOARD_HEADER.APPLIED_EFFECT:
+                print('hi')
                 socketio.emit(SCOREBOARD_HEADER.APPLIED_EFFECT,
                               json.dumps(event[1], ensure_ascii=False))
                               

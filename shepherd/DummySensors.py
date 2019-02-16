@@ -7,6 +7,7 @@ def sender():
     input_to_header = {
         "launch"   : SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED,
         "code"  : SHEPHERD_HEADER.CODE_APPLICATION,
+        "effect" : SCOREBOARD_HEADER.APPLIED_EFFECT
     }
 
     input_to_alliance = {
@@ -37,6 +38,13 @@ def sender():
                 continue
             lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance,
                                                        "result" : code})
+        # elif new_input == SCOREBOARD_HEADER.APPLIED_EFFECT
+        #     alliance = input_to_alliance.get(input("Alliance: blue gold "))
+        #     button_num = input_to_launch.get(input("Launch button: 1 2"))
+        #     if button_num is None or alliance is None:
+        #         print("Invalid input")
+        #         continue
+        #     lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance, "button" : button_num})
         else:
             print("Invalid input")
 
