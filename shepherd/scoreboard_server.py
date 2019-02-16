@@ -1,8 +1,8 @@
 import json
 import threading
 import time
-import queue
-import gevent # pylint: disable=import-error
+import gevent
+import gevent.queue # pylint: disable=import-error
 from flask import Flask, render_template # pylint: disable=import-error
 from flask_socketio import SocketIO, emit, join_room, leave_room, send # pylint: disable=import-error
 from Utils import *
@@ -13,7 +13,7 @@ PORT = 5500
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='gevent')
 
 @app.route('/')
 def hello():
