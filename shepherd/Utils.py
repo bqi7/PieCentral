@@ -69,6 +69,8 @@ class SCOREBOARD_HEADER():
         # PERKS_SELECTED{alliance, perk_1, perk_2, perk_3}
     APPLIED_EFFECT = "applied_effect"
         # APPLIED_EFFECT{alliance, effect}
+    OVERDRIVE_START = "overdrive_start"
+        # OVERDRIVE_START{}
 
 # pylint: disable=invalid-name
 class CONSTANTS():
