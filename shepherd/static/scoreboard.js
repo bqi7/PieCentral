@@ -1,10 +1,10 @@
 var socket = io('http://127.0.0.1:5000');
 var overTimer = true;
 var stageTimer = true;
-var timerUno = true;
-var timerDos = true;
-var timerThres = true;
-var timerQuatro = true;
+var timerA = true;
+var timerB = true;
+var timerC = true;
+var timerD = true;
 
 socket.on('connect', function(data) {
     socket.emit('join', 'scoreboard');
@@ -36,10 +36,10 @@ socket.on('launch_button_timer_start', function(allianceButton) {
 socket.on("reset_timers", function() {
   overTimer = false;
   stageTimer = false;
-  timerUno = false;
-  timerDos = false;
-  timerThres = false;
-  timerQuatro = false;
+  timerA = false;
+  timerB = false;
+  timerC = false;
+  timerD = false;
 })
 
 socket.on("overdrive_start", function() {
@@ -59,10 +59,10 @@ socket.on("score", function(scores) {
 function testing() {
   overTimer = false;
   stageTimer = false;
-  timerUno = false;
-  timerDos = false;
-  timerThres = false;
-  timerQuatro = false;
+  timerA = false;
+  timerB = false;
+  timerC = false;
+  timerD = false;
 }
 
 function stageTimerStart(timeleft) {
@@ -170,25 +170,60 @@ function goldClear() {
 }
 
 function runTimer1() {
-  timerUno = true;
-  setTimeout(timer1, 0)
+  timerA = true;
+  //setTimeout(timer1, 0)
+  launchButtonTimer('.timer1', '.circle_animation1', timerA);
 }
 
 
 function runTimer2() {
-  timerDos = true;
-  setTimeout(timer2, 0)
+  timerB = true;
+  launchButtonTimer('.timer2', '.circle_animation2', timerB);
 }
 
 function runTimer3() {
-  timerThres = true;
-  setTimeout(timer3, 0)
+  timerC = true;
+  launchButtonTimer('.timer3', '.circle_animation3', timerC);
 }
 
 function runTimer4() {
-  timerQuatro = true;
-  setTimeout(timer4, 0)
+  timerD = true;
+  launchButtonTimer('.timer4', '.circle_animation4', timerC);
 }
+
+function launchButtonTimer(timerNum, circleNum, timerStatus) { 
+  /* how long the timer will run (seconds) */
+  
+  var time = 30;
+  var initialOffset = '440';
+  var i = 1;
+
+  /* Need initial run as interval hasn't yet occured... */
+  $(timerNum).css('stroke-dashoffset', initialOffset-(1*(initialOffset/time)));
+
+  var interval = setInterval(function() {
+      $(timerNum).text(time - i);
+      if (timerNum == '.timer1') {
+        timerStatus = timerA;
+      } else if (timerNum == '.timer2') {
+        timerStatus = timerB;
+      } else if (timerNum == '.timer3') {
+        timerStatus = timerC;
+      } else {
+        timerStatus = timerD;
+      }
+      if (i == time||!timerStatus) {  	
+        clearInterval(interval);
+        $(timerNum).text(30);
+        $(circleNum).css('stroke-dashoffset', '0')
+        return;
+      }
+      $(circleNum).css('stroke-dashoffset', initialOffset-((i+1)*(initialOffset/time)));
+      i++;  
+  }, 1000);
+
+}
+
 function timer1() { 
   /* how long the timer will run (seconds) */
   
@@ -201,7 +236,7 @@ function timer1() {
 
   var interval = setInterval(function() {
       $('.timer1').text(time - i);
-      if (i == time||!timerUno) {  	
+      if (i == time||!timerA) {  	
         clearInterval(interval);
         $('.timer1').text(30);
         $('.circle_animation1').css('stroke-dashoffset', '0')
@@ -224,7 +259,7 @@ function timer2() {
 
   var interval = setInterval(function() {
       $('.timer2').text(time - i);
-      if (i == time || !timerDos) {  	
+      if (i == time || !timerB) {  	
         clearInterval(interval);
         $('.timer2').text(30);
         $('.circle_animation2').css('stroke-dashoffset', '0')
@@ -247,7 +282,7 @@ function timer3() {
 
   var interval = setInterval(function() {
       $('.timer3').text(time - i);
-      if (i == time||!timerThres) {  	
+      if (i == time||!timerC) {  	
         clearInterval(interval);
         $('.timer3').text(30);
         $('.circle_animation3').css('stroke-dashoffset', '0')
@@ -270,7 +305,7 @@ function timer4() {
 
   var interval = setInterval(function() {
       $('.timer4').text(time - i);
-      if (i == time || !timerQuatro) {  	
+      if (i == time || !timerD) {  	
         clearInterval(interval);
         $('.timer4').text(30);
         $('.circle_animation4').css('stroke-dashoffset', '0')
