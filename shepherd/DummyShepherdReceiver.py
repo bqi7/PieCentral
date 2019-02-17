@@ -43,9 +43,13 @@ def receiver():
         if overdrive:
             lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START, {})
             overdrive = False
+        if event[0] == SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED:
+            alliance = event[1]["alliance"]
+            button = event[1]["button"]
+            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, {"alliance": alliance, "button": button})
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.PERKS_SELECTED, {"alliance": ALLIANCE_COLOR.BLUE, "perk_1": PERKS.TAFFY, "perk_2": PERKS.TAFFY, "perk_3": PERKS.TAFFY})
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, {"alliance": ALLIANCE_COLOR.BLUE, "effect": EFFECTS.BLACKMAIL})
-        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, {"alliance": ALLIANCE_COLOR.BLUE, "button": 1})
+        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, {"alliance": ALLIANCE_COLOR.BLUE, "effect": EFFECTS.SPOILED_CANDY})
 
 if __name__ == "__main__":
     receiver()
