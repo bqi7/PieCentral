@@ -7,4 +7,6 @@ void currentLimitSetup();
 void setCurrentThreshold(float x);
 int read_limit_state();
 
+void ctrl_pwm();
+
 #endif /* CURRENT_LIMIT_H */
