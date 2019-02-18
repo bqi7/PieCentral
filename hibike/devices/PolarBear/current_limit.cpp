@@ -123,7 +123,8 @@ void currentLimitSetup() {
 void ctrl_pwm()
 {
 	uint8_t drive_mode = readDriveMode();
-	float pwm_in = (drive_mode == MANUAL) ? readPWMInput() : readPWMDPID();
-	float pwm_out = current_limiting(pwm_in);
+	float pwm_in = (drive_mode == MANUALDRIVE) ? readPWMInput() : readPWMDPID();
+	//float pwm_out = current_limiting(pwm_in);
+	float pwm_out = pwm_in;
 	drive(pwm_out);
 }
