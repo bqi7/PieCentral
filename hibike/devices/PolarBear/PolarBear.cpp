@@ -20,7 +20,7 @@ uint8_t driveMode = 0;
 
 void setup() {
 	motorSetup();
-	currentLimitSetup();
+	//currentLimitSetup();
 	encoderSetup();
 	PIDSetup();
 	setup_LEDs();
