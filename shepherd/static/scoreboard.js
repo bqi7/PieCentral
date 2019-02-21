@@ -182,11 +182,11 @@ function draw() {
 };
 
 function blueTwist() {
-   $('#blueTwist').attr('src', 'Twisted.png');
+   $('#blueTwist').attr('src', '../static/Twisted.png');
 }
 
 function goldTwist() {
-   $('#goldTwist').attr('src', 'Twisted.png');
+   $('#goldTwist').attr('src', '../static/Twisted.png');
 }
 
 function runTimer1() {
