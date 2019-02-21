@@ -52,25 +52,25 @@ float readCurrent()
 void drive(float target) 
 {
 	if (target < -deadBand) {
-		digitalWrite(PWM1, HIGH);
-		analogWrite(PWM2, 255 - (int) (-1.0 * target * 255.0));
-		// Timer1.pwm(PWM2, (int) (-1 * target * 1023));
+		digitalWrite(INV, LOW);
+		analogWrite(PWM1, 255);
+		analogWrite(PWM2, 255 + (int) (target * 255));
 	} else if (target > deadBand) {
-		digitalWrite(PWM2, HIGH);
-		analogWrite(PWM1, 255 - (int) (target * 255.0));
-		// Timer1.pwm(PWM1, (int) (target * 1023));
+		target = target * -1;
+		digitalWrite(INV, HIGH);
+		analogWrite(PWM1, 255);
+		analogWrite(PWM2, 255 + (int) (target * 255));
 	} else {
-		digitalWrite(PWM2, HIGH);
-		digitalWrite(PWM1, HIGH);
-		target = 0;
+		analogWrite(PWM2, HIGH);
+		analogWrite(PWM1, HIGH);
 	}
 }
 
 
 void clearFault() 
 {
-	digitalWrite(PWM1, HIGH);
-	digitalWrite(PWM2, HIGH);
+	analogWrite(PWM1, 255);
+	analogWrite(PWM2, 255);
 }
 
 void setDeadBand(float range) 
