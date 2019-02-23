@@ -14,9 +14,27 @@ socket.on('connect', function(data) {
     socket.emit('join', 'scoreboard');
   });
 
+socket.on('teams', function(match_info) {
+  b1_name = JSON.parse(match_info).b1_name
+  b1_num = JSON.parse(match_info).b1_num
+  b2_name = JSON.parse(match_info).b2_name
+  b2_num = JSON.parse(match_info).b2_num
+  g1_name = JSON.parse(match_info).g1_name
+  g1_num = JSON.parse(match_info).g1_num
+  g2_name = JSON.parse(match_info).g2_name
+  g2_num = JSON.parse(match_info).g2_num
+  match_number = JSON.parse(match_info).match_number
+  nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number)
+})
+
 socket.on('stage_timer_start', function(secondsInStage) {
     time = JSON.parse(secondsInStage).time
     stageTimerStart(time)
+})
+
+socket.on('stage', function(stage_name) {
+  stage = JSON.parse(stage_name).stage_name
+  setStageName(stage)
 })
 
 socket.on('launch_button_timer_start', function(allianceButton) {
@@ -38,12 +56,7 @@ socket.on('launch_button_timer_start', function(allianceButton) {
     });
 
 socket.on("reset_timers", function() {
-  overTimer = false;
-  stageTimer = false;
-  timerA = false;
-  timerB = false;
-  timerC = false;
-  timerD = false;
+  resetTimers();
 })
 
 socket.on("overdrive_start", function() {
@@ -83,12 +96,32 @@ socket.on("score", function(scores) {
 
 
 function testing() {
+  resetTimers()
+}
+
+function resetTimers(){
   overTimer = false;
   stageTimer = false;
   timerA = false;
   timerB = false;
   timerC = false;
   timerD = false;
+}
+
+function setStageName(stage) {
+  $('#stage').html(stage)
+}
+
+function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number){
+  //set the names of all the teams and the match number
+  $('#blue-1-name').html(b1_name)
+  $('#blue-1-num').html(b1_num)
+  $('#blue-2-name').html(b2_name)
+  $('#blue-2-num').html(b2_num)
+  $('#gold-1-name').html(g1_name)
+  $('#gold-1-num').html(g1_num)
+  $('#gold-2-name').html(g2_name)
+  $('#gold-2-num').html(g2_num)
 }
 
 function stageTimerStart(timeleft) {
