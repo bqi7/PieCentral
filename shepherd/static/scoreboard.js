@@ -93,7 +93,10 @@ socket.on("score", function(scores) {
   $('#gold-score').html(goldScore);
 })
 
-
+function testScore(blueScore, goldScore) {
+  $('#blue-score').html(blueScore);
+  $('#gold-score').html(goldScore);
+}
 
 function testing() {
   resetTimers()
