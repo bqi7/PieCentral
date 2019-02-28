@@ -23,6 +23,7 @@ $(".image-checkbox").on("click", function (e) {
 /*
 var socket = io('http://127.0.0.1:5000');
 var t1_name, t1_num, t2_name, t2_num
+var master_robot
 
 
 socket.on('connect', function(data) {
@@ -40,7 +41,11 @@ function getCookie(cname) {
   return "";
 }
 
-socket.on(--PERKS_HEADER.TEAMS--, function(data) {
+if (getCookie('alliance') != '') {
+    hideButtons()
+}
+
+socket.on(TODO: --PERKS_HEADER.TEAMS--, function(data) {
   dictionary = JSON.parse(data)
   if (getCookie('alliance') == 'gold') {
       t1_name = JSON.parse(match_info).g1_name
@@ -57,6 +62,7 @@ socket.on(--PERKS_HEADER.TEAMS--, function(data) {
 })
 
 function setTeams() {
+    TODO: Change name of elements
     $("#team-1-number").val(t1_num);
     $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
@@ -64,21 +70,29 @@ function setTeams() {
 }
 
 function blueClick() {
-    //TODO: $("blue element") set css
-    //TODO: $("gold element") remove css
+    hideButtons()
     document.cookie = "alliance=blue"
 }
 
 function goldClick() {
-    //TODO: $("gold element") set css
-    //TODO: $("blue element") remove css
+    hideButtons()
     document.cookie = "alliance=gold"
+}
+
+function hideButtons() {
+    //TODO: $("gold element") set button style to hidden
+    //TODO: $("blue element") set button style to hidden
+}
+
+function setMasterRobot() {
+    //TODO: set master_robot
+    //TODO: set clicked robot number prominently
 }
 
 //onclick
 function submitPerks() {
     team_color = getCookie('alliance')
     //TODO: Gather list of selected perks
-    //TODO: data = {'alliance' : team_color. 'perk-1' : '' ...}
+    //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
 }*/
