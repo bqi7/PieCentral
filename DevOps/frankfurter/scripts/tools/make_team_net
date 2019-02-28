@@ -20,8 +20,8 @@ cp "$frankfurter/resources/dhcpcd.conf" "$build_dir"
 cp "$frankfurter/resources/wpa_supplicant.conf" "$build_dir"
 
 # Perform substitutions
-sed -i "s/ip_address=192.168.128.200/ip_address=192.168.128.$(( team_number + 200 ))/" "$build_dir/dhcpcd.conf"
-sed -i "s/ip_address=192.168.0.200/ip_address=192.168.0.$(( team_number + 200 ))/" "$build_dir/dhcpcd.conf"
+sed -i "s:ip_address=192.168.128.200/24:ip_address=192.168.128.$(( team_number + 200 ))/24:" "$build_dir/dhcpcd.conf"
+sed -i "s:ip_address=192.168.0.200/24:ip_address=192.168.0.$(( team_number + 200 ))/24:" "$build_dir/dhcpcd.conf"
 sed -i "9s/ssid=\"\"/ssid=\"Team$team_number\"/" "$build_dir/wpa_supplicant.conf"
 sed -i "10s/psk=\"\"/psk=\"$router_psk\"/" "$build_dir/wpa_supplicant.conf"
 
