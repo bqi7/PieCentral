@@ -7,7 +7,6 @@ import os
 import re
 import signal
 import sys
-import time
 import traceback
 import warnings
 
@@ -374,8 +373,8 @@ def terminate_process(process_name):
     if process_name not in ALL_PROCESSES:
         return
     process = ALL_PROCESSES.pop(process_name)
-    process.terminate() # ******************************************** MIGHT NEED TO CHANGE: (make sure that processes aren't sharing queues and pipes)
-                        # https://docs.python.org/3/library/multiprocessing.html?highlight=multiprocessing#multiprocessing.Process.terminate
+    # TODO: make sure that processes aren't sharing queues and pipes
+    process.terminate()
     process.join(3) # Give process 3 seconds to terminate
     if process.exitcode != None: # process has terminated
         return
@@ -385,7 +384,7 @@ def terminate_process(process_name):
             print("Queue state is probably boned and we should restart entire runtime")
             print("Boned Process:", process_name)
             os.kill(process.pid, signal.SIGKILL)
-            raise KillProcessTimeoutError
+            raise OSError
 
 
 def runtime_test(test_names):

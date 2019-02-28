@@ -93,7 +93,7 @@ class Robot(StudentAPI):
         "YogiBear": ["duty_cycle", "pid_pos_setpoint", "pid_pos_kp", "pid_pos_ki",
                      "pid_pos_kd", "current_thresh", "enc_pos"],
         "PolarBear": ["duty_cycle", "pid_pos_setpoint", "pid_pos_kp", "pid_pos_ki",
-                     "pid_pos_kd", "current_thresh", "enc_pos"],
+                      "pid_pos_kd", "current_thresh", "enc_pos"],
     }
     deviceName_to_readParams = {
         "LimitSwitch": ["switch0", "switch1", "switch2"],
@@ -159,20 +159,6 @@ class Robot(StudentAPI):
         self._check_write_params(uid, "duty_cycle")
         self._check_value("duty_cycle", 0)
         self.hibike_write_value(uid, [("duty_cycle", 0)])
-
-
-    def set_motor(self, device_name, value):
-        uid = self._hibike_get_uid(device_name)
-        self._check_write_params(uid, "duty_cycle")
-        self._check_value("duty_cycle", value)
-        self.to_manager.put([HIBIKE_COMMANDS.WRITE, [uid, [("duty_cycle", value)]]])
-
-    def stop_motor(self, device_name):
-        uid = self._hibike_get_uid(device_name)
-        self._check_write_params(uid, "duty_cycle")
-        self._check_value("duty_cycle", 0)
-        self.to_manager.put([HIBIKE_COMMANDS.WRITE, [uid, [("duty_cycle", 0)]]])
-
 
     def run(self, func, *args, **kwargs):
         """
