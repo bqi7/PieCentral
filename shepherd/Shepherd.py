@@ -143,6 +143,12 @@ def to_teleop(args):
 
     Timer.reset_all()
     game_timer.start_timer(CONSTANTS.TELEOP_TIME)
+    overdrive_time = random.randint(0,CONSTANTS.TELEOP_TIME -
+                                      CONSTANTS.OVERDRIVE_TIME)
+    overdrive_timer.start_timer(overdrive_time)
+    print("overdrive will happen at " + overdrive_time // 60 + ":" +
+          overdrive_time % 60)
+
     enable_robots(False)
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
              {"time" : CONSTANTS.TELEOP_TIME})
@@ -381,6 +387,10 @@ def final_score(args):
     lcm_send(SCOREBOARD_HEADER.SCORE, msg)
 
 
+def overdrive_triggered(args):
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TRIGGER_OVERDRIVE)
+    print("overdrive is active for the next 30 seconds")
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -419,7 +429,8 @@ teleop_functions = {
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
-    SHEPHERD_HEADER.END_EXTENDED_TELEOP: to_end
+    SHEPHERD_HEADER.END_EXTENDED_TELEOP : to_end,
+    SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered
 
 }
 
@@ -447,6 +458,7 @@ events = None
 ###########################################
 # Game Specific Variables
 ###########################################
+<<<<<<< HEAD
 buttons = {'gold_1': False, 'gold_2': False, 'blue_1': False, 'Blue_2': False}
 launch_button_timer_gold_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 launch_button_timer_gold_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
@@ -455,6 +467,10 @@ launch_button_timer_blue_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_button_timer_gold_2,
              'blue_1': launch_button_timer_blue_1, 'Blue_2': launch_button_timer_blue_2}
 
+=======
+
+overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
+>>>>>>> c9e06ce9b547537f28175a1744cf32da5f7d6007
 #nothing
 
 
