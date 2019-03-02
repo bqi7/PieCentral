@@ -1,8 +1,10 @@
+import asyncio
 from collections import UserDict
 from enum import IntEnum
 import os
 import json
 import yaml
+import threading
 
 
 class RuntimeException(UserDict, Exception):
@@ -66,3 +68,44 @@ def read_conf_file(filename: str):
                                valid_formats=list(CONF_FILE_FORMATS))
     with open(filename) as conf_file:
         return CONF_FILE_FORMATS[extension]
+
+
+class AsyncioThread(threading.Thread):
+    def __init__(self, *thread_args, target=None, args=None, kwargs=None,
+                 cleanup_timeout=5, **thread_kwargs):
+        args, kwargs = args or (), kwargs or {}
+        if target:
+            self.target, self.args, self.kwargs = target, args, kwargs
+            target, args, kwargs = self.bootstrap, (), {}
+            self.cleanup_timeout = cleanup_timeout
+        super().__init__(*thread_args, **thread_kwargs, target=target, args=args, kwargs=kwargs)
+
+    def bootstrap(self):
+        self.loop = asyncio.new_event_loop()
+        self.task = self.loop.create_task(self.target(*self.args, **self.kwargs))
+        try:
+            asyncio.set_event_loop(self.loop)
+            self.loop.run_until_complete(self.task)
+        except asyncio.CancelledError:
+            pass
+        finally:
+            tasks = asyncio.all_tasks(self.loop)
+            for task in tasks:
+                if not task.cancelled():
+                    self.loop.call_soon_threadsafe(task.cancel)
+            tasks = asyncio.gather(*tasks, return_exceptions=True)
+            tasks = asyncio.wait_for(tasks, self.cleanup_timeout)
+            self.loop.run_until_complete(tasks)
+            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+            self.loop.stop()
+            self.loop.close()
+
+    def run(self):
+        if hasattr(self, 'loop') and self.loop.is_running():
+            raise OSError('AsyncioThread is already running.')
+        super().run()
+
+    def stop(self):
+        if hasattr(self, 'loop') and hasattr(self, 'task'):
+            if self.loop.is_running():
+                self.loop.call_soon_threadsafe(self.task.cancel)
