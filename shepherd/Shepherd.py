@@ -85,6 +85,8 @@ def to_setup(args):
     if alliances[ALLIANCE_COLOR.BLUE] is not None:
         reset()
 
+    code_setup()
+
     alliances[ALLIANCE_COLOR.BLUE] = Alliance(ALLIANCE_COLOR.BLUE, b1_name,
                                               b1_num, b2_name, b2_num)
     alliances[ALLIANCE_COLOR.GOLD] = Alliance(ALLIANCE_COLOR.GOLD, g1_name,
@@ -101,6 +103,7 @@ def to_setup(args):
     print("ENTERING SETUP STATE")
     print({"blue_score" : alliances[ALLIANCE_COLOR.BLUE].score,
            "gold_score" : alliances[ALLIANCE_COLOR.GOLD].score})
+
 
 def to_perk_selection(args):
     global game_state
@@ -185,6 +188,10 @@ def reset(args=None):
         if alliance is not None:
             alliance.reset()
     disable_robots()
+    buttons['gold_1'] = False
+    buttons['gold_2'] = False
+    buttons['blue_1'] = False
+    buttons['blue_2'] = False
     print("RESET MATCH, MOVE TO SETUP")
 
 def get_match(args):
@@ -277,13 +284,21 @@ def set_master_robot(args):
     msg = {"alliance": alliance, "master": team_number}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
 
+def next_code():
+    if codes_used == []:
+       codes_used.append(codes[0])
+       return codes[0]
+    else:
+       index = len(codes_used)
+       codes_used.append(codes[index])
+       return codes[index]
+
 def code_setup():
     '''
     Set up code_solution and code_effect dictionaries
     '''
     global code_solution
     global code_effect
-
     code_solution = Code.assign_code_solution()
     code_effect = Code.assign_code_effect()
     msg = {"codes_solutions": code_solution}
@@ -335,20 +350,46 @@ def apply_perks(args):
     alliance.perk_3 = args['perk_3']
 
 def launch_button_triggered(args):
-    ## TODO: This
+    '''
+    check if allowed once every 30 seconds, give one of the codes to the correct alliance through Dawn,
+    update scoreboard
+    '''
+    launch_button_timer_gold_1.start_timer(CONSTANTS.COOLDOWN)
+    alliance = args["alliance"]
+    button = args["button"]
+    lb = alliance + "_" + str(button)
+    if not timer_dictionary[lb].is_running():
+        msg = {"alliance": alliance, "button": button}
+        send_code(alliance, code)
+        timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
+        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
+
+def send_code(alliance, code):
     pass
 
 def auto_launch_button_triggered(args):
     ## TODO: add ten score, mark button as dirty, sent to sc (both things)
-    pass
+    alliance = args["alliance"]
+    button = args["button"]
+    alliance.change_score(10)
+    temp_str = alliance + "_" + str(button)
+    if not buttons[temp_str]:
+        buttons[temp_str] = True
+        msg = {"alliance": alliance, "button": button}
+        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
+
 
 def final_score(args):
-    ## TODO: This
-    pass
+    '''
+    send shepherd the final score, send score to scoreboard
+    '''
+    blue_final = get_score(args['blue_score'])
+    gold_final = get_score(args['gold_score'])
+    msg = {"alliance": gold, "amount": gold_final}
+    lcm_send(SCOREBOARD_HEADER.SCORE, msg)
+    msg = {"alliance": blue, "amount": blue_final}
+    lcm_send(SCOREBOARD_HEADER.SCORE, msg)
 
-def game_perks(args):
-    ## TODO: This
-    pass
 
 def overdrive_triggered(args):
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TRIGGER_OVERDRIVE)
@@ -421,10 +462,20 @@ events = None
 ###########################################
 # Game Specific Variables
 ###########################################
+buttons = {'gold_1': False, 'gold_2': False, 'blue_1': False, 'Blue_2': False}
+launch_button_timer_gold_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
+launch_button_timer_gold_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
+launch_button_timer_blue_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
+launch_button_timer_blue_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
+timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_button_timer_gold_2,
+             'blue_1': launch_button_timer_blue_1, 'Blue_2': launch_button_timer_blue_2}
+
 
 overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
 code_solution = {}
 code_effect = {}
+codes = []
+codes_used = []
 
 #nothing
 
