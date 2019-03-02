@@ -38,17 +38,16 @@ class SENSORS_HEADER():
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
-    ROBOT_STATE = "robot_state"
-    CODES = "codes"
-        # CODES{codes_solutions}
-    HEARTBEAT = "heartbeat"
-    DECODE = "decode"
-        # DECODE{alliance, tag}
+
+    IP_ADDRESS = "ip_address"
+    #TODO this^
+
+class RUNTIME_HEADER():
     SPECIFIC_ROBOT_STATE = "specific_robot_state"
         # SPECIFIC_ROBOT_STATE{team_number, autonomous, enabled}
-    MASTER = "master"
-    	# MASTER{alliance, team_number}
-
+        # robot ip is 192.168.128.teamnumber
+    DECODE = "decode"
+        # DECODE{alliance, seed}
 
 # pylint: disable=invalid-name
 class UI_HEADER():
@@ -75,13 +74,14 @@ class SCOREBOARD_HEADER():
 
 # pylint: disable=invalid-name
 class CONSTANTS():
-    PERK_SELECTION_TIME = 15
+    PERK_SELECTION_TIME = 30
     AUTO_TIME = 30
     TELEOP_TIME = 180
     OVERDRIVE_TIME = 30
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
     CSV_FILE_NAME = "Sheets/schedule.csv"
     TAFFY_TIME = 15
+    TWIST_CHANCE = .3 #a value 0<x<1
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():
@@ -95,12 +95,13 @@ class LCM_TARGETS():
     SENSORS = "lcm_target_sensors"
     UI = "lcm_target_ui"
     DAWN = "lcm_target_dawn"
+    RUNTIME = "lcm_target_runtime"
 
 # pylint: disable=invalid-name
 class TIMER_TYPES():
     MATCH = {"TYPE":"match", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.STAGE_TIMER_END}
     EXTENDED_TELEOP = {"TYPE":"extended_teleop", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.END_EXTENDED_TELEOP}
-    OVERDRIVE_DELAY = {"TYPE":"overdrive_delay", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.}#TODO
+    OVERDRIVE_DELAY = {"TYPE":"overdrive_delay", "NEEDS_FUNCTION": True, "FUNCTION":SHEPHERD_HEADER.TRIGGER_OVERDRIVE}#TODO
     LAUNCH_BUTTON = {"TYPE":"extended_teleop", "NEEDS_FUNCTION": False}
 
 # pylint: disable=invalid-name
@@ -115,10 +116,17 @@ class STATE():
 class EFFECTS():
     TWIST = "twist"
     SPOILED_CANDY = "spoiled_candy"
-    ALL_EFFECTS = [TWIST, SPOILED_CANDY]
 
 class PERKS():
     EMPTY = "empty"
     BUBBLEGUM = "bubblegum"
+    DIET = "diet"
+    SWEET_SPOT = "sweet_spot"
     TAFFY = "taffy"
+    CHOCOLATE_COVERED_ESPRESSO_BEANS = "chocolate_covered_espresso_beans"
+    MINTY_FRESH_START = "minty_fresh_start"
+    RASPBERRY_COTTON_CANDY = "raspberry_cotton_candy"
+    ARTIFICIAL_SWEETENER = "artificial"
+    JAWBREAKER = "jawbreaker"
+    SOUR_GUMMY_WORMS = "sour_gummy_worms"
     # To be continued TODO

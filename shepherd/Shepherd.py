@@ -11,11 +11,14 @@ import Sheet
 
 __version__ = (1, 0, 0)
 
+#TODO move comunication of game state and of code stuff directly to runtime
+#TODO send dawn robot IPs
 
 ###########################################
 # Evergreen Methods
 ###########################################
 
+#TODO send stage to scoreboard
 def start():
     '''
     Main loop which processes the event queue and calls the appropriate function
@@ -156,6 +159,8 @@ def to_end(args):
     Move to end stage after the match ends. Robots should be disabled here
     and final score adjustments can be made.
     '''
+
+
     global game_state
     lcm_send(LCM_TARGETS.UI, UI_HEADER.SCORES,
              {"blue_score" : math.floor(alliances[ALLIANCE_COLOR.BLUE].score),
@@ -250,8 +255,6 @@ def disable_robots():
 ###########################################
 # Game Specific Methods
 ###########################################
-code_solution = {}
-code_effect = {}
 
 def disable_robot(args):
     '''
@@ -276,7 +279,7 @@ def set_master_robot(args):
 
 def code_setup():
     '''
-    Set up code_solution and code_effect dictionaries and send code_solution to Dawn
+    Set up code_solution and code_effect dictionaries
     '''
     global code_solution
     global code_effect
@@ -284,7 +287,6 @@ def code_setup():
     code_solution = Code.assign_code_solution()
     code_effect = Code.assign_code_effect()
     msg = {"codes_solutions": code_solution}
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
 def apply_code(args):
     '''
@@ -295,6 +297,10 @@ def apply_code(args):
     if (answer is not None and answer in code_solution.values()):
         code = [k for k, v in code_solution.items() if v == answer][0]
         msg = {"alliance": alliance, "effect": code_effect[code]}
+        if code_effect[code] == EFFECTS.TWIST and not alliance.can_twist:
+            code_effect[code] = EFFECTS.SPOILED_CANDY
+        if code_effect[code] == EFFECTS.TWIST:
+            alliance.can_twist = False
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
     else:
         msg = {"alliance": alliance}
@@ -382,7 +388,7 @@ wait_functions = {
 
 teleop_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
-    SHEPHERD_HEADER.STAGE_TIMER_END : to_end,
+    SHEPHERD_HEADER.STAGE_TIMER_END : end_teleop,
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
@@ -417,6 +423,9 @@ events = None
 ###########################################
 
 overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
+code_solution = {}
+code_effect = {}
+
 #nothing
 
 
