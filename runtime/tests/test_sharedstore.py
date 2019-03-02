@@ -1,66 +1,59 @@
 import unittest
 import threading
 import multiprocessing
-from runtime.statemanager import SharedStoreClient, SharedStoreServer
+from runtime.statemanager import SharedStore
 import pytest
+import time
 
 
 class TestSharedStore(unittest.TestCase):
-    def setUp(self):
-        self.name = 'test-store'
-        self.server = SharedStoreServer(self.name)
-        self.server.start()
+    def create_net(self, count, target, args=None, kwargs=None):
+        args, kwargs = args or (), kwargs or {}
+        ready, error = multiprocessing.Barrier(count), multiprocessing.Event()
+        children = [multiprocessing.Process(target=target, args=(whoami, ready, error) + args,
+                                            kwargs=kwargs) for whoami in range(count)]
+        return children, ready, error
 
-    def tearDown(self):
-        self.server.stop()
+    def set_and_wait(self, store, whoami, ready, error, count, delay=1):
+        store.ready.wait()
+        ready.wait()
+        store[whoami] = whoami
+        ready.wait()
+        time.sleep(delay)  # Wait for command streams to stabilize
+        for peer in range(count):
+            if peer not in store:
+                error.set()
+                return
 
-    def check_set_watch(self, sender, receiver, key, value):
-        async def recv(store, recv_key):
-            self.assertEqual(key, recv_key)
-            self.assertEqual(store[key], value)
-            done.set()
-        done = threading.Event()
-        receiver.watch(key, recv)
-        sender[key] = value
-        done.wait()
+    def test_net_set(self):
+        def target(whoami, ready, error, count):
+            with SharedStore() as store:
+                self.set_and_wait(store, whoami, ready, error, count)
+        count = 10
+        children, ready, error = self.create_net(count, target, args=(count, ))
+        for child in children:
+            child.start()
+        for child in children:
+            child.join()
+        self.assertFalse(error.is_set())
 
-    def check_del_watch(self, sender, receiver, key):
-        async def set_recv(store, recv_key):
-            del store[recv_key]
-        async def del_recv(store, recv_key):
-            self.assertNotIn(store, recv_key)
-            done.set()
-        done = threading.Event()
-        receiver.watch(key, set_recv)
-        sender.watch(key, del_recv)
-        sender[key] = None
-        done.wait()
-
-    def test_client_set_watch(self):
-        with SharedStoreClient(self.name) as client:
-            self.check_set_watch(client, self.server, 'key', 1)
-
-    def test_server_set_watch(self):
-        with SharedStoreClient(self.name) as client:
-            self.check_set_watch(self.server, client, 'key', 1)
-
-    def test_client_del_watch(self):
-        # with SharedStoreClient(self.name) as client:
-        #     self.check_del_watch(client, self.server, 'key')
-        pass
-
-    def test_server_del_watch(self):
-        # with SharedStoreClient(self.name) as client:
-        #     self.check_del_watch(self.server, client, 'key')
-        pass
-
-    def test_server_restart(self):
-        self.assertEqual(threading.active_count(), 2)
-        self.server.stop()
-        self.assertEqual(threading.active_count(), 1)
-        self.server.start()
-        self.assertEqual(threading.active_count(), 2)
-
-    @pytest.mark.perf
-    def test_set_throughput(self):
-        pass  # TODO
+    def test_net_del(self):
+        def target(whoami, ready, error, count):
+            with SharedStore() as store:
+                self.set_and_wait(store, whoami, ready, error, count)
+                if error.is_set():
+                    return
+                del store[whoami]
+                ready.wait()
+                time.sleep(1)
+                for peer in range(count):
+                    if peer in store:
+                        error.set()
+                        return
+        count = 10
+        children, ready, error = self.create_net(count, target, args=(count, ))
+        for child in children:
+            child.start()
+        for child in children:
+            child.join()
+        self.assertFalse(error.is_set())

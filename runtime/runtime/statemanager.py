@@ -28,7 +28,8 @@ class SharedStore(UserDict):
         MUTATE = SET | DEL
 
     ipc_name_format = '/tmp/runtime-store-{pid}.ipc'
-    lock_name = '/tmp/runtime-store.lock'
+    join_lock_name = '/tmp/runtime-store.lock'
+    mutate_lock_name = '/tmp/runtime-mutate.lock'
 
     @staticmethod
     def get_transport(name):
@@ -61,20 +62,24 @@ class SharedStore(UserDict):
         self.thread.start()
 
     def stop(self):
-        if hasattr(self, 'thread'):
-            self.thread.stop()
-            self.thread.join()
+        self.ready.wait()
+        self.thread.stop()
+        self.thread.join()
+        self.ready.clear()
         self.bus.close()
 
     async def bootstrap_bus_listener(self):
         with self.bus:
-            with FileLock(self.lock_name):
+            # This section executes atomically to ensure the network is
+            # strongly connected.
+            with FileLock(self.join_lock_name):
                 for peer in self.get_peers():
                     try:
                         self.bus.dial(self.get_transport(peer), block=True)
-                    except pynng.exceptions.ConnectionRefused:
+                    except (pynng.exceptions.ConnectionRefused, pynng.exceptions.Closed):
                         pass  # TODO: raise warning
                 self.bus.listen(self.get_bus_url())
+            self.ready.set()
             await self.recv_from_bus()
 
     async def recv_from_bus(self):
@@ -88,39 +93,15 @@ class SharedStore(UserDict):
                 pass  # Raise warning
 
     def send_command(self, command, *data):
+        self.ready.wait()
         self.bus.send(pickle.dumps((command, ) + data))
 
     def __setitem__(self, key, value):
-        self.send_command(SharedStore.Command.SET, key, value)
-        super().__setitem__(key, value)
+        with FileLock(self.mutate_lock_name):
+            self.send_command(SharedStore.Command.SET, key, value)
+            super().__setitem__(key, value)
 
     def __delitem__(self, key):
-        self.send_command(SharedStore.Command.DEL, key)
-        super().__delitem__(key)
-
-
-async def _target(whoami):
-    with SharedStore() as sm:
-        await asyncio.sleep(2)
-        sm[whoami] = whoami
-    print('Done!')
-
-
-def target(whoami):
-    asyncio.run(_target(whoami))
-
-
-if __name__ == '__main__':
-    children = [
-        multiprocessing.Process(target=target, args=(i, ))
-        for i in range(3)
-    ]
-    for child in children:
-        child.start()
-    try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        for child in children:
-            child.terminate()
-            child.join()
+        with FileLock(self.mutate_lock_name):
+            self.send_command(SharedStore.Command.DEL, key)
+            super().__delitem__(key)
