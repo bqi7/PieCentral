@@ -15,7 +15,7 @@ from typing import Callable, Tuple, Dict
 import aioprocessing
 import runtime.logging
 from runtime.api import Robot
-from runtime import networking
+from runtime import networking, devices
 from runtime.util import RuntimeException, RuntimeIPCException
 from collections import UserDict
 
@@ -75,19 +75,28 @@ class SubprocessMonitor(UserDict):
         return subprocess
 
     async def monitor_process(self, name):
+        failures = 0
         while True:
             start = time.time()
-            for _ in range(self.max_respawns):
-                subprocess = await self.start_process(name)
-                subprocess.join()
+            subprocess = await self.start_process(name)
+            await subprocess.coro_join()
             end = time.time()
-            if end - start <= self.respawn_reset:
-                raise RuntimeIPCException('Subprocess failed too many times.',
-                                          name=name, start=start, end=end)
+            if end - start > self.respawn_reset:
+                failures = 0
+            failures += 1
+            LOGGER.warn('Subprocess failed.', name=name, start=start, end=end, failures=failures)
+            if failures >= self.max_respawns:
+                raise RuntimeIPCException('Subprocess failed too many times.', failures=failures)
+            else:
+                LOGGER.warn('Attempting to respawn subprocess.', name=name)
 
     async def spin(self):
         monitors = [self.monitor_process(name) for name in self]
         await asyncio.gather(*monitors)
+
+    def terminate(self):
+        for name in self:
+            self.subprocesses[name].terminate()
 
 
 def bootstrap(options):
@@ -99,6 +108,9 @@ def bootstrap(options):
         options['udp_send'],
         options['udp_recv'],
     ))
+    monitor.add('devices', devices.start, (
+        options['poll_period'],
+    ))
     try:
         asyncio.run(monitor.spin())
     except KeyboardInterrupt:
@@ -107,4 +119,6 @@ def bootstrap(options):
         # If we reach the top of the call stack, something is seriously wrong.
         ctx = exc.data if isinstance(exc, RuntimeException) else {}
         msg = 'Fatal exception: Runtime cannot recover from this failure.'
-        LOGGER.critical(msg, msg=str(exc), ctx=ctx)
+        LOGGER.critical(msg, msg=str(exc), ctx=ctx, options=options)
+    finally:
+        monitor.terminate()

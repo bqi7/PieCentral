@@ -7,6 +7,9 @@ __all__ = ['SmartSensorObserver']
 
 
 import asyncio
+from collections import namedtuple
+import ctypes
+from typing import List
 import os
 import serial
 # from serial.aio import create_serial_connection
@@ -120,6 +123,10 @@ def load_schema(schema_path):
                 param['write'] = False
             # TODO: add default lower and upper bounds
     print(base_schema)
+
+
+def start(poll_period):
+    LOGGER.info('ERROR')
 
 
 def bootstrap(options):

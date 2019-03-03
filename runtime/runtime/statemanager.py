@@ -11,6 +11,7 @@ import time
 from functools import lru_cache
 from runtime.util import AsyncioThread
 
+from posix_ipc import Semaphore
 from filelock import FileLock
 import pynng
 from pynng import Bus0 as Bus
@@ -28,8 +29,6 @@ class SharedStore(UserDict):
         MUTATE = SET | DEL
 
     ipc_name_format = '/tmp/runtime-store-{pid}.ipc'
-    join_lock_name = '/tmp/runtime-store.lock'
-    mutate_lock_name = '/tmp/runtime-mutate.lock'
 
     @staticmethod
     def get_transport(name):
@@ -57,6 +56,8 @@ class SharedStore(UserDict):
         self.stop()
 
     def start(self):
+        self.join_lock = Semaphore('/runtime-join')
+        self.mutate_lock = Semaphore('/runtime-mutate')
         self.thread = AsyncioThread(name=self.name, daemon=True,
                                     target=self.bootstrap_bus_listener)
         self.thread.start()
@@ -67,12 +68,14 @@ class SharedStore(UserDict):
         self.thread.join()
         self.ready.clear()
         self.bus.close()
+        self.join_lock.close()
+        self.mutate_lock.close()
 
     async def bootstrap_bus_listener(self):
         with self.bus:
             # This section executes atomically to ensure the network is
             # strongly connected.
-            with FileLock(self.join_lock_name):
+            with self.:
                 for peer in self.get_peers():
                     try:
                         self.bus.dial(self.get_transport(peer), block=True)
@@ -97,11 +100,11 @@ class SharedStore(UserDict):
         self.bus.send(pickle.dumps((command, ) + data))
 
     def __setitem__(self, key, value):
-        with FileLock(self.mutate_lock_name):
-            self.send_command(SharedStore.Command.SET, key, value)
-            super().__setitem__(key, value)
+        # with FileLock(self.mutate_lock_name):
+        self.send_command(SharedStore.Command.SET, key, value)
+        super().__setitem__(key, value)
 
     def __delitem__(self, key):
-        with FileLock(self.mutate_lock_name):
-            self.send_command(SharedStore.Command.DEL, key)
-            super().__delitem__(key)
+        # with FileLock(self.mutate_lock_name):
+        self.send_command(SharedStore.Command.DEL, key)
+        super().__delitem__(key)

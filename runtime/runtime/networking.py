@@ -1,6 +1,7 @@
 import asyncio
 import signal
 import socket
+import time
 
 from runtime.logging import make_logger
 
@@ -70,4 +71,4 @@ def stop(_signum, _stack_frame):
 
 
 def start(hostname, tcp_port, udp_send_port, udp_recv_port):
-    time.sleep(5)
+    time.sleep(200)
