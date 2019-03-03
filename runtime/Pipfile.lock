@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5e4c9fa2aac2d167f1f54743ef3b6b8a9bf0661108586b9abc9987d2c3d34f6f"
+            "sha256": "ae279bb0cfbdd99532030345a26e2fc12e1d9c1219960a37b33d4e38f27eba05"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -15,6 +15,13 @@
         ]
     },
     "default": {
+        "aioprocessing": {
+            "hashes": [
+                "sha256:9b88f4e51b7358e7a53ea2b6cfd1e000848270a1b09532a410b6d38e015b7de5",
+                "sha256:b6952b476586c2a2e0d2802f42d73e6898ab474213ffda788d720a3fb57b01fb"
+            ],
+            "version": "==1.0.1"
+        },
         "cffi": {
             "hashes": [
                 "sha256:00b97afa72c233495560a0793cdc86c2571721b4271c0667addc83c417f3d90f",
@@ -94,13 +101,6 @@
             ],
             "version": "==0.29.6"
         },
-        "filelock": {
-            "hashes": [
-                "sha256:b8d5ca5ca1c815e1574aee746650ea7301de63d87935b3463d26368b76e31633",
-                "sha256:d610c1bb404daf85976d7a82eb2ada120f04671007266b708606565dd03b5be6"
-            ],
-            "version": "==3.0.10"
-        },
         "posix-ipc": {
             "hashes": [
                 "sha256:40f1324d1aac30516dc6476f6ec4d7a8c2deff584042dcf841bc612a639bd474",
@@ -177,10 +177,10 @@
     "develop": {
         "astroid": {
             "hashes": [
-                "sha256:1d5d0e6e408701ae657342645465d08be6fb66cf0ede16a31cc6435bd2e61718",
-                "sha256:8fc40235cd184bff5d7b8e1284a647005cbd36bbc87d0c39f6f6389ae26e17ad"
+                "sha256:bfa089d8ebeccc44c35fb06cc9ebf951d9b47b371d25dc14be85b30fef46267f",
+                "sha256:d76f540795deb23b2f4ca6d3e40ab4ff543fdb5c82c083664b8651a4cb129ac7"
             ],
-            "version": "==2.2.0"
+            "version": "==2.2.2"
         },
         "atomicwrites": {
             "hashes": [
@@ -268,10 +268,10 @@
         },
         "pylint": {
             "hashes": [
-                "sha256:2bf4bd58d6d5d87174fbc9d1d134a9aeee852d4dc29cbd422a7015772770bc63",
-                "sha256:ee80c7af4f127b2a480d83010c9f0e97beb8eaa652b78c2837d3ed30b12e1182"
+                "sha256:5d77031694a5fb97ea95e828c8d10fc770a1df6eb3906067aaed42201a8a6a09",
+                "sha256:723e3db49555abaf9bf79dc474c6b9e2935ad82230b10c1138a71ea41ac0fff1"
             ],
-            "version": "==2.3.0"
+            "version": "==2.3.1"
         },
         "pytest": {
             "hashes": [

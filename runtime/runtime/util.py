@@ -9,7 +9,7 @@ import threading
 
 class RuntimeException(UserDict, Exception):
     """
-    Base class for runtime-related exceptions.
+    Base class for Runtime-specific exceptions.
 
     Example:
 
@@ -29,6 +29,10 @@ class RuntimeException(UserDict, Exception):
             kwargs = ', '.join(f'{name}={repr(value)}' for name, value in self.items())
             return f'{cls_name}({repr(msg)}, {kwargs})'
         return f'{cls_name}({repr(msg)})'
+
+
+class RuntimeIPCException(RuntimeException):
+    pass
 
 
 class AutoIntEnum(IntEnum):
