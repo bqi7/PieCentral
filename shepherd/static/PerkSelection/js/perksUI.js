@@ -20,7 +20,7 @@ $(".image-checkbox").on("click", function (e) {
   e.preventDefault();
 });
 
-/*
+
 var socket = io('http://127.0.0.1:5000');
 var t1_name, t1_num, t2_name, t2_num
 var master_robot
@@ -95,4 +95,27 @@ function submitPerks() {
     //TODO: Gather list of selected perks
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
-}*/
+    var robot = document.getElementsByName('master_robot'));
+    if (robot[0].checked) {
+      master_robot = robot[0];
+    } else {
+      master_robot = robot[1];
+    }
+    perk1 = getPerk('perk1');
+    perk2 = getPerk('perk2');
+    perk3 = getPerk('perk3');
+    data = {'alliance' : team_color, 'master_robot' : master_robot, 'perk1' : perk1, 'perk2' : perk2, 'perk3' : perk3}
+    socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
+}
+
+function getPerk(name) {
+  var tier = document.getElementsByName(name);
+  var perk = tier[0];
+  for (var i = 0; i < tier.length; i++) {
+    if (tier[i].checked) {
+      perk = perk[i]
+      break;
+    }
+  }
+  return perk;
+}
