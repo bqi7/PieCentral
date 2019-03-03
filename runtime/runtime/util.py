@@ -35,6 +35,10 @@ class RuntimeIPCException(RuntimeException):
     pass
 
 
+class RuntimeExecutorException(RuntimeException):
+    pass
+
+
 class AutoIntEnum(IntEnum):
     """
     An enum with automatically incrementing integer values, starting from zero.

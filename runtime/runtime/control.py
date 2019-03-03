@@ -7,6 +7,7 @@ import atexit
 from enum import Enum, auto
 import multiprocessing
 import importlib
+import inspect
 import os
 import sys
 import time
@@ -16,7 +17,11 @@ import aioprocessing
 import runtime.logging
 from runtime.api import Robot
 from runtime import networking, devices
-from runtime.util import RuntimeException, RuntimeIPCException
+from runtime.util import (
+    RuntimeException,
+    RuntimeIPCException,
+    RuntimeExecutorException,
+)
 from collections import UserDict
 
 LOGGER = runtime.logging.make_logger(__name__)
@@ -29,37 +34,77 @@ class Mode(Enum):
     ESTOP = auto()
 
 
+def blank_function():
+    pass
+
+
+async def blank_coroutine():
+    pass
+
+
 class StudentCodeExecutor:
+    required_functions = {
+        'autonomous_setup': blank_function,
+        'autonomous_main': blank_function,
+        'teleop_setup': blank_function,
+        'teleop_main': blank_function,
+        'autonomous_actions': blank_coroutine,
+    }
+
     def __init__(self, path: str):
         self.path = os.path.abspath(os.path.expanduser(path))
         dirname, basename = os.path.split(self.path)
         self.module_name, _ = os.path.splitext(basename)
-        sys.path.append(dirname)
-        LOGGER.debug(f'Added "{dirname}" to "sys.path".')
+        if dirname not in sys.path:
+            sys.path.append(dirname)
+            LOGGER.debug(f'Added "{dirname}" to "sys.path".')
 
     def __call__(self, student_freq, student_timeout):
         while True:
             self.reload()
             time.sleep(1)
 
-    def patch(self):
-        self.module.Robot = Robot
+    def patch(self, module):
+        """ Monkey-patch student code. """
+        module.Robot = Robot
+        for name, default_function in self.required_functions.items():
+            if not hasattr(module, name):
+                setattr(module, name, default_function)
+
+    def validate(self, module):
+        for name, default_function in self.required_functions.items():
+            function = getattr(module, name)
+            if not inspect.isfunction(function):
+                raise RuntimeExecutorException(f'"{name}" is not a function.',
+                                               function_name=name)
+            expects_coro = inspect.iscoroutinefunction(default_function)
+            actually_coro = inspect.iscoroutinefunction(function)
+            if expects_coro and not actually_coro:
+                raise RuntimeExecutorException(
+                    f'"{name}" is not a coroutine function when it should be.',
+                    function_name=name,
+                )
+            if not expects_coro and actually_coro:
+                raise RuntimeExecutorException(
+                    f'"{name}" is a corountine function when it should not be.',
+                    function_name=name,
+                )
+            if inspect.signature(default_function) != inspect.signature(function):
+                raise RuntimeExecutorException(f'"{name}" signature is not correct.',
+                                               function_name=name)
 
     def reload(self):
-        try:
-            if not hasattr(self, 'module'):
-                self.module = importlib.import_module(self.module_name)
-            else:
-                self.module = importlib.reload(self.module)
-        except Exception as exc:
-            LOGGER.error('Unable to import student code module.',
-                         msg=str(exc), type=type(exc).__name__)
+        if not hasattr(self, 'module'):
+            self.module = importlib.import_module(self.module_name)
         else:
-            LOGGER.debug('Imported student code module.')
-
-
-def run_student_code(module_file):
-    pass
+            self.module = importlib.reload(self.module)
+        self.patch(self.module)
+        self.validate(self.module)
+        # except Exception as exc:
+        #     LOGGER.error('Unable to import student code module.',
+        #                  msg=str(exc), type=type(exc).__name__)
+        # else:
+        #     LOGGER.debug('Imported student code module.')
 
 
 class SubprocessMonitor(UserDict):
@@ -126,6 +171,7 @@ class SubprocessMonitor(UserDict):
 
 
 def bootstrap(options):
+    """ Initializes subprocesses and catches any fatal exceptions. """
     runtime.logging.initialize(options['log_level'])
     monitor = SubprocessMonitor(options['max_respawns'], options['respawn_reset'])
     monitor.add('networking', networking.start, (
@@ -144,6 +190,7 @@ def bootstrap(options):
         options['student_freq'],
         options['student_timeout'],
     ))
+
     try:
         asyncio.run(monitor.spin())
     except KeyboardInterrupt:

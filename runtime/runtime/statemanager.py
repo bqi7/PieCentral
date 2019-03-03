@@ -72,18 +72,19 @@ class SharedStore(UserDict):
         self.mutate_lock.close()
 
     async def bootstrap_bus_listener(self):
-        with self.bus:
-            # This section executes atomically to ensure the network is
-            # strongly connected.
-            with self.:
-                for peer in self.get_peers():
-                    try:
-                        self.bus.dial(self.get_transport(peer), block=True)
-                    except (pynng.exceptions.ConnectionRefused, pynng.exceptions.Closed):
-                        pass  # TODO: raise warning
-                self.bus.listen(self.get_bus_url())
-            self.ready.set()
-            await self.recv_from_bus()
+        pass
+        # with self.bus:
+        #     # This section executes atomically to ensure the network is
+        #     # strongly connected.
+        #     with self.:
+        #         for peer in self.get_peers():
+        #             try:
+        #                 self.bus.dial(self.get_transport(peer), block=True)
+        #             except (pynng.exceptions.ConnectionRefused, pynng.exceptions.Closed):
+        #                 pass  # TODO: raise warning
+        #         self.bus.listen(self.get_bus_url())
+        #     self.ready.set()
+        #     await self.recv_from_bus()
 
     async def recv_from_bus(self):
         while True:

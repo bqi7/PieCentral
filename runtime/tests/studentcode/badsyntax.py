@@ -12,3 +12,5 @@ def teleop_setup():
 
 def teleop_main():
     pass
+
+This module should raise an error when imported.
