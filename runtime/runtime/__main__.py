@@ -18,11 +18,13 @@ def get_module_path(filename):
               help='Number of times to attempt to respawn a child process.')
 @click.option('--respawn-reset', default=120,
               help='Seconds before the respawn counter is reset.')
-@click.option('-t', '--student-time', default=1.0,
+@click.option('--terminate-timeout', default=5,
+              help='Timeout in seconds for subprocesses to terminate.')
+@click.option('-t', '--student-timeout', default=1.0,
               help='Student code timeout in seconds.')
 @click.option('-f', '--student-freq', default=20,
               help='Number of times to execute student code per second.')
-@click.option('--hostname', default='127.0.0.1', help='Hostname to bind servers to.')
+@click.option('--host', default='127.0.0.1', help='Hostname to bind servers to.')
 @click.option('--tcp', default=1234, help='TCP port.')
 @click.option('--udp-send', default=1235, help='UDP send port.')
 @click.option('--udp-recv', default=1236, help='UDP receive port.')

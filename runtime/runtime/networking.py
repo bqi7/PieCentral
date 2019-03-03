@@ -11,7 +11,6 @@ LOGGER = make_logger(__name__)
 class DawnStreamingProtocol(asyncio.DatagramProtocol):
     def connection_made(self, transport):
         self.transport = transport
-        print('OK!')
 
     def connection_lost(self, exc):
         pass
@@ -24,6 +23,14 @@ class DawnStreamingProtocol(asyncio.DatagramProtocol):
 
     async def send_datagrams(self):
         pass
+
+
+class CommandProtocol(asyncio.Protocol):
+    pass
+
+
+class NetworkingMonitor:
+    pass
 
 
 class NetworkingManager:
@@ -40,35 +47,29 @@ async def create_server(host: str, port: int, protocol: asyncio.BaseProtocol):
                                     reuse_address=True, reuse_port=True)
 
 
-async def run(host: str, streaming_port: int, command_port: int):
-    loop = asyncio.get_event_loop()
-    try:
-        streaming_server = await create_server(host, streaming_port, DawnStreamingProtocol)
-        command_server = await create_server(host, command_port, CommandProtocol)
-        async with streaming_server, command_server:
-            await asyncio.gather(streaming_server.serve_forever(),
-                                 command_server.serve_forever())
-    except asyncio.CancelledError:
-        LOGGER.info('Event loop cancelled.')
-    finally:
-        await asyncio.gather(streaming_server.wait_closed(),
-                             command_server.wait_closed())
-        LOGGER.info('Closed streaming and command servers.')
+async def run(host: str, tcp_port: int, udp_send_port: int, udp_recv_port: int):
+    while True:
+        pass
+    # loop = asyncio.get_event_loop()
+    # try:
+    #     streaming_server = await create_server(host, tcp_port, DawnStreamingProtocol)
+    #     command_server = await create_server(host, udp_recv_port, CommandProtocol)
+    #     async with streaming_server, command_server:
+    #         await asyncio.gather(streaming_server.serve_forever(),
+    #                              command_server.serve_forever())
+    # except asyncio.CancelledError:
+    #     LOGGER.info('Event loop cancelled.')
+    # finally:
+    #     await asyncio.gather(streaming_server.wait_closed(),
+    #                          command_server.wait_closed())
+    #     LOGGER.info('Closed streaming and command servers.')
 
 
 def stop(_signum, _stack_frame):
-    tasks = asyncio.all_tasks()
-    for task in tasks:
-        if not task.cancelled():
-            task.cancel()
-    tasks = asyncio.gather(*tasks, return_exceptions=True)
-    tasks = asyncio.wait_for(tasks, )
+    pass
 
 
-# def start(host, streaming_port, command_port):
-#     signal.signal(signal.SIGTERM, stop)
-#     asyncio.run(run(host, streaming_port, command_port))
-
-
-def start(hostname, tcp_port, udp_send_port, udp_recv_port):
-    time.sleep(200)
+def start(host, tcp_port, udp_send_port, udp_recv_port):
+    signal.signal(signal.SIGTERM, stop)
+    LOGGER.debug('Attached SIGTERM handler.')
+    asyncio.run(run(host, tcp_port, udp_send_port, udp_recv_port))

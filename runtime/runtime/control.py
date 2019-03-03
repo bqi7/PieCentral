@@ -29,22 +29,33 @@ class Mode(Enum):
     ESTOP = auto()
 
 
-class StudentCode:
+class StudentCodeExecutor:
     def __init__(self, path: str):
         self.path = os.path.abspath(os.path.expanduser(path))
         dirname, basename = os.path.split(self.path)
-        sys.path.append(dirname)
-        LOGGER.debug(f'Added "{dirname}" to `sys.path`.')
-
         self.module_name, _ = os.path.splitext(basename)
-        self.module = importlib.import_module(self.module_name)
-        LOGGER.debug('Imported student code module.', module=self.module_name)
+        sys.path.append(dirname)
+        LOGGER.debug(f'Added "{dirname}" to "sys.path".')
+
+    def __call__(self, student_freq, student_timeout):
+        while True:
+            self.reload()
+            time.sleep(1)
 
     def patch(self):
         self.module.Robot = Robot
 
     def reload(self):
-        self.module = importlib.reload(self.module)
+        try:
+            if not hasattr(self, 'module'):
+                self.module = importlib.import_module(self.module_name)
+            else:
+                self.module = importlib.reload(self.module)
+        except Exception as exc:
+            LOGGER.error('Unable to import student code module.',
+                         msg=str(exc), type=type(exc).__name__)
+        else:
+            LOGGER.debug('Imported student code module.')
 
 
 def run_student_code(module_file):
@@ -70,6 +81,7 @@ class SubprocessMonitor(UserDict):
             target=target,
             args=args,
             kwargs=kwargs,
+            daemon=True,
         )
         subprocess.start()
         return subprocess
@@ -84,32 +96,53 @@ class SubprocessMonitor(UserDict):
             if end - start > self.respawn_reset:
                 failures = 0
             failures += 1
-            LOGGER.warn('Subprocess failed.', name=name, start=start, end=end, failures=failures)
+            ctx = {'start': start, 'end': end, 'failures': failures, 'subprocess_name': name}
+            LOGGER.warn('Subprocess failed.', **ctx)
             if failures >= self.max_respawns:
-                raise RuntimeIPCException('Subprocess failed too many times.', failures=failures)
+                raise RuntimeIPCException('Subprocess failed too many times.', **ctx)
             else:
-                LOGGER.warn('Attempting to respawn subprocess.', name=name)
+                LOGGER.warn('Attempting to respawn subprocess.', subprocess_name=name)
 
     async def spin(self):
         monitors = [self.monitor_process(name) for name in self]
         await asyncio.gather(*monitors)
 
-    def terminate(self):
+    def terminate(self, timeout=None):
         for name in self:
-            self.subprocesses[name].terminate()
+            subprocess = self.subprocesses[name]
+            if subprocess.is_alive():
+                LOGGER.warn('Sending SIGTERM to subprocess.', subprocess_name=name)
+                subprocess.terminate()
+                subprocess.join(timeout)
+                time.sleep(0.05)  # Wait for "exitcode" to set.
+                if subprocess.exitcode is None:
+                    LOGGER.critical('Sending SIGKILL to subprocess. '
+                                    'Unable to shut down gracefully.',
+                                    subprocess_name=name)
+                    subprocess.kill()
+
+    def running_count(self):
+        return sum(subprocess.is_alive() for subprocess in self.subprocesses.values())
 
 
 def bootstrap(options):
     runtime.logging.initialize(options['log_level'])
     monitor = SubprocessMonitor(options['max_respawns'], options['respawn_reset'])
     monitor.add('networking', networking.start, (
-        options['hostname'],
+        options['host'],
         options['tcp'],
         options['udp_send'],
         options['udp_recv'],
     ))
     monitor.add('devices', devices.start, (
+        options['poll'],
         options['poll_period'],
+        options['encoders'],
+        options['decoders'],
+    ))
+    monitor.add('executor', StudentCodeExecutor(options['student_code']), (
+        options['student_freq'],
+        options['student_timeout'],
     ))
     try:
         asyncio.run(monitor.spin())
@@ -119,6 +152,7 @@ def bootstrap(options):
         # If we reach the top of the call stack, something is seriously wrong.
         ctx = exc.data if isinstance(exc, RuntimeException) else {}
         msg = 'Fatal exception: Runtime cannot recover from this failure.'
-        LOGGER.critical(msg, msg=str(exc), ctx=ctx, options=options)
+        LOGGER.critical(msg, msg=str(exc), type=type(exc).__name__, ctx=ctx,
+                        options=options)
     finally:
-        monitor.terminate()
+        monitor.terminate(options['terminate_timeout'])

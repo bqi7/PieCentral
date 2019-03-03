@@ -17,6 +17,7 @@ import serial
 from typing import Callable, Generator
 from runtime.logging import make_logger
 import yaml
+import time
 
 LOGGER = make_logger(__name__)
 
@@ -125,8 +126,9 @@ def load_schema(schema_path):
     print(base_schema)
 
 
-def start(poll_period):
-    LOGGER.info('ERROR')
+def start(poll, poll_period, encoders, decoders):
+    while True:
+        pass
 
 
 def bootstrap(options):
