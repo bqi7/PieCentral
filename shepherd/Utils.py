@@ -19,6 +19,9 @@ class SHEPHERD_HEADER():
     END_EXTENDED_TELEOP = "end_extended_teleop"
 
     LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
+
+    AUTO_LAUNCH_BUTTON_TRIGGERED = "auto_launch_button_triggered"
+
     CODE_APPLICATION = "code_application"
 
     APPLY_PERKS = "apply_perks"
@@ -29,8 +32,6 @@ class SHEPHERD_HEADER():
         # ASSIGN_TEAMS{g1num, g2num, b1num, b2num}
     TEAM_RETRIEVAL = "team_retrieval"
         # TEAM_RETRIEVAL{}
-    TRIGGER_OVERDRIVE = "trigger_overdrive"
-        #TRIGGER_OVERDRIVE{}
 
 # pylint: disable=invalid-name
 class SENSORS_HEADER():
@@ -63,25 +64,22 @@ class SCOREBOARD_HEADER():
     STAGE_TIMER_START = "stage_timer_start"
     RESET_TIMERS = "reset_timers"
     ALL_INFO = "all_info"
-
     LAUNCH_BUTTON_TIMER_START = "launch_button_timer_start"
         # LAUNCH_BUTTON_TIMER_START{alliance, button}
     PERKS_SELECTED = "perks_selected"
         # PERKS_SELECTED{alliance, perk_1, perk_2, perk_3}
     APPLIED_EFFECT = "applied_effect"
         # APPLIED_EFFECT{alliance, effect}
-    OVERDRIVE_START = "overdrive_start"
-        #OVERDRIVE_START{}
 
 # pylint: disable=invalid-name
 class CONSTANTS():
     PERK_SELECTION_TIME = 15
     AUTO_TIME = 30
     TELEOP_TIME = 180
-    OVERDRIVE_TIME = 30
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
     CSV_FILE_NAME = "Sheets/schedule.csv"
     TAFFY_TIME = 15
+    COOLDOWN = 30
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():
@@ -113,12 +111,12 @@ class STATE():
     END = "end"
 
 class EFFECTS():
-    TWIST = "twist"
+    BLACKMAIL = "blackmail"
     SPOILED_CANDY = "spoiled_candy"
-    ALL_EFFECTS = [TWIST, SPOILED_CANDY]
+    ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
 
 class PERKS():
     EMPTY = "empty"
     BUBBLEGUM = "bubblegum"
     TAFFY = "taffy"
-    # To be continued TODO
+    # To be continued
