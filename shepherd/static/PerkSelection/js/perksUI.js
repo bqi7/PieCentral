@@ -20,11 +20,7 @@ $(".image-checkbox").on("click", function (e) {
   e.preventDefault();
 });
 
-<<<<<<< HEAD
 
-=======
-/*
->>>>>>> 3065a991452168fc2abc07faafb1612c1722dd92
 var socket = io('http://127.0.0.1:5000');
 var t1_name, t1_num, t2_name, t2_num
 var master_robot
@@ -99,7 +95,6 @@ function submitPerks() {
     //TODO: Gather list of selected perks
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
-<<<<<<< HEAD
     var robot = document.getElementsByName('master_robot'));
     if (robot[0].checked) {
       master_robot = robot[0];
@@ -124,6 +119,3 @@ function getPerk(name) {
   }
   return perk;
 }
-=======
-}*/
->>>>>>> 3065a991452168fc2abc07faafb1612c1722dd92

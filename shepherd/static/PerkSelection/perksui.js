@@ -35,7 +35,6 @@ socket.on(--PERKS_HEADER.TEAMS--, function(data) {
 
 document.cookie = "cookiename=cookievalue"
 
-<<<<<<< HEAD
 function setMasterRobot() {
 
 }
@@ -78,10 +77,4 @@ function getPerk(name) {
     }
   }
   return perk;
-=======
-
-//onclick
-function submitPerks() {
-
->>>>>>> 3065a991452168fc2abc07faafb1612c1722dd92
 }
