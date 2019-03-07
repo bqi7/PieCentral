@@ -9,6 +9,7 @@
 </head>
 
 <body>
+<form>
 
   <link rel="stylesheet" type="text/css" href="css/perksUI.css" media="screen" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
@@ -16,17 +17,6 @@
 
 
   <h1 align="center">Perk Selection</h1>
-
-  <!--
-  <div class="container">
-  	<div class="row">
-  		<div class="col-sm-7"></div>
-  		<div class="col-sm-3">Master Robot Selection:</div>
-  		<div class="col-sm-1">1 <input type="radio" name="master_robot"></div>
-  		<div class="col-sm-1">2 <input type="radio" name="master_robot"></div>
-  	</div>
-  </div>
-  -->
 
   <br>
   <h5 align="center">Master Robot Selection: &ensp; <input type="radio" name="master_robot"> ______ &emsp; <input type="radio" name="master_robot"> ______</h5>
@@ -36,7 +26,7 @@
 	  <ul id="ul_top_hypers">
 	  <li><input type="radio" id="cb1" name="tier1" />
 	    <label for="cb1"><img src="assets/icons/BlueTwisted.png" /></label>
-	  </li>	
+	  </li>
 	  <li><input type="radio" id="cb2" name="tier1" />
 	    <label for="cb2"><img src="assets/icons/BlueTwisted.png" /></label>
 	  </li>
@@ -80,8 +70,11 @@
 	</ul>
 	</div>
 
+	<br>
+		<input type="submit" value="Submit" onclick="submitPerks();">
+
 
 </body>
+</form>
 
 </html>
-
