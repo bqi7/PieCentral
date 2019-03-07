@@ -354,7 +354,6 @@ def launch_button_triggered(args):
     check if allowed once every 30 seconds, give one of the codes to the correct alliance through Dawn,
     update scoreboard
     '''
-    launch_button_timer_gold_1.start_timer(CONSTANTS.COOLDOWN)
     alliance = args["alliance"]
     button = args["button"]
     lb = alliance + "_" + str(button)
