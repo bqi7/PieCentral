@@ -16,7 +16,7 @@ function getCookie(cname) {
 }
 
 
-socket.on(--PERKS_HEADER.TEAMS--, function(data) {
+socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
   if (getCookie(alliance) == 'gold') {
       t1_name = JSON.parse(match_info).g1_name
@@ -32,10 +32,18 @@ socket.on(--PERKS_HEADER.TEAMS--, function(data) {
 
 })
 
+socket.on('collect_perks', function(data) {
+  
+})
+
+socket.on('collect_codes', function(data){
+  submitPerks()
+  //Change to next UI
+})
+
 
 document.cookie = "cookiename=cookievalue"
 
-<<<<<<< HEAD
 function setMasterRobot() {
 
 }
@@ -43,7 +51,7 @@ function setMasterRobot() {
 //onclick
 function submitPerks() {
   team_color = getCookie('alliance')
-  var robot = document.getElementsByName('master_robot'));
+  var robot = document.getElementsByName('master_robot');
   if (robot[0].checked) {
     master_robot = robot[0];
   } else {
@@ -78,10 +86,4 @@ function getPerk(name) {
     }
   }
   return perk;
-=======
-
-//onclick
-function submitPerks() {
-
->>>>>>> 3065a991452168fc2abc07faafb1612c1722dd92
 }
