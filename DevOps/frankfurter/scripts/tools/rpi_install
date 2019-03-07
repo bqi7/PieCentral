@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# install pre-built image onto SD, then run make_team_net to setup networking
+
+read -e -p 'Enter the path to the pre-built image: ' path_to_img
+read -e -p 'Enter the path to the SD card: ' path_to_sd
+
+# install with dd
+echo "Installing "$path_to_img" to "$path_to_sd""
+echo "This may take a while"
+
+sudo dd if="$path_to_img" of="$path_to_sd" bs=1M status=progress
+echo "Installation Successful!"
+
+# run make_team_net to setup networking
+
+CARD="$path_to_sd"2
+./make_team_net $CARD
+

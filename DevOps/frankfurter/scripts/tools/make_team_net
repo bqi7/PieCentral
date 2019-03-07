@@ -28,9 +28,10 @@ sed -i "9s/ssid=\"\"/ssid=\"Team$team_number\"/" "$build_dir/wpa_supplicant.conf
 sed -i "10s/psk=\"\"/psk=\"$router_psk\"/" "$build_dir/wpa_supplicant.conf"
 
 # Copy and move files
-sudo mount /dev/sdb2 "$mnt_dir"
-cp "$build_dir/dhcpcd.conf" "$mnt_dir/etc/dhcpcd.conf"
-cp "$build_dir/wpa_supplicant.conf" "$mnt_dir/wpa_supplicant/wpa_supplicant.conf"
+sudo mount $1 "$mnt_dir"
+sudo cp "$build_dir/dhcpcd.conf" "$mnt_dir/etc/dhcpcd.conf"
+sudo cp "$build_dir/wpa_supplicant.conf" "$mnt_dir/etc/wpa_supplicant/wpa_supplicant.conf"
+sudo umount "$mnt_dir"
 
 #scp "$build_dir/interfaces" "$build_dir/wpa_supplicant.conf" "$user@$default_ip:~"
 #ssh -t "$user@$default_ip" "sudo mv ~/interfaces /etc/network && sudo mv ~/wpa_supplicant.conf /etc/wpa_supplicant"
