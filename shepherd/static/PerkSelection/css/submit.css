@@ -1,6 +1,7 @@
 body {
     margin-top: 0px;
     margin-bottom: 0px;
+    font-family: sans-serif;
 }
 
 html {
@@ -13,12 +14,12 @@ html {
 	background: #008000;
 	color: #F8F8FF;
 	border-radius: 50%;
-	font-size: 30px; 
+	font-size: 28px; 
 
 	position: absolute;
-	top: 450px;
+	top: 420px;
 	left: 50%;
-	margin-left: -67px;
+	margin-left: -70px;
 }
 
 #submit-button:active {
