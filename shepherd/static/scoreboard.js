@@ -74,6 +74,22 @@ socket.on("applied_effect", function(data) {
   }
 })
 
+socket.on("perks_selected", function(data) {
+  console.log('selecting perks')
+  alliance = JSON.parse(data).alliance
+  perk1 = JSON.parse(data).perk_1
+  perk2 = JSON.parse(data).perk_2
+  perk3 = JSON.parse(data).perk_3
+
+  select_perk(alliance, 1, perk1)
+  select_perk(alliance, 2, perk2)
+  select_perk(alliance, 3, perk3)
+})
+
+function select_perk(alliance, perk_num, perk) {
+  id = '#' + alliance + "Perk" + perk_num.toString()
+  $(id).attr('src', '../static/PerkSelection/assets/DummyPerks/' + perk + '.png');
+}
 
 socket.on("score", function(scores) {
   blueScore = JSON.parse(scores).blue_score;

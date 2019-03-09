@@ -95,7 +95,7 @@ function submitPerks() {
     //TODO: Gather list of selected perks
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
-    var robot = document.getElementsByName('master_robot'));
+    var robot = document.getElementsByName('master_robot');
     if (robot[0].checked) {
       master_robot = robot[0];
     } else {

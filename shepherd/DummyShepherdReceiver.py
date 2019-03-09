@@ -45,8 +45,6 @@ def receiver():
         if event[0] == SHEPHERD_HEADER.APPLY_PERKS:
             msg = {"alliance": event[1]["alliance"], "perk_1": event[1]["perk1"], "perk_2": event[1]["perk2"], "perk_3": event[1]["perk3"]}
             lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.PERKS_SELECTED, msg)
-        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, {"alliance": ALLIANCE_COLOR.BLUE, "effect": EFFECTS.BLACKMAIL})
-        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, {"alliance": ALLIANCE_COLOR.BLUE, "effect": EFFECTS.SPOILED_CANDY})
 
 if __name__ == "__main__":
     receiver()
