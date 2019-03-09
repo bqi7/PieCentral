@@ -171,7 +171,7 @@ function pad(number) {
 function progress(timeleft, timetotal, $element) {
     var progressBarWidth = timeleft * $element.width() / timetotal;
     if (timeleft == timetotal) {
-        $element.find('div').animate({ width: progressBarWidth }, 100, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
+        $element.find('div').animate({ width: progressBarWidth }, 0, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
     } else {
         $element.find('div').animate({ width: progressBarWidth }, 1000, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
     }
@@ -290,7 +290,7 @@ function launchButtonTimer(timerNum, circleNum, timerStatus) {
       }
       if (i == time||!timerStatus) {  	
         clearInterval(interval);
-        $(timerNum).text(30);
+        $(timerNum).text(0);
         $(circleNum).css('stroke-dashoffset', '0')
         return;
       }
