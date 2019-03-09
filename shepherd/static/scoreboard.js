@@ -74,15 +74,33 @@ socket.on("applied_effect", function(data) {
       if (effect == "blackmail") {
           blueTwist();
       } else {
-          blueSpoiledNumber += 1
-           $('#blueSpoiledNumber').html(blueSpoiledNumber)
+          var spoiledTimeBlue = 15
+          setImageVisible('#blueSpoiled', true)
+          var spoiledIntervalB = setInterval(function() {
+            if (spoiledTimeBlue == 0) {
+              clearInterval(spoiledIntervalB)
+              setImageVisible('#blueSpoiled', false)
+            }
+            else {
+              spoiledTimeBlue -= 1
+            }
+          }, 1000)
       }
   } else {
       if (effect == "blackmail") {
           goldTwist();
       } else {
-          goldSpoiledNumber += 1
-          $('#goldSpoiledNumber').html(goldSpoiledNumber)
+        var spoiledTimeGold = 15
+        setImageVisible('#goldSpoiled', true)
+        var spoiledIntervalG = setInterval(function() {
+          if (spoiledTimeGold == 0) {
+            clearInterval(spoiledIntervalG)
+            setImageVisible('#goldSpoiled', false)
+          }
+          else {
+            spoiledTimeGold -= 1
+          }
+        }, 1000)
       }
   }
 })
@@ -166,6 +184,11 @@ function runStageTimer(timeleft) {
 
 function pad(number) {
   return (number < 10 ? '0' : '') + number
+}
+
+function setImageVisible(id, visible) {
+  var img = document.getElementById(id);
+  img.style.visibility = (visible ? 'visible' : 'hidden');
 }
 
 function progress(timeleft, timetotal, $element) {
