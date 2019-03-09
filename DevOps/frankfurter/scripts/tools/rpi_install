@@ -9,7 +9,7 @@ read -e -p 'Enter the path to the SD card: ' path_to_sd
 echo "Installing "$path_to_img" to "$path_to_sd""
 echo "This may take a while"
 
-sudo dd if="$path_to_img" of="$path_to_sd" bs=1M status=progress
+sudo dd if="$path_to_img" of="$path_to_sd" bs=4M status=progress
 echo "Installation Successful!"
 
 # run make_team_net to setup networking
