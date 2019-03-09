@@ -55,7 +55,6 @@ def receiver():
                               json.dumps(event[1], ensure_ascii=False))
 
             elif event[0] == SCOREBOARD_HEADER.APPLIED_EFFECT:
-                print('hi')
                 socketio.emit(SCOREBOARD_HEADER.APPLIED_EFFECT,
                               json.dumps(event[1], ensure_ascii=False))
 

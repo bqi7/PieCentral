@@ -11,6 +11,10 @@ $(".image-checkbox").each(function () {
   }
 });
 
+$("input").hover(function() {
+    $(this).attr('checked', true);
+});
+
 // sync the state to the input
 $(".image-checkbox").on("click", function (e) {
   $(this).toggleClass('image-checkbox-checked');
@@ -21,7 +25,7 @@ $(".image-checkbox").on("click", function (e) {
 });
 
 
-var socket = io('http://127.0.0.1:5000');
+var socket = io('http://127.0.0.1:6000');
 var t1_name, t1_num, t2_name, t2_num
 var master_robot
 
@@ -45,24 +49,24 @@ if (getCookie('alliance') != '') {
     hideButtons()
 }
 
-socket.on(TODO: --PERKS_HEADER.TEAMS--, function(data) {
-  dictionary = JSON.parse(data)
-  if (getCookie('alliance') == 'gold') {
-      t1_name = JSON.parse(match_info).g1_name
-      t1_num = JSON.parse(match_info).g1_num
-      t2_name = JSON.parse(match_info).g2_name
-      t2_num = JSON.parse(match_info).g2_num
-  } else if (getCookie('alliance') == 'blue') {
-      t1_name = JSON.parse(match_info).b1_name
-      t1_num = JSON.parse(match_info).b1_num
-      t2_name = JSON.parse(match_info).b2_name
-      t2_num = JSON.parse(match_info).b2_num
-  }
-  setTeams()
-})
+// socket.on(TODO: --PERKS_HEADER.TEAMS--, function(data) {
+//   dictionary = JSON.parse(data)
+//   if (getCookie('alliance') == 'gold') {
+//       t1_name = JSON.parse(match_info).g1_name
+//       t1_num = JSON.parse(match_info).g1_num
+//       t2_name = JSON.parse(match_info).g2_name
+//       t2_num = JSON.parse(match_info).g2_num
+//   } else if (getCookie('alliance') == 'blue') {
+//       t1_name = JSON.parse(match_info).b1_name
+//       t1_num = JSON.parse(match_info).b1_num
+//       t2_name = JSON.parse(match_info).b2_name
+//       t2_num = JSON.parse(match_info).b2_num
+//   }
+//   setTeams()
+// })
 
 function setTeams() {
-    TODO: Change name of elements
+    // TODO: Change name of elements
     $("#team-1-number").val(t1_num);
     $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
@@ -95,7 +99,7 @@ function submitPerks() {
     //TODO: Gather list of selected perks
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
-    var robot = document.getElementsByName('master_robot'));
+    var robot = document.getElementsByName('master_robot');
     if (robot[0].checked) {
       master_robot = robot[0];
     } else {

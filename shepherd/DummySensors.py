@@ -9,7 +9,8 @@ def sender():
         "code"      : SHEPHERD_HEADER.CODE_APPLICATION,
         "overdrive" : SCOREBOARD_HEADER.OVERDRIVE_START,
         "effect"    : SCOREBOARD_HEADER.APPLIED_EFFECT,
-        "timer"     : SCOREBOARD_HEADER.STAGE_TIMER_START
+        "timer"     : SCOREBOARD_HEADER.STAGE_TIMER_START,
+        "perk"      : SCOREBOARD_HEADER.PERKS_SELECTED
     }
 
     input_to_alliance = {
@@ -28,7 +29,7 @@ def sender():
     }
 
     while True:
-        new_input = input_to_header.get(input("Command: {launch, code, effect, overdrive, timer} "))
+        new_input = input_to_header.get(input("Command: {launch, code, effect, overdrive, timer, perk} "))
         if new_input == SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED:
             alliance = input_to_alliance.get(input("Alliance: blue gold "))
             button_num = input_to_launch.get(input("Launch button: 1 2 "))
@@ -64,6 +65,12 @@ def sender():
                 print("Invalid input")
                 continue
             lcm_send(LCM_TARGETS.SCOREBOARD, new_input, {"time": time})
+
+        elif new_input == SCOREBOARD_HEADER.PERKS_SELECTED:
+            msg_blue = {"alliance": "blue", "perk_1": "bubblegum", "perk_2": "minty fresh start", "perk_3": "jawbreaker"}
+            msg_gold = {"alliance": "gold", "perk_1": "taffy", "perk_2": "chocolate-covered espresso beans", "perk_3": "sour gummy worms"}
+            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.PERKS_SELECTED, msg_blue)
+            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.PERKS_SELECTED, msg_gold)
 
         # elif new_input == SCOREBOARD_HEADER.APPLIED_EFFECT
         #     alliance = input_to_alliance.get(input("Alliance: blue gold "))
