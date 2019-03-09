@@ -72,6 +72,18 @@ class SCOREBOARD_HEADER():
     OVERDRIVE_START = "overdrive_start"
         #OVERDRIVE_START{}
 
+class TABLET_HEADER():
+    TEAMS = "teams"
+    #{b1num, b2num, g1num, g2num}
+    CODE = "code"
+    #{alliance, code}
+    COLLECT_PERKS = "collect_perks"
+    #{}
+    COLLECT_CODES = "collect_codes"
+    #{}
+    RESET = "reset"
+    #{}
+
 # pylint: disable=invalid-name
 class CONSTANTS():
     PERK_SELECTION_TIME = 30

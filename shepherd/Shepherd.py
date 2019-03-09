@@ -370,9 +370,9 @@ def auto_launch_button_triggered(args):
     ## TODO: add ten score, mark button as dirty, sent to sc (both things)
     alliance = args["alliance"]
     button = args["button"]
-    alliance.change_score(10)
     temp_str = alliance + "_" + str(button)
     if not buttons[temp_str]:
+        alliance.change_score(10)
         buttons[temp_str] = True
         msg = {"alliance": alliance, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
