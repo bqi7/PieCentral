@@ -1,0 +1,40 @@
+body {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+html {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+#submit-button {
+	padding: 5px 30px 5px 30px;
+	background: #008000;
+	color: #F8F8FF;
+	border-radius: 50%;
+	font-size: 30px; 
+
+	position: absolute;
+	top: 450px;
+	left: 50%;
+	margin-left: -67px;
+}
+
+#submit-button:active {
+	opacity: 0.80;
+}
+
+#submit-button {
+	cursor: pointer;
+}
+
+#text-area {
+	position: absolute;
+	top: 150px;
+	left: 50%;
+	margin-left: -150px;
+
+	height:200px;
+    width:400px;
+}
