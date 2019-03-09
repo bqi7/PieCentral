@@ -134,7 +134,11 @@ function pad(number) {
 
 function progress(timeleft, timetotal, $element) {
     var progressBarWidth = timeleft * $element.width() / timetotal;
-    $element.find('div').animate({ width: progressBarWidth }, 500).html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
+    if (timeleft == timetotal) {
+        $element.find('div').animate({ width: progressBarWidth }, 100, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
+    } else {
+        $element.find('div').animate({ width: progressBarWidth }, 1000, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
+    }
     if(timeleft > 0) {
         setTimeout(function() {
             if(overTimer) {
@@ -144,14 +148,14 @@ function progress(timeleft, timetotal, $element) {
             }
         }, 1000);
     } else {
-      $element.find('div').animate({ width: 0 }, 500).html("")
+      $element.find('div').animate({ width: 0 }, 1000, 'linear').html("")
       $('#overdriveText').css('color', 'white');
     }
 };
 
 function startOverdrive(time) {
     overTimer = true;
-    $('#overdriveText').css('color', 'pink');
+    $('#overdriveText').css('color', 'DarkGreen');
     progress(time, time, $('#progressBar'));
 }
 
