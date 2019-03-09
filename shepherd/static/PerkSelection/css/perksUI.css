@@ -10,6 +10,10 @@ input[type="radio"][id^="cb"] {
   display: none;
 }
 
+input[type="radio"] { 
+  transform: scale(2); 
+}
+
 label {
   border: 1px solid #fff;
   padding: 10px;
@@ -44,8 +48,8 @@ label::before {
 }
 
 label img {
-  height: 150px;
-  width: 200px;
+  height: 100px;
+  width: 150px;
   transition-duration: 0.2s;
   transform-origin: 50% 50%;
 }

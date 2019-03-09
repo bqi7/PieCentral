@@ -1,8 +1,8 @@
 import json
 import threading
 import time
-import queue
-import gevent # pylint: disable=import-error
+import gevent
+import gevent.queue # pylint: disable=import-error
 from flask import Flask, render_template # pylint: disable=import-error
 from flask_socketio import SocketIO, emit, join_room, leave_room, send # pylint: disable=import-error
 from Utils import *
@@ -13,15 +13,15 @@ PORT = 5500
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='gevent')
 
 @app.route('/')
 def hello():
-    return "go to /Scoreboard.html"
+    return "go to /scoreboard.html"
 
-@app.route('/Scoreboard.html/')
+@app.route('/scoreboard.html/')
 def scoreboard():
-    return render_template('Scoreboard.html')
+    return render_template('scoreboard.html')
 
 def receiver():
 
@@ -56,6 +56,10 @@ def receiver():
 
             elif event[0] == SCOREBOARD_HEADER.APPLIED_EFFECT:
                 socketio.emit(SCOREBOARD_HEADER.APPLIED_EFFECT,
+                              json.dumps(event[1], ensure_ascii=False))
+
+            elif event[0] == SCOREBOARD_HEADER.OVERDRIVE_START:
+                socketio.emit(SCOREBOARD_HEADER.OVERDRIVE_START,
                               json.dumps(event[1], ensure_ascii=False))
                               
             #if event[0] == SCOREBOARD_HEADER.ALL_INFO):

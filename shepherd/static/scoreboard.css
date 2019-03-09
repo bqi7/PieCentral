@@ -2,7 +2,7 @@
   width: 100%;
   margin: 10px auto;
   height: 22px;
-  background-color: #0A5F44;
+  background-color: white;
 }
 
 #progressBar div {
@@ -34,24 +34,24 @@ svg {
 
 .circle_animation1 {
   stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
-  stroke-dashoffset: 440;
+  stroke-dashoffset: 0;
   transition: all 1s linear;
 }
 
 .circle_animation2 {
   stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
-  stroke-dashoffset: 440;
+  stroke-dashoffset: 0;
   transition: all 1s linear;
 }
 
 .circle_animation3 {
   stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
-  stroke-dashoffset: 440;
+  stroke-dashoffset: 0;
   transition: all 1s linear;
 }
 
 .circle_animation4 {
   stroke-dasharray: 440; /* this value is the pixel circumference of the circle */
-  stroke-dashoffset: 440;
+  stroke-dashoffset: 0;
   transition: all 1s linear;
   }

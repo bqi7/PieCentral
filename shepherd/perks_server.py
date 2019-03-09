@@ -9,7 +9,7 @@ from Utils import *
 from LCM import *
 
 HOST_URL = "0.0.0.0"
-PORT = 5500
+PORT = 6000
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
@@ -22,7 +22,6 @@ def hello():
 @app.route('/perksUI.html/')
 def scoreboard():
     return render_template('perksUI.html')
-
 
 @socketio.on('ui-to-server-selected-perks')
 def ui_to_server_scores(perks):
