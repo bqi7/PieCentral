@@ -4,7 +4,6 @@ from LCM import *
 from Utils import *
 
 def receiver():
-    overdrive = True
     events = queue.Queue()
     lcm_start_read(LCM_TARGETS.SHEPHERD, events)
     while True:
@@ -17,9 +16,6 @@ def receiver():
         #     x = {"RFID_list": s}
         #     lcm_send(LCM_TARGETS.UI, UI_HEADER.RFID_LIST, x)
         #     print("Sent RFIDs")
-        if overdrive:
-            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START, {})
-            overdrive = False
         if event[0] == SHEPHERD_HEADER.GET_SCORES:
             x = {"blue_score": rand.randrange(100), "gold_score": rand.randrange(100)}
             lcm_send(LCM_TARGETS.UI, UI_HEADER.SCORES, x)

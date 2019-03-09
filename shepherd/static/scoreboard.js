@@ -5,8 +5,8 @@ var timerUno = true;
 var timerDos = true;
 var timerThres = true;
 var timerQuatro = true;
-var goldSpoiledNumber = 1;
-var blueSpoiledNumber = 1;
+var goldSpoiledNumber = 0;
+var blueSpoiledNumber = 0;
 var isBlueTwisted = false;
 var isGoldTwisted = false;
 

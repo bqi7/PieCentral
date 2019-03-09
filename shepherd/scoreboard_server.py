@@ -58,6 +58,10 @@ def receiver():
                 print('hi')
                 socketio.emit(SCOREBOARD_HEADER.APPLIED_EFFECT,
                               json.dumps(event[1], ensure_ascii=False))
+
+            elif event[0] == SCOREBOARD_HEADER.OVERDRIVE_START:
+                socketio.emit(SCOREBOARD_HEADER.OVERDRIVE_START,
+                              json.dumps(event[1], ensure_ascii=False))
                               
             #if event[0] == SCOREBOARD_HEADER.ALL_INFO):
             #    socketio.emit('server-to-gui-all-info', json.dumps(event[1], ensure_ascii=False))

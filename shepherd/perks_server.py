@@ -23,7 +23,6 @@ def hello():
 def scoreboard():
     return render_template('perksUI.html')
 
-
 @socketio.on('ui-to-server-selected-perks')
 def ui_to_server_scores(perks):
     lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.APPLY_PERKS, json.loads(scores))
