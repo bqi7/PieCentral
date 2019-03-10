@@ -11,12 +11,18 @@ $(".image-checkbox").each(function () {
   }
 });
 
-$("input").hover(function() {
-    $(this).attr('checked', true);
+$(":input").hover(function() {
+    console.log('string')
+    $(this).prop('checked', true);
 });
+
+function select(id) {
+  document.getElementById(id).checked = true
+}
 
 // sync the state to the input
 $(".image-checkbox").on("click", function (e) {
+  console.log('test string')
   $(this).toggleClass('image-checkbox-checked');
   var $checkbox = $(this).find('input[type="checkbox"]');
   $checkbox.prop("checked",!$checkbox.prop("checked"))
@@ -24,15 +30,14 @@ $(".image-checkbox").on("click", function (e) {
   e.preventDefault();
 });
 
+// var socket = io('http://127.0.0.1:6000');
+// var t1_name, t1_num, t2_name, t2_num
+// var master_robot
 
-var socket = io('http://127.0.0.1:6000');
-var t1_name, t1_num, t2_name, t2_num
-var master_robot
 
-
-socket.on('connect', function(data) {
-  socket.emit('join', 'perks');
-});
+// socket.on('connect', function(data) {
+//   socket.emit('join', 'perks');
+// });
 
 function getCookie(cname) {
   var name = cname + "=";
