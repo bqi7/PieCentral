@@ -57,15 +57,15 @@ if (getCookie('alliance') != '') {
 socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
   if (getCookie('alliance') == 'gold') {
-      t1_name = JSON.parse(match_info).g1_name
-      t1_num = JSON.parse(match_info).g1_num
-      t2_name = JSON.parse(match_info).g2_name
-      t2_num = JSON.parse(match_info).g2_num
+      t1_name = JSON.parse(data).g1_name
+      t1_num = JSON.parse(data).g1_num
+      t2_name = JSON.parse(data).g2_name
+      t2_num = JSON.parse(data).g2_num
   } else if (getCookie('alliance') == 'blue') {
-      t1_name = JSON.parse(match_info).b1_name
-      t1_num = JSON.parse(match_info).b1_num
-      t2_name = JSON.parse(match_info).b2_name
-      t2_num = JSON.parse(match_info).b2_num
+      t1_name = JSON.parse(data).b1_name
+      t1_num = JSON.parse(data).b1_num
+      t2_name = JSON.parse(data).b2_name
+      t2_num = JSON.parse(data).b2_num
   }
   setTeams()
 })
@@ -80,12 +80,12 @@ socket.on('collect_codes', function(data){
   //Change to next UI
   var origin = window.location.origin
   window.location.href = origin + "/submit.html"
-}
+})
 
 socket.on('reset', function(data){
   var origin = window.location.origin
   window.location.href = origin + "/reset.html"
-}
+})
 
 
 function setTeams() {
