@@ -30,14 +30,14 @@ $(".image-checkbox").on("click", function (e) {
   e.preventDefault();
 });
 
-// var socket = io('http://127.0.0.1:6000');
-// var t1_name, t1_num, t2_name, t2_num
-// var master_robot
+ var socket = io('http://127.0.0.1:5001');
+ var t1_name, t1_num, t2_name, t2_num
+ var master_robot
 
 
-// socket.on('connect', function(data) {
-//   socket.emit('join', 'perks');
-// });
+ socket.on('connect', function(data) {
+   socket.emit('join', 'perks');
+ });
 
 function getCookie(cname) {
   var name = cname + "=";
@@ -71,7 +71,7 @@ socket.on('teams', function(data) {
 })
 
 socket.on('collect_perks', function(data) {
-  
+
 })
 
 socket.on('collect_codes', function(data){
