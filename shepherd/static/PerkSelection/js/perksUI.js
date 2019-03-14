@@ -71,13 +71,22 @@ socket.on('teams', function(data) {
 })
 
 socket.on('collect_perks', function(data) {
-  
+  var origin = window.location.origin
+  window.location.href = origin + "/perksUI.html"
 })
 
 socket.on('collect_codes', function(data){
   submitPerks()
   //Change to next UI
-})
+  var origin = window.location.origin
+  window.location.href = origin + "/submit.html"
+}
+
+socket.on('reset', function(data){
+  var origin = window.location.origin
+  window.location.href = origin + "/reset.html"
+}
+
 
 function setTeams() {
     // TODO: Change name of elements
