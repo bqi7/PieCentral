@@ -187,8 +187,7 @@ function pad(number) {
 }
 
 function setImageVisible(id, visible) {
-  var img = document.getElementById(id);
-  img.style.visibility = (visible ? 'visible' : 'hidden');
+  $(id).css("visibility", (visible ? 'visible' : 'hidden'));
 }
 
 function progress(timeleft, timetotal, $element) {
