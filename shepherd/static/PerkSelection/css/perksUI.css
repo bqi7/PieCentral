@@ -79,3 +79,26 @@ label img {
     justify-content:space-around;
     list-style-type:none;
 }
+
+input[type="radio"][id^="mr1"] {
+  display: none;
+ }
+ input[type="radio"][id^="mr2"] {
+  display: none;
+ }
+ 
+ #masterrobot {
+  display: flex;
+  justify-content:center;
+  list-style-type:none;
+ }
+ 
+ #masterrobot :checked+label {
+  transform: scale(0.9);
+  box-shadow: 0 0 5px #333;
+  z-index: -1;
+  transition-duration: 0.2s;
+  transform-origin: 50% 50%;
+ }
+ 
+ 
