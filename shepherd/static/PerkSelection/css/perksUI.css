@@ -46,8 +46,7 @@ label::before {
 label img {
   height: 150px;
   width: 200px;
-  transition-duration: 0.2s;
-  transform-origin: 50% 50%;
+  
 }
 
 :checked+label {
@@ -60,10 +59,12 @@ label img {
   transform: scale(1);
 }
 
-:checked+label img {
+#ul_top_hypers :checked+label {
   transform: scale(0.9);
   box-shadow: 0 0 5px #333;
   z-index: -1;
+  transition-duration: 0.2s;
+  transform-origin: 50% 50%;
 }
 
 #div_top_hypers {
@@ -74,4 +75,25 @@ label img {
     display: flex;
     justify-content:space-around;
     list-style-type:none;
+}
+
+input[type="radio"][id^="mr1"] {
+  display: none;
+}
+input[type="radio"][id^="mr2"] {
+  display: none;
+}
+
+#masterrobot {
+  display: flex;
+  justify-content:center;
+  list-style-type:none;
+}
+
+#masterrobot :checked+label {
+  transform: scale(0.9);
+  box-shadow: 0 0 5px #333;
+  z-index: -1;
+  transition-duration: 0.2s;
+  transform-origin: 50% 50%;
 }

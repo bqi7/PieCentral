@@ -14,20 +14,23 @@
   <link rel="stylesheet" type="text/css" href="css/perksUI.css" media="screen" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
   <script src="js/perksUI.js"></script>
-<!-- 
-  <div class="container">
-  	<div class="row">
-  		<div class="col-sm-10"></div>
-  		<div class="col-sm-1"><input type="radio" id="robot1" name="master_robot"></div>
-  		<div class="col-sm-1"><input type="radio" id="robot2" name="master_robot"></div>
-  	</div>
-  </div> -->
 
-	<h1 align="center">Perk Selection</h1>
-	<br>
-	<h5 align="center">Master Robot Selection: &ensp; ______ <input type="radio" name="master_robot"> &emsp; ______ <input type="radio" name="master_robot"></h5>
 
-  <h3>&ensp; Perk 1</h3>
+  <h1 align="center">Perk Selection</h1>
+
+  <br>
+	<h5 align="center" style="justify-content: center">Master Robot Selection:
+			<div id="div_top_hypers">
+					<ul id="masterrobot">
+		<li><input type="radio" id="mr1" class="MasterRobot" name="master_robot"> 
+		<label for="mr1">Team Number 1</label></li>
+		<li><input type="radio" id="mr2" class="MasterRobot" name="master_robot"> 
+		<label for="mr2">Team Number 2</label></li>
+			</ul>
+		</div>
+	</h5>
+
+  <h3> &ensp;Perk 1</h3>
 	<div id="div_top_hypers">
 	  <ul id="ul_top_hypers">
 	  <li><input type="radio" id="cb1" name="tier1" />
