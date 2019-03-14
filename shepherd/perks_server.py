@@ -9,7 +9,7 @@ from Utils import *
 from LCM import *
 
 HOST_URL = "127.0.0.1"
-PORT = 6000
+PORT = 5001
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
