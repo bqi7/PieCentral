@@ -68,3 +68,62 @@ def tennis_ball(num):
     return num
 
 def most_common(num):
+    return
+
+def remove_duplicates(num):
+    l = []
+    while num > 0:
+        l = [num % 10] + l
+        num = num // 10
+    final = []
+    for i in range(len(l)):
+        y = 0
+        exist = False
+        while y < i:
+            if l[i] == l[y]:
+                exist = True
+            y += 1
+        if not exist:
+            final = [l[i]] + final
+    n = 0
+    while final != []:
+        n = 10 * n + final[-1]
+        final = final[:-1]
+    return n
+
+def next_fib(num):
+    first = 0
+    second = 1
+    sum = 0
+    if num == 0:
+        return 0
+    for i in range(num):
+        sum = first + second
+        if sum >= num:
+            return sum
+        first = second
+        second = sum
+
+def get_coins(num):
+    quarters = num // 25
+    nickels = (num - 25 * quarters) // 5
+    pennies = num - nickels * 5 - quarters * 25
+    return int(str(quarters) + str(nickels) + str(pennies))
+
+def most_common(num):
+    l = []
+    d = {}
+    while num % 10 != 0:
+        n = num % 10
+        if n not in d.keys():
+            d[n] = 1
+        else:
+            d[n] += 1
+    if len(d.keys()) <= 4:
+        keys = d.keys()
+        keys.sort()
+        final = 0
+        while keys ! = []:
+            e = key.
+    else:
+        return

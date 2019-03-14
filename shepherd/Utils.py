@@ -78,11 +78,11 @@ class CONSTANTS():
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
     CSV_FILE_NAME = "Sheets/schedule.csv"
     TAFFY_TIME = 15
-<<<<<<< HEAD
+
     COOLDOWN = 30
-=======
+
     TWIST_CHANCE = .3 #a value 0<x<1
->>>>>>> 6e0c7d8b58e4a62de0e8b29c16a1efe05e1c28b5
+
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():
@@ -117,10 +117,7 @@ class STATE():
 class EFFECTS():
     BLACKMAIL = "blackmail"
     SPOILED_CANDY = "spoiled_candy"
-<<<<<<< HEAD
     ALL_EFFECTS = [BLACKMAIL, SPOILED_CANDY]
-=======
->>>>>>> 6e0c7d8b58e4a62de0e8b29c16a1efe05e1c28b5
 
 class PERKS():
     EMPTY = "empty"
@@ -128,14 +125,9 @@ class PERKS():
     DIET = "diet"
     SWEET_SPOT = "sweet_spot"
     TAFFY = "taffy"
-<<<<<<< HEAD
-    # To be continued
-=======
     CHOCOLATE_COVERED_ESPRESSO_BEANS = "chocolate_covered_espresso_beans"
     MINTY_FRESH_START = "minty_fresh_start"
     RASPBERRY_COTTON_CANDY = "raspberry_cotton_candy"
     ARTIFICIAL_SWEETENER = "artificial"
     JAWBREAKER = "jawbreaker"
     SOUR_GUMMY_WORMS = "sour_gummy_worms"
-    # To be continued TODO
->>>>>>> 6e0c7d8b58e4a62de0e8b29c16a1efe05e1c28b5
