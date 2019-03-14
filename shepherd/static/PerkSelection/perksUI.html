@@ -19,13 +19,25 @@
     <br>
     <!-- <h5 align="center">Master Robot Selection: &ensp; 23 <input type="radio" name="master_robot"> &emsp; 14 <input type="radio" name="master_robot"></h5> -->
 
-    <h5 align="center">
+    <!-- <h5 align="center">
       Master Robot Selection: &ensp;
       <input type="radio" id="master1" name="masterrobot" />
       <label for="master1"><textarea rows="2" cols="2" onmouseover="select('master1')">text text text</textarea></label> &emsp;
       <input type="radio" id="master2" name="masterrobot" />
       <label for="master2"><textarea rows="2" cols="2" onmouseover="select('master2')">text text text 2</textarea></label>
-    </h5>
+    </h5> -->
+
+		<br>
+  		<h5 align="center" style="justify-content: center">Master Robot Selection:
+      	<div id="div_top_hypers">
+          <ul id="masterrobot">
+   				 <li><input type="radio" id="mr1" class="MasterRobot" name="master_robot">
+   					<label for="mr1" onmouseover="select('mr1')">Team Number 1</label></li>
+    			<li><input type="radio" id="mr2" class="MasterRobot" name="master_robot">
+   				 <label for="mr2" onmouseover="select('mr2')">Team Number 2</label></li>
+      		</ul>
+    		</div>
+  	</h5>
 
     <h3>&ensp; Perk 1</h3>
     <div id="div_top_hypers">
