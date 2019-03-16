@@ -57,11 +57,15 @@ if (getCookie('alliance') != '') {
 socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
   if (getCookie('alliance') == 'gold') {
-      t1_num = JSON.parse(data).g1_num
-      t2_num = JSON.parse(data).g2_num
+      // t1_name = JSON.parse(data).g1name
+      t1_num = JSON.parse(data).g1num
+      // t2_name = JSON.parse(data).g2name
+      t2_num = JSON.parse(data).g2num
   } else if (getCookie('alliance') == 'blue') {
-      t1_num = JSON.parse(data).b1_num
-      t2_num = JSON.parse(data).b2_num
+      // t1_name = JSON.parse(data).b1name
+      t1_num = JSON.parse(data).b1num
+      // t2_name = JSON.parse(data).b2name
+      t2_num = JSON.parse(data).b2num
   }
   setTeams(t1_num, t2_num)
 })
@@ -119,25 +123,30 @@ function submitPerks() {
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
     var robot = document.getElementsByName('master_robot');
-    if (robot[0].checked) {
-      master_robot = t1_num;
-    } else {
+    if (robot[1].checked) {
       master_robot = t2_num;
+    } else {
+      master_robot = t1_num;
     }
     perk_1 = getPerk('tier1');
     perk_2 = getPerk('tier2');
     perk_3 = getPerk('tier3');
-    data = {'alliance' : team_color, 'master_robot' : master_robot, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
-    socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
+    perks_data = {'alliance' : team_color, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
+    master_robot_data = {'alliance' : team_color, 'team_num' : master_robot}
+    socket.emit('ui-to-server-master-robot', JSON.stringify(master_robot_data))
+    socket.emit('ui-to-server-selected-perks', JSON.stringify(perks_data))
 }
+
+perk_dict = {"cb1": "bubblegum", "cb2": "diet", "cb3": "sweet_spot", "cb4": "taffy", "cb5": "chocolate_covered_espresso_beans",
+      "cb6": "minty_fresh_start", "cb7": "raspberry_cotton_candy", "cb8": "artificial", "cb9": "jawbreaker", "cb10": "sour_gummy_worms"}
 
 function getPerk(name) {
   var tier = document.getElementsByName(name);
   console.log(tier)
-  var perk = tier[0];
+  var perk = "empty";
   for (var i = 0; i < tier.length; i++) {
     if (tier[i].checked) {
-      perk = perk[i]
+      perk = perk_dict[tier[i].id]
       break;
     }
   }

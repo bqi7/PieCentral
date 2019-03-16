@@ -35,6 +35,10 @@ def reset():
 def ui_to_server_perks(perks):
     lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.APPLY_PERKS, json.loads(perks))
 
+@socketio.on('ui-to-server-master-robot')
+def ui_to_server_perks(data):
+    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.MASTER_ROBOT, json.loads(data))
+
 def receiver():
 
     events = gevent.queue.Queue()
