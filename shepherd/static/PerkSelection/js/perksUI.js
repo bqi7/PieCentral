@@ -94,6 +94,8 @@ function setTeams() {
     $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
     $("#team-2-name").val(t2_name);
+    $("#mr1label").text('Team Number ' + t1_num);
+    $("#mr2label").text('Team Number ' + t2_num);
 }
 
 function blueClick() {
