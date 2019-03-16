@@ -442,6 +442,7 @@ perk_selection_functions = {
 auto_wait_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
+    SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
     SHEPHERD_HEADER.GET_SCORES : get_score,
     SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
 }
