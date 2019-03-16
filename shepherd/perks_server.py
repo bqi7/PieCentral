@@ -17,11 +17,19 @@ socketio = SocketIO(app, async_mode='gevent')
 
 @app.route('/')
 def hello():
-    return "go to /perksUI.html"
+    return "go to /reset.html"
 
 @app.route('/perksUI.html/')
-def scoreboard():
+def perksUI():
     return render_template('perksUI.html')
+
+@app.route('/submit.html/')
+def submit():
+    return render_template('submit.html')
+
+@app.route('/reset.html/')
+def reset():
+    return render_template('reset.html')
 
 @socketio.on('ui-to-server-selected-perks')
 def ui_to_server_scores(perks):
