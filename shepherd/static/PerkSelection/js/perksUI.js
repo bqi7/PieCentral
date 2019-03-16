@@ -66,6 +66,10 @@ socket.on('teams', function(data) {
       t1_num = JSON.parse(data).b1num
       // t2_name = JSON.parse(data).b2name
       t2_num = JSON.parse(data).b2num
+  } else {
+      t1_num = JSON.parse(data).b1num
+      t2_num = JSON.parse(data).b2num
+      console.log(t1_num)
   }
   setTeams()
 })
@@ -91,9 +95,9 @@ socket.on('reset', function(data){
 function setTeams() {
     // TODO: Change name of elements
     $("#team-1-number").val(t1_num);
-    $("#team-1-name").val(t1_name);
+    // $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
-    $("#team-2-name").val(t2_name);
+    // $("#team-2-name").val(t2_name);
 }
 
 function blueClick() {
@@ -122,6 +126,7 @@ function submitPerks() {
     //TODO: Gather list of selected perks
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
+    console.log(t1_num)
     var robot = document.getElementsByName('master_robot');
     if (robot[1].checked) {
       master_robot = t2_num;
