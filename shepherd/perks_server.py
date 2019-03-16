@@ -44,8 +44,8 @@ def receiver():
         if not events.empty():
             event = events.get_nowait()
             print("RECEIVED:", event)
-            if event[0] == PERKS_HEADER.TEAMS:
-                socketio.emit(PERKS_HEADER.TEAMS, json.dumps(event[1], ensure_ascii=False))
+            if event[0] == TABLET_HEADER.TEAMS:
+                socketio.emit(TABLET_HEADER.TEAMS, json.dumps(event[1], ensure_ascii=False))
 
         socketio.sleep(0.1)
 

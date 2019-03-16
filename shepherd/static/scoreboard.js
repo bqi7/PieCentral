@@ -71,7 +71,7 @@ socket.on("applied_effect", function(data) {
   alliance = JSON.parse(data).alliance
   effect = JSON.parse(data).effect
   if (alliance == "blue"){
-      if (effect == "blackmail") {
+      if (effect == "twist") {
           blueTwist();
       } else {
           var spoiledTimeBlue = 15
@@ -87,7 +87,7 @@ socket.on("applied_effect", function(data) {
           }, 1000)
       }
   } else {
-      if (effect == "blackmail") {
+      if (effect == "twist") {
           goldTwist();
       } else {
         var spoiledTimeGold = 15
