@@ -104,7 +104,7 @@ def to_setup(args):
     alliances[ALLIANCE_COLOR.GOLD] = Alliance(ALLIANCE_COLOR.GOLD, g1_name,
                                               g1_num, g2_name, g2_num)
 
-    msg = {"b1num":b1_num, "b2num"b2_num, "g1num":g1_num, "g2num":g2_num}
+    msg = {"b1num":b1_num, "b2num":           b2_num, "g1num":g1_num, "g2num":g2_num}
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.TEAMS, msg)
 
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TEAMS, {
