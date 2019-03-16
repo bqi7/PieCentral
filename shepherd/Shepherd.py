@@ -38,6 +38,18 @@ def start():
                 func(payload[1])
             else:
                 print("Invalid Event in Setup")
+        elif game_state == STATE.PERK_SELCTION:
+            func = perk_selection_functions.get(payload[0])
+            if func is not None:
+                func(payload[1])
+            else:
+                print("Invalid Event in Perk_selection")
+        elif game_state == STATE.AUTO_WAIT:
+            func = auto_wait_functions.get(payload[0])
+            if func is not None:
+                func(payload[1])
+            else:
+                print("Invalid Event in Auto_wait")
         elif game_state == STATE.AUTO:
             func = auto_functions.get(payload[0])
             if func is not None:
@@ -92,6 +104,9 @@ def to_setup(args):
     alliances[ALLIANCE_COLOR.GOLD] = Alliance(ALLIANCE_COLOR.GOLD, g1_name,
                                               g1_num, g2_name, g2_num)
 
+    msg = {"b1num":b1_num, "b2num"b2_num, "g1num":g1_num, "g2num":g2_num}
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.TEAMS, msg)
+
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TEAMS, {
         "b1name" : b1_name, "b1num" : b1_num,
         "b2name" : b2_name, "b2num" : b2_num,
@@ -109,7 +124,14 @@ def to_perk_selection(args):
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
     game_state = STATE.PERK_SELCTION
+    LCM.send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
     print("ENTERING PERK SELECTION STATE")
+
+def to_auto_wait(args):
+    global game_state
+    game_state = STATE.AUTO_WAIT
+    LCM.send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_CODES)
+    print("ENTERING AUTO_WAIT STATE")
 
 def to_auto(args):
     '''
@@ -192,6 +214,7 @@ def reset(args=None):
     buttons['gold_2'] = False
     buttons['blue_1'] = False
     buttons['blue_2'] = False
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.RESET)
     print("RESET MATCH, MOVE TO SETUP")
 
 def get_match(args):
@@ -303,6 +326,10 @@ def code_setup():
     code_effect = Code.assign_code_effect()
     msg = {"codes_solutions": code_solution}
 
+def bounce_code(args):
+    msg = {"alliance":args["alliance"], "result":args["result"]}
+    lcm.send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
+
 def apply_code(args):
     '''
     Send Scoreboard the effect if the answer is correct
@@ -407,7 +434,14 @@ setup_functions = {
 perk_selection_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
-    SHEPHERD_HEADER.START_NEXT_STAGE: to_auto
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_auto_wait
+}
+
+auto_wait_functions = {
+    SHEPHERD_HEADER.RESET_MATCH : reset,
+    SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
+    SHEPHERD_HEADER.GET_SCORES : get_score,
+    SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
 }
 
 auto_functions = {
@@ -415,7 +449,8 @@ auto_functions = {
     SHEPHERD_HEADER.STAGE_TIMER_END : to_wait,
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : auto_launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
-    SHEPHERD_HEADER.ROBOT_OFF : disable_robot
+    SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
+    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
 
     }
 
@@ -433,7 +468,8 @@ teleop_functions = {
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
     SHEPHERD_HEADER.END_EXTENDED_TELEOP : to_end,
-    SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered
+    SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered,
+    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
 
 }
 

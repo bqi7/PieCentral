@@ -8,11 +8,11 @@ code_effect = {}
 
 def generate_code(code_list):
     ##: TODO
-    pass
+    return 1234
 
 def decode(code):
     ##: TODO
-    pass
+    return 1234
 
 def assign_code_solution():
     '''
@@ -68,3 +68,4 @@ def tennis_ball(num):
     return num
 
 def most_common(num):
+    pass

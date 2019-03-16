@@ -19,6 +19,7 @@ class SHEPHERD_HEADER():
     END_EXTENDED_TELEOP = "end_extended_teleop"
 
     LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
+    CODE_RETRIEVAL = "code_retrieval"
     CODE_APPLICATION = "code_application"
 
     APPLY_PERKS = "apply_perks"
@@ -108,6 +109,7 @@ class LCM_TARGETS():
     UI = "lcm_target_ui"
     DAWN = "lcm_target_dawn"
     RUNTIME = "lcm_target_runtime"
+    TABLET = "tablet"
 
 # pylint: disable=invalid-name
 class TIMER_TYPES():
@@ -120,6 +122,7 @@ class TIMER_TYPES():
 class STATE():
     SETUP = "setup"
     PERK_SELCTION = "perk_selection"
+    AUTO_WAIT = "auto_wait"
     AUTO = "auto"
     WAIT = "wait"
     TELEOP = "teleop"
