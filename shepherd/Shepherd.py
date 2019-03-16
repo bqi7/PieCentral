@@ -124,13 +124,13 @@ def to_perk_selection(args):
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
     game_state = STATE.PERK_SELCTION
-    LCM.send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
     print("ENTERING PERK SELECTION STATE")
 
 def to_auto_wait(args):
     global game_state
     game_state = STATE.AUTO_WAIT
-    LCM.send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_CODES)
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_CODES)
     print("ENTERING AUTO_WAIT STATE")
 
 def to_auto(args):
