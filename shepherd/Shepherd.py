@@ -376,6 +376,8 @@ def apply_perks(args):
     alliance.perk_1 = args['perk_1']
     alliance.perk_2 = args['perk_2']
     alliance.perk_3 = args['perk_3']
+    msg = {"alliance": args['alliance'], "perk_1":args['perk_1'], "perk_2":args['perk_2'], "perk_3":args['perk_3']}
+    lcm_send(LCM_TARGETS.SCOREBOARD, )
 
 def launch_button_triggered(args):
     '''
