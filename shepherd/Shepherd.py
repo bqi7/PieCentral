@@ -301,11 +301,7 @@ def set_master_robot(args):
     Set the master robot of the alliance
     '''
     alliance = args["alliance"]
-    team_name = args["team_name"]
-    if team_name == alliance.team_1_name:
-        team_number = alliance.team_1_number
-    else:
-        team_number = alliance.team_2_number
+    team_number = args["team_num"]
     msg = {"alliance": alliance, "master": team_number}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
 
