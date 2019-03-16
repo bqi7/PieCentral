@@ -125,6 +125,8 @@ def to_perk_selection(args):
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
     game_state = STATE.PERK_SELCTION
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
+             {"time" : CONSTANTS.PERK_SELECTION_TIME})
     print("ENTERING PERK SELECTION STATE")
 
 def to_auto_wait(args):
@@ -374,6 +376,8 @@ def apply_perks(args):
     alliance.perk_1 = args['perk_1']
     alliance.perk_2 = args['perk_2']
     alliance.perk_3 = args['perk_3']
+    msg = {"alliance": args['alliance'], "perk_1":args['perk_1'], "perk_2":args['perk_2'], "perk_3":args['perk_3']}
+    lcm_send(LCM_TARGETS.SCOREBOARD, )
 
 def launch_button_triggered(args):
     '''
@@ -436,12 +440,15 @@ setup_functions = {
 perk_selection_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
-    SHEPHERD_HEADER.START_NEXT_STAGE: to_auto_wait
+    SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
+    SHEPHERD_HEADER.STAGE_TIMER_END: to_auto_wait
 }
 
 auto_wait_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
+    SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
+    SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
     SHEPHERD_HEADER.GET_SCORES : get_score,
     SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
 }

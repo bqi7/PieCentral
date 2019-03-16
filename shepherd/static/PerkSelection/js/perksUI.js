@@ -126,19 +126,20 @@ function submitPerks() {
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
     var robot = document.getElementsByName('master_robot');
     if (robot[0].checked) {
-      master_robot = robot[0];
+      master_robot = t1_num;
     } else {
-      master_robot = robot[1];
+      master_robot = t2_num;
     }
-    perk1 = getPerk('perk1');
-    perk2 = getPerk('perk2');
-    perk3 = getPerk('perk3');
-    data = {'alliance' : team_color, 'master_robot' : master_robot, 'perk1' : perk1, 'perk2' : perk2, 'perk3' : perk3}
+    perk_1 = getPerk('tier1');
+    perk_2 = getPerk('tier2');
+    perk_3 = getPerk('tier3');
+    data = {'alliance' : team_color, 'master_robot' : master_robot, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
     socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
 }
 
 function getPerk(name) {
   var tier = document.getElementsByName(name);
+  console.log(tier)
   var perk = tier[0];
   for (var i = 0; i < tier.length; i++) {
     if (tier[i].checked) {

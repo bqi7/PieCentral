@@ -46,6 +46,10 @@ def receiver():
                 socketio.emit(SCOREBOARD_HEADER.STAGE_TIMER_START,
                               json.dumps(event[1], ensure_ascii=False))
 
+            elif event[0] == SCOREBOARD_HEADER.STAGE:
+                socketio.emit(SCOREBOARD_HEADER.STAGE,
+                              json.dumps(event[1], ensure_ascii=False))
+
             elif event[0] == SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START:
                 socketio.emit(SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START,
                               json.dumps(event[1], ensure_ascii=False))

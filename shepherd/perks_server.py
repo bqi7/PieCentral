@@ -32,13 +32,13 @@ def reset():
     return render_template('reset.html')
 
 @socketio.on('ui-to-server-selected-perks')
-def ui_to_server_scores(perks):
-    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.APPLY_PERKS, json.loads(scores))
+def ui_to_server_perks(perks):
+    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.APPLY_PERKS, json.loads(perks))
 
 def receiver():
 
     events = gevent.queue.Queue()
-    lcm_start_read(str.encode(LCM_TARGETS.SCOREBOARD), events)
+    lcm_start_read(str.encode(LCM_TARGETS.TABLET), events)
 
     while True:
         if not events.empty():
@@ -46,6 +46,12 @@ def receiver():
             print("RECEIVED:", event)
             if event[0] == TABLET_HEADER.TEAMS:
                 socketio.emit(TABLET_HEADER.TEAMS, json.dumps(event[1], ensure_ascii=False))
+            if event[0] == TABLET_HEADER.RESET:
+                socketio.emit(TABLET_HEADER.RESET, json.dumps(event[1], ensure_ascii=False))
+            if event[0] == TABLET_HEADER.COLLECT_CODES:
+                socketio.emit(TABLET_HEADER.COLLECT_CODES, json.dumps(event[1], ensure_ascii=False))
+            if event[0] == TABLET_HEADER.COLLECT_PERKS:
+                socketio.emit(TABLET_HEADER.COLLECT_PERKS, json.dumps(event[1], ensure_ascii=False))
 
         socketio.sleep(0.1)
 
