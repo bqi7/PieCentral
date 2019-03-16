@@ -125,6 +125,8 @@ def to_perk_selection(args):
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
     game_state = STATE.PERK_SELCTION
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
+             {"time" : CONSTANTS.PERK_SELECTION_TIME})
     print("ENTERING PERK SELECTION STATE")
 
 def to_auto_wait(args):
