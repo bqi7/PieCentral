@@ -311,10 +311,9 @@ def next_code():
     if codes_used == []:
        codes_used.append(codes[0])
        return codes[0]
-    else:
-       index = len(codes_used)
-       codes_used.append(codes[index])
-       return codes[index]
+    index = len(codes_used)
+    codes_used.append(codes[index])
+    return codes[index]
 
 def code_setup():
     '''
@@ -386,6 +385,7 @@ def launch_button_triggered(args):
     lb = alliance + "_" + str(button)
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance, "button": button}
+        code = next_code()
         send_code(alliance, code)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -409,16 +409,18 @@ def final_score(args):
     '''
     send shepherd the final score, send score to scoreboard
     '''
-    blue_final = get_score(args['blue_score'])
-    gold_final = get_score(args['gold_score'])
-    msg = {"alliance": gold, "amount": gold_final}
+    blue_final = args['blue_score']
+    gold_final = args['gold_score']
+    alliances[ALLIANCE_COLOR.GOLD].score = gold_final
+    alliances[ALLIANCE_COLOR.BLUE].score = blue_final
+    msg = {"alliance": ALLIANCE_COLOR.GOLD, "amount": gold_final}
     lcm_send(SCOREBOARD_HEADER.SCORE, msg)
-    msg = {"alliance": blue, "amount": blue_final}
+    msg = {"alliance": ALLIANCE_COLOR.BLUE, "amount": blue_final}
     lcm_send(SCOREBOARD_HEADER.SCORE, msg)
 
 
 def overdrive_triggered(args):
-    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TRIGGER_OVERDRIVE)
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START)
     print("overdrive is active for the next 30 seconds")
 
 ###########################################

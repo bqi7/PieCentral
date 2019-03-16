@@ -39,8 +39,12 @@ class SENSORS_HEADER():
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
-
+    CODES = "codes"
+    DECODE = "decode"
+    SPECIFIC_ROBOT_STATE = "srt"
+    MASTER = "master"
     IP_ADDRESS = "ip_address"
+    ROBOT_STATE = "rs"
     #TODO this^
 
 class RUNTIME_HEADER():
@@ -95,6 +99,7 @@ class CONSTANTS():
     CSV_FILE_NAME = "Sheets/schedule.csv"
     TAFFY_TIME = 15
     TWIST_CHANCE = .3 #a value 0<x<1
+    COOLDOWN = 30
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():
