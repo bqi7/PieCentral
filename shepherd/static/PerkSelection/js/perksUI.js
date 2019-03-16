@@ -71,7 +71,7 @@ socket.on('teams', function(data) {
       t2_num = JSON.parse(data).b2num
       console.log(t1_num)
   }
-  setTeams()
+  setTeams(t1_num, t2_num)
 })
 
 socket.on('collect_perks', function(data) {
@@ -92,12 +92,14 @@ socket.on('reset', function(data){
 })
 
 
-function setTeams() {
+function setTeams(t1_num, t2_num) {
     // TODO: Change name of elements
     $("#team-1-number").val(t1_num);
     // $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
     // $("#team-2-name").val(t2_name);
+    $("#mr1label").text('Team Number ' + t1_num);
+    $("#mr2label").text('Team Number ' + t2_num);
 }
 
 function blueClick() {
@@ -110,9 +112,23 @@ function goldClick() {
     document.cookie = "alliance=gold"
 }
 
+function murderCookie() {
+    document.cookie = "alliance="
+    showButtons()
+}
+
 function hideButtons() {
     //TODO: $("gold element") set button style to hidden
     //TODO: $("blue element") set button style to hidden
+    document.getElementById("gold_button").style.display = "none"
+    document.getElementById("blue_button").style.display = "none"
+    document.getElementById("as_button").style.display = "none"
+}
+
+function showButtons() {
+  document.getElementById("gold_button").style.display = "block"
+  document.getElementById("blue_button").style.display = "block"
+  document.getElementById("as_button").style.display = "block"
 }
 
 function setMasterRobot() {
