@@ -88,7 +88,7 @@ class DeviceStructure(ctypes.Structure):
         })
 
     @staticmethod
-    def make_shared_device(device_type):
+    def make_shared_device(device_type): # instantiates a device
         name = device_type.__name__ + '-' + str(uuid.uuid4())
         buf = SharedMemoryBuffer(name, ctypes.sizeof(device_type))
         device = device_type.from_buffer(buf)
