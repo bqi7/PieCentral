@@ -132,7 +132,7 @@ function submitPerks() {
     perk_2 = getPerk('tier2');
     perk_3 = getPerk('tier3');
     perks_data = {'alliance' : team_color, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
-    master_robot_data = {'alliance' : team_color, 'master_robot' : master_robot}
+    master_robot_data = {'alliance' : team_color, 'team_num' : master_robot}
     socket.emit('ui-to-server-master-robot', JSON.stringify(master_robot_data))
     socket.emit('ui-to-server-selected-perks', JSON.stringify(perks_data))
 }
