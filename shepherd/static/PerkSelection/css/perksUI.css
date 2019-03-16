@@ -72,7 +72,7 @@ label img {
 
 #div_top_hypers {
     background-color:#eeeeee;
-    display:inline;      
+    display:inline;  
 }
 #ul_top_hypers {
     display: flex;
@@ -99,6 +99,9 @@ input[type="radio"][id^="mr1"] {
   z-index: -1;
   transition-duration: 0.2s;
   transform-origin: 50% 50%;
+  border-style:solid;  
+  border-color: black;
+  border-width: 0.2mm;  
  }
  
  

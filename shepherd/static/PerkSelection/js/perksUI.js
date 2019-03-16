@@ -57,17 +57,17 @@ if (getCookie('alliance') != '') {
 socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
   if (getCookie('alliance') == 'gold') {
-      t1_name = JSON.parse(data).g1_name
-      t1_num = JSON.parse(data).g1_num
-      t2_name = JSON.parse(data).g2_name
-      t2_num = JSON.parse(data).g2_num
+      // t1_name = JSON.parse(data).g1name
+      t1_num = JSON.parse(data).g1num
+      // t2_name = JSON.parse(data).g2name
+      t2_num = JSON.parse(data).g2num
   } else if (getCookie('alliance') == 'blue') {
-      t1_name = JSON.parse(data).b1_name
-      t1_num = JSON.parse(data).b1_num
-      t2_name = JSON.parse(data).b2_name
-      t2_num = JSON.parse(data).b2_num
+      // t1_name = JSON.parse(data).b1name
+      t1_num = JSON.parse(data).b1num
+      // t2_name = JSON.parse(data).b2name
+      t2_num = JSON.parse(data).b2num
   }
-  setTeams()
+  setTeams(t1_num, t2_num)
 })
 
 socket.on('collect_perks', function(data) {
@@ -88,12 +88,12 @@ socket.on('reset', function(data){
 })
 
 
-function setTeams() {
+function setTeams(t1_num, t2_num) {
     // TODO: Change name of elements
     $("#team-1-number").val(t1_num);
-    $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
-    $("#team-2-name").val(t2_name);
+    $("#mr1label").text('Team Number ' + t1_num);
+    $("#mr2label").text('Team Number ' + t2_num);
 }
 
 function blueClick() {
@@ -146,7 +146,7 @@ function submitPerks() {
     perk_2 = getPerk('tier2');
     perk_3 = getPerk('tier3');
     perks_data = {'alliance' : team_color, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
-    master_robot_data = {'alliance' : team_color, 'master_robot' : master_robot}
+    master_robot_data = {'alliance' : team_color, 'team_num' : master_robot}
     socket.emit('ui-to-server-master-robot', JSON.stringify(master_robot_data))
     socket.emit('ui-to-server-selected-perks', JSON.stringify(perks_data))
 }
