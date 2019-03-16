@@ -57,15 +57,15 @@ if (getCookie('alliance') != '') {
 socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
   if (getCookie('alliance') == 'gold') {
-      t1_name = JSON.parse(data).g1_name
-      t1_num = JSON.parse(data).g1_num
-      t2_name = JSON.parse(data).g2_name
-      t2_num = JSON.parse(data).g2_num
+      // t1_name = JSON.parse(data).g1name
+      t1_num = JSON.parse(data).g1num
+      // t2_name = JSON.parse(data).g2name
+      t2_num = JSON.parse(data).g2num
   } else if (getCookie('alliance') == 'blue') {
-      t1_name = JSON.parse(data).b1_name
-      t1_num = JSON.parse(data).b1_num
-      t2_name = JSON.parse(data).b2_name
-      t2_num = JSON.parse(data).b2_num
+      // t1_name = JSON.parse(data).b1name
+      t1_num = JSON.parse(data).b1num
+      // t2_name = JSON.parse(data).b2name
+      t2_num = JSON.parse(data).b2num
   }
   setTeams()
 })
