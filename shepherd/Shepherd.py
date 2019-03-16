@@ -440,6 +440,7 @@ setup_functions = {
 perk_selection_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
+    SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
     SHEPHERD_HEADER.STAGE_TIMER_END: to_auto_wait
 }
 
@@ -447,6 +448,7 @@ auto_wait_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
+    SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
     SHEPHERD_HEADER.GET_SCORES : get_score,
     SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
 }
