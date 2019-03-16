@@ -123,25 +123,30 @@ function submitPerks() {
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
     var robot = document.getElementsByName('master_robot');
-    if (robot[0].checked) {
-      master_robot = t1_num;
-    } else {
+    if (robot[1].checked) {
       master_robot = t2_num;
+    } else {
+      master_robot = t1_num;
     }
     perk_1 = getPerk('tier1');
     perk_2 = getPerk('tier2');
     perk_3 = getPerk('tier3');
-    data = {'alliance' : team_color, 'master_robot' : master_robot, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
-    socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
+    perks_data = {'alliance' : team_color, 'perk_1' : perk_1, 'perk_2' : perk_2, 'perk_3' : perk_3}
+    master_robot_data = {'alliance' : team_color, 'master_robot' : master_robot}
+    socket.emit('ui-to-server-master-robot', JSON.stringify(master_robot_data))
+    socket.emit('ui-to-server-selected-perks', JSON.stringify(perks_data))
 }
+
+perk_dict = {"cb1": "bubblegum", "cb2": "diet", "cb3": "sweet_spot", "cb4": "taffy", "cb5": "chocolate_covered_espresso_beans",
+      "cb6": "minty_fresh_start", "cb7": "raspberry_cotton_candy", "cb8": "artificial", "cb9": "jawbreaker", "cb10": "sour_gummy_worms"}
 
 function getPerk(name) {
   var tier = document.getElementsByName(name);
   console.log(tier)
-  var perk = tier[0];
+  var perk = "empty";
   for (var i = 0; i < tier.length; i++) {
     if (tier[i].checked) {
-      perk = perk[i]
+      perk = perk_dict[tier[i].id]
       break;
     }
   }

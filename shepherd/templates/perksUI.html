@@ -23,7 +23,7 @@
     <h5 align="center" style="justify-content: center">Master Robot Selection:
       <div id="div_top_hypers">
         <ul id="masterrobot">
-      <li><input type="radio" id="mr1" class="MasterRobot" name="master_robot">
+      <li><input type="radio" id="mr1" class="MasterRobot" name="master_robot" checked=true>
         <label for="mr1" onmouseover="select('mr1')">Team Number 1</label></li>
         <li><input type="radio" id="mr2" class="MasterRobot" name="master_robot">
            <label for="mr2" onmouseover="select('mr2')">Team Number 2</label></li>
@@ -65,14 +65,14 @@
     <h3>&ensp;Perk 3</h3>
     <div id="div_top_hypers">
       <ul id="ul_top_hypers">
+        <li><input type="radio" id="cb8" name="tier3" />
+          <label for="cb8"><img src={{url_for( 'static', filename="PerkSelection/assets/DummyPerks/artificial sweetener.png")}} onmouseover="select('cb8')" /></label>
+        </li>
         <li><input type="radio" id="cb9" name="tier3" />
-          <label for="cb9"><img src={{url_for( 'static', filename="PerkSelection/assets/DummyPerks/artificial sweetener.png")}} onmouseover="select('cb9')" /></label>
+          <label for="cb9"><img src={{url_for( 'static', filename="PerkSelection/assets/DummyPerks/jawbreaker.png")}} onmouseover="select('cb9')" /></label>
         </li>
         <li><input type="radio" id="cb10" name="tier3" />
-          <label for="cb10"><img src={{url_for( 'static', filename="PerkSelection/assets/DummyPerks/jawbreaker.png")}} onmouseover="select('cb10')" /></label>
-        </li>
-        <li><input type="radio" id="cb11" name="tier3" />
-          <label for="cb11"><img src={{url_for( 'static', filename="PerkSelection/assets/DummyPerks/sour gummy worms.png")}} onmouseover="select('cb11')" /></label>
+          <label for="cb10"><img src={{url_for( 'static', filename="PerkSelection/assets/DummyPerks/sour gummy worms.png")}} onmouseover="select('cb10')" /></label>
         </li>
       </ul>
     </div>
