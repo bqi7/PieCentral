@@ -50,6 +50,11 @@ function getCookie(cname) {
   return "";
 }
 
+function store_teams(t1, t2) {
+    var ca = document.cookie.split(';');
+    document.cookie = ca[0]+";t1="+t1+";t2="+t2+ca.slice(3)
+}
+
 if (getCookie('alliance') != '') {
     hideButtons()
 }
