@@ -54,6 +54,8 @@ function checkCookie() {
   if (getCookie('alliance') != '') {
       hideButtons()
   }
+  t1_num = getCookie('t1')
+  t2_num = getCookie('t2')
 }
 
 window.onload = checkCookie
@@ -70,10 +72,6 @@ socket.on('teams', function(data) {
       t1_num = JSON.parse(data).b1num
       // t2_name = JSON.parse(data).b2name
       t2_num = JSON.parse(data).b2num
-  } else {
-      t1_num = JSON.parse(data).b1num
-      t2_num = JSON.parse(data).b2num
-      console.log(t1_num)
   }
   setTeams(t1_num, t2_num)
 })
