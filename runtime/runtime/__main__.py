@@ -12,7 +12,9 @@ def get_module_path(filename):
     module_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(module_dir, filename)
 
-
+"""
+Available command-line options.    
+"""
 @click.command()
 @click.option('-r', '--max-respawns', default=3,
               help='Number of times to attempt to respawn a child process.')
@@ -43,6 +45,7 @@ def get_module_path(filename):
               help='Show the runtime version and exit.')
 @click.argument('student-code', default=get_module_path('studentcode.py'),
                 type=click.Path(exists=True, dir_okay=False))
+
 def cli(version, **options):
     """
     The PiE runtime daemon manages the state of a robot, controls student code
@@ -51,7 +54,7 @@ def cli(version, **options):
     if version:
         print('.'.join(map(str, __version__)))
     else:
-        bootstrap(options)
+        bootstrap(options) # starts control.py
 
 
 if __name__ == '__main__':
