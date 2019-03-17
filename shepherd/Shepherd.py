@@ -414,9 +414,9 @@ def final_score(args):
     alliances[ALLIANCE_COLOR.GOLD].score = gold_final
     alliances[ALLIANCE_COLOR.BLUE].score = blue_final
     msg = {"alliance": ALLIANCE_COLOR.GOLD, "amount": gold_final}
-    lcm_send(SCOREBOARD_HEADER.SCORE, msg)
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.SCORE, msg)
     msg = {"alliance": ALLIANCE_COLOR.BLUE, "amount": blue_final}
-    lcm_send(SCOREBOARD_HEADER.SCORE, msg)
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.SCORE, msg)
 
 
 def overdrive_triggered(args):
