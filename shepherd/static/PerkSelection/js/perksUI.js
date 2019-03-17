@@ -58,6 +58,11 @@ function checkCookie() {
   t2_num = getCookie('t2')
 }
 
+function store_teams(t1, t2) {
+    var ca = document.cookie.split(';');
+    document.cookie = ca[0]+";t1="+t1+";t2="+t2+ca.slice(3)
+}
+
 window.onload = checkCookie
 
 socket.on('teams', function(data) {
