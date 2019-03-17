@@ -11,7 +11,7 @@ from types import ModuleType
 from typing import Callable, Tuple, Dict
 import aioprocessing
 import runtime.logging
-from runtime import networking, devices, studentcode_exec
+from runtime import networking, devices, executor
 from runtime.util import (
     RuntimeException,
     RuntimeIPCException,
@@ -107,7 +107,8 @@ def bootstrap(options):
         options['encoders'],
         options['decoders'],
     ))
-    monitor.add('executor', StudentCodeExecutor(options['student_code']), (
+    monitor.add('executor', executor.start, (
+        options['student_code'],
         options['student_freq'],
         options['student_timeout'],
     ))

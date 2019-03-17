@@ -79,3 +79,12 @@ class StudentCodeExecutor:
         # else:
         #     LOGGER.debug('Imported student code module.')
 
+def stop(_signum, _stack_frame):
+    pass
+
+
+def start(student_code, student_freq, student_timeout):
+    signal.signal(signal.SIGTERM, stop)
+    LOGGER.debug('Attached SIGTERM handler.')
+    sc_exc = StudentCodeExecutor(student_code)
+    sc_exc(student_freq, student_timeout)
