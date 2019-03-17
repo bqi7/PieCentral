@@ -6,12 +6,8 @@ li {
   display: inline;
 }
 
-input[type="radio"] {
+input[type="radio"]:not(.Alliance) {
   display: none;
-}
-
-input[type="radio"] { 
-  transform: scale(2); 
 }
 
 label {

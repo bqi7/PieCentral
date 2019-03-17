@@ -50,9 +50,13 @@ function getCookie(cname) {
   return "";
 }
 
-if (getCookie('alliance') != '') {
-    hideButtons()
+function checkCookie() {
+  if (getCookie('alliance') != '') {
+      hideButtons()
+  }
 }
+
+window.onload = checkCookie
 
 socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
@@ -120,15 +124,21 @@ function murderCookie() {
 function hideButtons() {
     //TODO: $("gold element") set button style to hidden
     //TODO: $("blue element") set button style to hidden
-    document.getElementById("gold_button").style.display = "none"
-    document.getElementById("blue_button").style.display = "none"
-    document.getElementById("as_button").style.display = "none"
+    $("#gold_button").css("display", "none")
+    $("#blue_button").css("display", "none")
+    $("#as_button").css("display", "none")
+    // document.getElementById("gold_button").style.display = "none"
+    // document.getElementById("blue_button").style.display = "none"
+    // document.getElementById("as_button").style.display = "none"
 }
 
 function showButtons() {
-  document.getElementById("gold_button").style.display = "block"
-  document.getElementById("blue_button").style.display = "block"
-  document.getElementById("as_button").style.display = "block"
+  $("#gold_button").css("display", "block")
+  $("#blue_button").css("display", "block")
+  $("#as_button").css("display", "block")
+  // document.getElementById("gold_button").style.display = "block"
+  // document.getElementById("blue_button").style.display = "block"
+  // document.getElementById("as_button").style.display = "block"
 }
 
 function setMasterRobot() {
