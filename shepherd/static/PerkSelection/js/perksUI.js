@@ -56,11 +56,13 @@ function checkCookie() {
   }
   t1_num = getCookie('t1')
   t2_num = getCookie('t2')
+  setTeams(t1_num, t2_num)
 }
 
-function store_teams(t1, t2) {
-    var ca = document.cookie.split(';');
-    document.cookie = ca[0]+";t1="+t1+";t2="+t2+ca.slice(3)
+function storeTeams(t1, t2) {
+    var ca = document.cookie.split(';')
+    document.cookie = "t1="+t1
+    document.cookie = "t2="+t2
 }
 
 window.onload = checkCookie
@@ -78,6 +80,7 @@ socket.on('teams', function(data) {
       // t2_name = JSON.parse(data).b2name
       t2_num = JSON.parse(data).b2num
   }
+  storeTeams(t1_num, t2_num)
   setTeams(t1_num, t2_num)
 })
 
@@ -172,7 +175,7 @@ function submitPerks() {
 }
 
 perk_dict = {"cb1": "bubblegum", "cb2": "diet", "cb3": "sweet_spot", "cb4": "taffy", "cb5": "chocolate_covered_espresso_beans",
-      "cb6": "minty_fresh_start", "cb7": "raspberry_cotton_candy", "cb8": "artificial", "cb9": "jawbreaker", "cb10": "sour_gummy_worms"}
+      "cb6": "minty_fresh_start", "cb7": "raspberry_cotton_candy", "cb8": "artificial_sweetener", "cb9": "jawbreaker", "cb10": "sour_gummy_worms"}
 
 function getPerk(name) {
   var tier = document.getElementsByName(name);
