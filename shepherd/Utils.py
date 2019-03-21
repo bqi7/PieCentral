@@ -52,7 +52,7 @@ class RUNTIME_HEADER():
         # SPECIFIC_ROBOT_STATE{team_number, autonomous, enabled}
         # robot ip is 192.168.128.teamnumber
     DECODE = "decode"
-        # DECODE{alliance, seed}
+        # DECODE{team_number, seed}
 
 # pylint: disable=invalid-name
 class UI_HEADER():
