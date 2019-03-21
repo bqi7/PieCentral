@@ -6,7 +6,7 @@ from Utils import *
 def sender():
     input_to_header = {
         "launch"    : SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED,
-        "code"      : SHEPHERD_HEADER.CODE_APPLICATION,
+        "code"      : SHEPHERD_HEADER.CODE_RETRIEVAL,
         "overdrive" : SCOREBOARD_HEADER.OVERDRIVE_START,
         "effect"    : SCOREBOARD_HEADER.APPLIED_EFFECT,
         "timer"     : SCOREBOARD_HEADER.STAGE_TIMER_START,
@@ -38,7 +38,7 @@ def sender():
                 continue
             lcm_send(LCM_TARGETS.SHEPHERD, new_input, {"alliance" : alliance, "button" : button_num})
 
-        elif new_input == SHEPHERD_HEADER.CODE_APPLICATION: # {alliance, result}
+        elif new_input == SHEPHERD_HEADER.CODE_RETRIEVAL: # {alliance, result}
             alliance = input_to_alliance.get(input("Alliance: blue gold "))
             code = input("Code: ")
             if alliance is None or code is None:
