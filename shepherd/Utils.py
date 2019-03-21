@@ -19,9 +19,13 @@ class SHEPHERD_HEADER():
     END_EXTENDED_TELEOP = "end_extended_teleop"
 
     LAUNCH_BUTTON_TRIGGERED = "launch_button_triggered"
+<<<<<<< HEAD
 
     AUTO_LAUNCH_BUTTON_TRIGGERED = "auto_launch_button_triggered"
 
+=======
+    CODE_RETRIEVAL = "code_retrieval"
+>>>>>>> 9cf8b630093c964c3cc8dbff57118c941f7f4cfd
     CODE_APPLICATION = "code_application"
 
     APPLY_PERKS = "apply_perks"
@@ -39,8 +43,12 @@ class SENSORS_HEADER():
 
 # pylint: disable=invalid-name
 class DAWN_HEADER():
-
+    CODES = "codes"
+    DECODE = "decode"
+    SPECIFIC_ROBOT_STATE = "srt"
+    MASTER = "master"
     IP_ADDRESS = "ip_address"
+    ROBOT_STATE = "rs"
     #TODO this^
 
 class RUNTIME_HEADER():
@@ -70,6 +78,18 @@ class SCOREBOARD_HEADER():
     APPLIED_EFFECT = "applied_effect"
         # APPLIED_EFFECT{alliance, effect}
 
+class TABLET_HEADER():
+    TEAMS = "teams"
+    #{b1num, b2num, g1num, g2num}
+    CODE = "code"
+    #{alliance, code}
+    COLLECT_PERKS = "collect_perks"
+    #{}
+    COLLECT_CODES = "collect_codes"
+    #{}
+    RESET = "reset"
+    #{}
+
 # pylint: disable=invalid-name
 class CONSTANTS():
     PERK_SELECTION_TIME = 30
@@ -82,6 +102,7 @@ class CONSTANTS():
     COOLDOWN = 30
 
     TWIST_CHANCE = .3 #a value 0<x<1
+    COOLDOWN = 30
 
 
 # pylint: disable=invalid-name
@@ -97,6 +118,7 @@ class LCM_TARGETS():
     UI = "lcm_target_ui"
     DAWN = "lcm_target_dawn"
     RUNTIME = "lcm_target_runtime"
+    TABLET = "tablet"
 
 # pylint: disable=invalid-name
 class TIMER_TYPES():
@@ -109,6 +131,7 @@ class TIMER_TYPES():
 class STATE():
     SETUP = "setup"
     PERK_SELCTION = "perk_selection"
+    AUTO_WAIT = "auto_wait"
     AUTO = "auto"
     WAIT = "wait"
     TELEOP = "teleop"

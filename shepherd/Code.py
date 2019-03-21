@@ -8,11 +8,11 @@ code_effect = {}
 
 def generate_code(code_list):
     ##: TODO
-    pass
+    return 1234
 
 def decode(code):
     ##: TODO
-    pass
+    return 1234
 
 def assign_code_solution():
     '''
@@ -68,6 +68,7 @@ def tennis_ball(num):
     return num
 
 def most_common(num):
+<<<<<<< HEAD
     parse = []
     while num != 0:
         parse.append(num % 10)
@@ -173,3 +174,6 @@ def most_common(num):
             e = key.
     else:
         return
+=======
+    pass
+>>>>>>> 9cf8b630093c964c3cc8dbff57118c941f7f4cfd

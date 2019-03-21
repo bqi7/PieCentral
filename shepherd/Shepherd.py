@@ -35,6 +35,18 @@ def start():
                 func(payload[1])
             else:
                 print("Invalid Event in Setup")
+        elif game_state == STATE.PERK_SELCTION:
+            func = perk_selection_functions.get(payload[0])
+            if func is not None:
+                func(payload[1])
+            else:
+                print("Invalid Event in Perk_selection")
+        elif game_state == STATE.AUTO_WAIT:
+            func = auto_wait_functions.get(payload[0])
+            if func is not None:
+                func(payload[1])
+            else:
+                print("Invalid Event in Auto_wait")
         elif game_state == STATE.AUTO:
             func = auto_functions.get(payload[0])
             if func is not None:
@@ -89,6 +101,9 @@ def to_setup(args):
     alliances[ALLIANCE_COLOR.GOLD] = Alliance(ALLIANCE_COLOR.GOLD, g1_name,
                                               g1_num, g2_name, g2_num)
 
+    msg = {"b1num":b1_num, "b2num":           b2_num, "g1num":g1_num, "g2num":g2_num}
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.TEAMS, msg)
+
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TEAMS, {
         "b1name" : b1_name, "b1num" : b1_num,
         "b2name" : b2_name, "b2num" : b2_num,
@@ -106,7 +121,14 @@ def to_perk_selection(args):
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
     game_state = STATE.PERK_SELCTION
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
     print("ENTERING PERK SELECTION STATE")
+
+def to_auto_wait(args):
+    global game_state
+    game_state = STATE.AUTO_WAIT
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_CODES)
+    print("ENTERING AUTO_WAIT STATE")
 
 def to_auto(args):
     '''
@@ -187,6 +209,7 @@ def reset(args=None):
     buttons['gold_2'] = False
     buttons['blue_1'] = False
     buttons['blue_2'] = False
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.RESET)
     print("RESET MATCH, MOVE TO SETUP")
 
 def get_match(args):
@@ -287,10 +310,9 @@ def next_code():
     if codes_used == []:
        codes_used.append(codes[0])
        return codes[0]
-    else:
-       index = len(codes_used)
-       codes_used.append(codes[index])
-       return codes[index]
+    index = len(codes_used)
+    codes_used.append(codes[index])
+    return codes[index]
 
 def code_setup():
     '''
@@ -302,6 +324,10 @@ def code_setup():
     code_effect = Code.assign_code_effect()
     msg = {"codes_solutions": code_solution}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
+
+def bounce_code(args):
+    msg = {"alliance":args["alliance"], "result":args["result"]}
+    lcm.send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
 
 def apply_code(args):
     '''
@@ -356,6 +382,7 @@ def launch_button_triggered(args):
     lb = alliance + "_" + str(button)
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance, "button": button}
+        code = next_code()
         send_code(alliance, code)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -367,9 +394,9 @@ def auto_launch_button_triggered(args):
     ## TODO: add ten score, mark button as dirty, sent to sc (both things)
     alliance = args["alliance"]
     button = args["button"]
-    alliance.change_score(10)
     temp_str = alliance + "_" + str(button)
     if not buttons[temp_str]:
+        alliance.change_score(10)
         buttons[temp_str] = True
         msg = {"alliance": alliance, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -379,16 +406,18 @@ def final_score(args):
     '''
     send shepherd the final score, send score to scoreboard
     '''
-    blue_final = get_score(args['blue_score'])
-    gold_final = get_score(args['gold_score'])
-    msg = {"alliance": gold, "amount": gold_final}
+    blue_final = args['blue_score']
+    gold_final = args['gold_score']
+    alliances[ALLIANCE_COLOR.GOLD].score = gold_final
+    alliances[ALLIANCE_COLOR.BLUE].score = blue_final
+    msg = {"alliance": ALLIANCE_COLOR.GOLD, "amount": gold_final}
     lcm_send(SCOREBOARD_HEADER.SCORE, msg)
-    msg = {"alliance": blue, "amount": blue_final}
+    msg = {"alliance": ALLIANCE_COLOR.BLUE, "amount": blue_final}
     lcm_send(SCOREBOARD_HEADER.SCORE, msg)
 
 
 def overdrive_triggered(args):
-    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.TRIGGER_OVERDRIVE)
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START)
     print("overdrive is active for the next 30 seconds")
 
 ###########################################
@@ -404,7 +433,14 @@ setup_functions = {
 perk_selection_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
-    SHEPHERD_HEADER.START_NEXT_STAGE: to_auto
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_auto_wait
+}
+
+auto_wait_functions = {
+    SHEPHERD_HEADER.RESET_MATCH : reset,
+    SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
+    SHEPHERD_HEADER.GET_SCORES : get_score,
+    SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
 }
 
 auto_functions = {
@@ -412,7 +448,8 @@ auto_functions = {
     SHEPHERD_HEADER.STAGE_TIMER_END : to_wait,
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : auto_launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
-    SHEPHERD_HEADER.ROBOT_OFF : disable_robot
+    SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
+    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
 
     }
 
@@ -430,7 +467,8 @@ teleop_functions = {
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
     SHEPHERD_HEADER.END_EXTENDED_TELEOP : to_end,
-    SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered
+    SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered,
+    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
 
 }
 
