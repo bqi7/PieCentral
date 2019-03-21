@@ -91,7 +91,7 @@ class TABLET_HEADER():
 
 # pylint: disable=invalid-name
 class CONSTANTS():
-    PERK_SELECTION_TIME = 30
+    PERK_SELECTION_TIME = 10 # actually supposed to be 30
     AUTO_TIME = 30
     TELEOP_TIME = 180
     OVERDRIVE_TIME = 30

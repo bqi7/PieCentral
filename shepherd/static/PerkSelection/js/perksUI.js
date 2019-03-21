@@ -50,14 +50,22 @@ function getCookie(cname) {
   return "";
 }
 
-function store_teams(t1, t2) {
-    var ca = document.cookie.split(';');
-    document.cookie = ca[0]+";t1="+t1+";t2="+t2+ca.slice(3)
+function checkCookie() {
+  if (getCookie('alliance') != '') {
+      hideButtons()
+  }
+  t1_num = getCookie('t1')
+  t2_num = getCookie('t2')
+  setTeams(t1_num, t2_num)
 }
 
-if (getCookie('alliance') != '') {
-    hideButtons()
+function storeTeams(t1, t2) {
+    var ca = document.cookie.split(';')
+    document.cookie = "t1="+t1
+    document.cookie = "t2="+t2
 }
+
+window.onload = checkCookie
 
 socket.on('teams', function(data) {
   dictionary = JSON.parse(data)
@@ -72,6 +80,7 @@ socket.on('teams', function(data) {
       // t2_name = JSON.parse(data).b2name
       t2_num = JSON.parse(data).b2num
   }
+  storeTeams(t1_num, t2_num)
   setTeams(t1_num, t2_num)
 })
 
@@ -96,7 +105,9 @@ socket.on('reset', function(data){
 function setTeams(t1_num, t2_num) {
     // TODO: Change name of elements
     $("#team-1-number").val(t1_num);
+    // $("#team-1-name").val(t1_name);
     $("#team-2-number").val(t2_num);
+    // $("#team-2-name").val(t2_name);
     $("#mr1label").text('Team Number ' + t1_num);
     $("#mr2label").text('Team Number ' + t2_num);
 }
@@ -119,15 +130,21 @@ function murderCookie() {
 function hideButtons() {
     //TODO: $("gold element") set button style to hidden
     //TODO: $("blue element") set button style to hidden
-    document.getElementById("gold_button").style.display = "none"
-    document.getElementById("blue_button").style.display = "none"
-    document.getElementById("as_button").style.display = "none"
+    $("#gold_button").css("display", "none")
+    $("#blue_button").css("display", "none")
+    $("#as_button").css("display", "none")
+    // document.getElementById("gold_button").style.display = "none"
+    // document.getElementById("blue_button").style.display = "none"
+    // document.getElementById("as_button").style.display = "none"
 }
 
 function showButtons() {
-  document.getElementById("gold_button").style.display = "block"
-  document.getElementById("blue_button").style.display = "block"
-  document.getElementById("as_button").style.display = "block"
+  $("#gold_button").css("display", "block")
+  $("#blue_button").css("display", "block")
+  $("#as_button").css("display", "block")
+  // document.getElementById("gold_button").style.display = "block"
+  // document.getElementById("blue_button").style.display = "block"
+  // document.getElementById("as_button").style.display = "block"
 }
 
 function setMasterRobot() {
@@ -141,6 +158,7 @@ function submitPerks() {
     //TODO: Gather list of selected perks
     //TODO: data = {'alliance' : team_color, 'master_robot' : 1000, 'perk_1' : '' ...}
     //TODO: socket.emit('ui-to-server-selected-perks', JSON.stringify(data))
+    console.log(t1_num)
     var robot = document.getElementsByName('master_robot');
     if (robot[1].checked) {
       master_robot = t2_num;
@@ -157,7 +175,7 @@ function submitPerks() {
 }
 
 perk_dict = {"cb1": "bubblegum", "cb2": "diet", "cb3": "sweet_spot", "cb4": "taffy", "cb5": "chocolate_covered_espresso_beans",
-      "cb6": "minty_fresh_start", "cb7": "raspberry_cotton_candy", "cb8": "artificial", "cb9": "jawbreaker", "cb10": "sour_gummy_worms"}
+      "cb6": "minty_fresh_start", "cb7": "raspberry_cotton_candy", "cb8": "artificial_sweetener", "cb9": "jawbreaker", "cb10": "sour_gummy_worms"}
 
 function getPerk(name) {
   var tier = document.getElementsByName(name);

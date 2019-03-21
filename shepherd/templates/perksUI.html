@@ -2,20 +2,21 @@
 <html>
 
 <head>
+  <script type="text/javascript" src={{url_for( 'static', filename='socket.io.js' )}}></script>
 
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
   <script type="text/javascript" src={{url_for( 'static', filename='socket.io.js' )}}></script>
 
   <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.js" crossorigin="anonymous"></script> -->
-
+  <link rel="stylesheet" type="text/css" href={{url_for( 'static', filename="PerkSelection/css/perksUI.css")}} media="screen" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  <script src={{url_for( 'static', filename="PerkSelection/js/perksUI.js")}}></script>
 </head>
 
 <body>
   <form>
 
-    <link rel="stylesheet" type="text/css" href={{url_for( 'static', filename="PerkSelection/css/perksUI.css")}} media="screen" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-    <script src={{url_for( 'static', filename="PerkSelection/js/perksUI.js")}}></script>
+
 
     <h1 align="center">Perk Selection</h1>
     <br>
@@ -34,8 +35,8 @@
     <h5 align="center" style="justify-content: center" id="as_button">alliance selection:
       <div id="div_top_hypers">
         <ul id="masterrobot">
-      <li><input type="radio" id="gold_button" class="Alliance" name="gold_button" onclick="goldClick()">gold</li>
-        <li><input type="radio" id="blue_button" class="Alliance" name="blue_button" onclick="blueClick()">blue</li>
+      <li><input type="radio" id="gold_button" class="Alliance" name="gold_button" onclick="goldClick()"> gold </li>
+        <li><input type="radio" id="blue_button" class="Alliance" name="blue_button" onclick="blueClick()"> blue </li>
         </ul>
     </div>
     </h5>

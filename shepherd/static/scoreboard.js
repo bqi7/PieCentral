@@ -118,8 +118,10 @@ socket.on("perks_selected", function(data) {
 })
 
 function select_perk(alliance, perk_num, perk) {
+  console.log("selecting perk " + perk)
   id = '#' + alliance + "Perk" + perk_num.toString()
-  $(id).attr('src', '../static/PerkSelection/assets/DummyPerks/' + perk + '.png');
+  $(id).attr('src', "/static/PerkSelection/assets/DummyPerks/" + perk + ".png" );
+  // $(id).attr('src', "{{url_for( 'static', filename='PerkSelection/assets/DummyPerks/" + perk + ".png' )}}" );
 }
 
 socket.on("score", function(scores) {
