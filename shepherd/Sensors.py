@@ -83,7 +83,7 @@ def recv_from_btn(ser, alliance_enum):
         sensor_msg = ser.readline().decode("utf-8")
         sensor_msg.lower()
         payload_list = sensor_msg.split(";")
-        if len(payload_list) == 2 and payload_list[1] == "hb\r\n"
+        if len(payload_list) == 2 and payload_list[1] == "hb\r\n":
             continue
         print("<2> Message Received: ", payload_list, flush=True)
         button_num = payload_list[1]
@@ -109,10 +109,10 @@ def main():
             button_serial_gold = port
 
     button_thread_blue = threading.Thread(
-        target = recv_from_btn, name="button thread blue", args=([button_serial_blue])
+        target = recv_from_btn, name="button blue", args=([button_serial_blue, ALLIANCE_COLOR.BLUE])
         )
     button_thread_gold = threading.Thread(
-        target = recv_from_btn, name="button thread gold", args=([button_srial_gold])
+        target = recv_from_btn, name="buttons gold", args=([button_serial_gold, ALLIANCE_COLOR.GOLD])
         )
 
     button_thread_blue.daemon = True
