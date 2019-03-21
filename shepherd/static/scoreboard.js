@@ -40,6 +40,7 @@ socket.on('stage', function(stage_name) {
 socket.on('launch_button_timer_start', function(allianceButton) {
     alliance = JSON.parse(allianceButton).alliance
     button = JSON.parse(allianceButton).button
+    console.log("launch button timer start")
     if (alliance == "blue"){
         if (button == 1) {
             runTimer1();
@@ -184,7 +185,10 @@ function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g
 }
 
 function stageTimerStart(timeleft) {
-  resetTimers()
+  // timerA = false;
+  // timerB = false;
+  // timerC = false;
+  // timerD = false;
   stageTimer = true;
   runStageTimer(timeleft);
 }
@@ -218,7 +222,7 @@ function progress(timeleft, timetotal, $element) {
     } else {
         $element.find('div').animate({ width: progressBarWidth }, 1000, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
     }
-    if(timeleft > 0) {
+    if (timeleft > 0) {
         setTimeout(function() {
             if(overTimer) {
               progress(timeleft - 1, timetotal, $element);
@@ -290,6 +294,8 @@ function goldTwist() {
 
 function runTimer1() {
   timerA = true;
+  console.log("timerA set to true")
+  console.log(timerA)
   //setTimeout(timer1, 0)
   launchButtonTimer('.timer1', '.circle_animation1', timerA);
 }

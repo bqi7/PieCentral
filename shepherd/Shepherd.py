@@ -383,9 +383,9 @@ def launch_button_triggered(args):
     '''
     alliance = alliances[args['alliance']]
     button = args["button"]
-    lb = alliance + "_" + str(button)
+    lb = alliance.name + "_" + str(button)
     if not timer_dictionary[lb].is_running():
-        msg = {"alliance": alliance, "button": button}
+        msg = {"alliance": alliance.name, "button": button}
         code = next_code()
         send_code(alliance, code)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
@@ -503,13 +503,13 @@ events = None
 ###########################################
 # Game Specific Variables
 ###########################################
-buttons = {'gold_1': False, 'gold_2': False, 'blue_1': False, 'Blue_2': False}
+buttons = {'gold_1': False, 'gold_2': False, 'blue_1': False, 'blue_2': False}
 launch_button_timer_gold_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 launch_button_timer_gold_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 launch_button_timer_blue_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 launch_button_timer_blue_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_button_timer_gold_2,
-             'blue_1': launch_button_timer_blue_1, 'Blue_2': launch_button_timer_blue_2}
+             'blue_1': launch_button_timer_blue_1, 'blue_2': launch_button_timer_blue_2}
 
 
 overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
