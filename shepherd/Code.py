@@ -68,7 +68,53 @@ def tennis_ball(num):
     return num
 
 def most_common(num):
-    return
+    parse = []
+    while num != 0:
+        parse.append(num % 10)
+        num = num // 10
+    parse.reverse()
+    l = list(set(parse))
+    if len(l) <= 4:
+        l = sorted(l, reverse=True)
+    else:
+        ret = []
+        d = {}
+        for n in parse:
+            if n in d.keys():
+                d[n] += 1
+            else:
+                d[n] = 1
+        final = []
+        boolean = {}
+        print(d)
+        for key, value in sorted(d.items(), key=lambda kv: kv[1], reverse = True):
+            final.append(key)
+            boolean[key] = False
+        print(final)
+        boolean[final[3]] = True
+        for key in final:
+            if d[key] == d[final[3]]:
+                boolean[key] = True
+        for i in range(4):
+            if boolean[final[i]] == False:
+                ret.append(final[i])
+        print(ret)
+        left = 4 - len(ret)
+        print(left)
+        if left != 0:
+            for i in range(len(parse)):
+                if boolean[parse[i]] == True and parse[i] not in ret:
+                    print(parse[i])
+                    ret.append(parse[i])
+                    left -= 1
+                    if left == 0:
+                        break
+        l = sorted(ret, reverse=True)
+    final_num = 0
+    while l != []:
+        final_num = final_num * 10 + l[0]
+        l = l[1:]
+    return final_num
 
 def remove_duplicates(num):
     l = []
