@@ -23,7 +23,8 @@ def get_working_serial_ports(excludes: set):
     Returns a list of `serial.Serial` object.
     """
     import glob
-    maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    # maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    maybe_ports = set(glob.glob("/dev/tty.usb*"))
     maybe_ports.difference_update(excludes)
 
     working = []

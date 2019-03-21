@@ -184,6 +184,7 @@ function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g
 }
 
 function stageTimerStart(timeleft) {
+  resetTimers()
   stageTimer = true;
   runStageTimer(timeleft);
 }
