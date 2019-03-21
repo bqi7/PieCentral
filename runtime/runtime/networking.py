@@ -3,7 +3,7 @@ import signal
 import socket
 import time
 
-from runtime.logging import make_logger
+from runtime.logger import make_logger
 
 LOGGER = make_logger(__name__)
 

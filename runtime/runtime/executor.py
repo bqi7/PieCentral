@@ -4,7 +4,7 @@ import time
 import inspect
 import importlib
 
-import runtime.logging
+import runtime.logger
 from runtime.api import Robot
 
 def blank_function():

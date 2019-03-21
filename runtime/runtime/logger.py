@@ -46,7 +46,6 @@ import sys
 from typing import Callable, Tuple
 import click
 
-
 def wrap_log_method(name: str) -> Callable:
     """ Make a decorator that will wrap a logging method. """
     def wrapper(cls):
@@ -57,7 +56,6 @@ def wrap_log_method(name: str) -> Callable:
         setattr(cls, name, log)
         return cls
     return wrapper
-
 
 @wrap_log_method('debug')
 @wrap_log_method('info')
