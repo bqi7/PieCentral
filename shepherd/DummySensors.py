@@ -24,7 +24,7 @@ def sender():
     }
 
     input_to_effect = {
-        "twist" : EFFECTS.BLACKMAIL,
+        "twist" : EFFECTS.TWIST,
         "spoil" : EFFECTS.SPOILED_CANDY
     }
 

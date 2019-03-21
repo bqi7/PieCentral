@@ -11,6 +11,8 @@ from LCM import *
 HOST_URL = "0.0.0.0"
 PORT = 7000
 
+#TODO work on this, new headers and deprecated headers.
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
 socketio = SocketIO(app)

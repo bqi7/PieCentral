@@ -15,14 +15,14 @@ socket.on('connect', function(data) {
   });
 
 socket.on('teams', function(match_info) {
-  b1_name = JSON.parse(match_info).b1_name
-  b1_num = JSON.parse(match_info).b1_num
-  b2_name = JSON.parse(match_info).b2_name
-  b2_num = JSON.parse(match_info).b2_num
-  g1_name = JSON.parse(match_info).g1_name
-  g1_num = JSON.parse(match_info).g1_num
-  g2_name = JSON.parse(match_info).g2_name
-  g2_num = JSON.parse(match_info).g2_num
+  b1_name = JSON.parse(match_info).b1name
+  b1_num = JSON.parse(match_info).b1num
+  b2_name = JSON.parse(match_info).b2name
+  b2_num = JSON.parse(match_info).b2num
+  g1_name = JSON.parse(match_info).g1name
+  g1_num = JSON.parse(match_info).g1num
+  g2_name = JSON.parse(match_info).g2name
+  g2_num = JSON.parse(match_info).g2num
   match_number = JSON.parse(match_info).match_number
   nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number)
 })
@@ -71,7 +71,7 @@ socket.on("applied_effect", function(data) {
   alliance = JSON.parse(data).alliance
   effect = JSON.parse(data).effect
   if (alliance == "blue"){
-      if (effect == "blackmail") {
+      if (effect == "twist") {
           blueTwist();
       } else {
           var spoiledTimeBlue = 15
@@ -87,7 +87,7 @@ socket.on("applied_effect", function(data) {
           }, 1000)
       }
   } else {
-      if (effect == "blackmail") {
+      if (effect == "twist") {
           goldTwist();
       } else {
         var spoiledTimeGold = 15
@@ -118,8 +118,10 @@ socket.on("perks_selected", function(data) {
 })
 
 function select_perk(alliance, perk_num, perk) {
+  console.log("selecting perk " + perk)
   id = '#' + alliance + "Perk" + perk_num.toString()
-  $(id).attr('src', '../static/PerkSelection/assets/DummyPerks/' + perk + '.png');
+  $(id).attr('src', "/static/PerkSelection/assets/DummyPerks/" + perk + ".png" );
+  // $(id).attr('src', "{{url_for( 'static', filename='PerkSelection/assets/DummyPerks/" + perk + ".png' )}}" );
 }
 
 socket.on("score", function(scores) {
@@ -153,6 +155,7 @@ function setStageName(stage) {
 
 function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number){
   //set the names of all the teams and the match number
+  console.log(b1_name)
   $('#blue-1-name').html(b1_name)
   $('#blue-1-num').html(b1_num)
   $('#blue-2-name').html(b2_name)
