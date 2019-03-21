@@ -173,8 +173,9 @@ def to_teleop(args):
     overdrive_time = random.randint(0,CONSTANTS.TELEOP_TIME -
                                       CONSTANTS.OVERDRIVE_TIME)
     overdrive_timer.start_timer(overdrive_time)
-    print("overdrive will happen at " + overdrive_time // 60 + ":" +
-          overdrive_time % 60)
+    overdrive_time = CONSTANTS.TELEOP_TIME - overdrive_time
+    print("overdrive will happen at " + str(overdrive_time // 60) + ":" +
+          str(overdrive_time % 60))
 
     enable_robots(False)
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
@@ -397,11 +398,11 @@ def auto_launch_button_triggered(args):
     ## TODO: add ten score, mark button as dirty, sent to sc (both things)
     alliance = alliances[args['alliance']]
     button = args["button"]
-    temp_str = alliance + "_" + str(button)
+    temp_str = alliance.name + "_" + str(button)
     if not buttons[temp_str]:
         alliance.change_score(10)
         buttons[temp_str] = True
-        msg = {"alliance": alliance, "button": button}
+        msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
 
 

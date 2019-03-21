@@ -112,16 +112,20 @@ socket.on("perks_selected", function(data) {
   perk2 = JSON.parse(data).perk_2
   perk3 = JSON.parse(data).perk_3
 
-  select_perk(alliance, 1, perk1)
-  select_perk(alliance, 2, perk2)
-  select_perk(alliance, 3, perk3)
+  selectPerk(alliance, 1, perk1)
+  selectPerk(alliance, 2, perk2)
+  selectPerk(alliance, 3, perk3)
 })
 
-function select_perk(alliance, perk_num, perk) {
+function selectPerk(alliance, perk_num, perk) {
   console.log("selecting perk " + perk)
   id = '#' + alliance + "Perk" + perk_num.toString()
-  $(id).attr('src', "/static/PerkSelection/assets/DummyPerks/" + perk + ".png" );
-  // $(id).attr('src', "{{url_for( 'static', filename='PerkSelection/assets/DummyPerks/" + perk + ".png' )}}" );
+  if (perk == "empty") {
+    $(id).attr('src', "/static/Perk_" + perk_num + ".png" );
+  } else {
+    $(id).attr('src', "/static/PerkSelection/assets/DummyPerks/" + perk + ".png" );
+    // $(id).attr('src', "{{url_for( 'static', filename='PerkSelection/assets/DummyPerks/" + perk + ".png' )}}" );
+  }
 }
 
 function setScores(blueScore, goldScore) {
@@ -169,6 +173,13 @@ function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g
   $('#gold-1-num').html(g1_num)
   $('#gold-2-name').html(g2_name)
   $('#gold-2-num').html(g2_num)
+
+  selectPerk("blue", 1, "empty")
+  selectPerk("blue", 2, "empty")
+  selectPerk("blue", 3, "empty")
+  selectPerk("gold", 1, "empty")
+  selectPerk("gold", 2, "empty")
+  selectPerk("gold", 3, "empty")
   setScores(0, 0)
 }
 
