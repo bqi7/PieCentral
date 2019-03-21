@@ -124,11 +124,16 @@ function select_perk(alliance, perk_num, perk) {
   // $(id).attr('src', "{{url_for( 'static', filename='PerkSelection/assets/DummyPerks/" + perk + ".png' )}}" );
 }
 
+function setScores(blueScore, goldScore) {
+  $('#blue-score').html(blueScore);
+  $('#gold-score').html(goldScore);
+
+}
+
 socket.on("score", function(scores) {
   blueScore = JSON.parse(scores).blue_score;
   goldScore = JSON.parse(scores).gold_score;
-  $('#blue-score').html(blueScore);
-  $('#gold-score').html(goldScore);
+  setScores(blueScore, goldScore)
 })
 
 function testScore(blueScore, goldScore) {
@@ -164,6 +169,7 @@ function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g
   $('#gold-1-num').html(g1_num)
   $('#gold-2-name').html(g2_name)
   $('#gold-2-num').html(g2_num)
+  setScores(0, 0)
 }
 
 function stageTimerStart(timeleft) {

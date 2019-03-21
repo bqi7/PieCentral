@@ -380,7 +380,7 @@ def launch_button_triggered(args):
     check if allowed once every 30 seconds, give one of the codes to the correct alliance through Dawn,
     update scoreboard
     '''
-    alliance = args["alliance"]
+    alliance = alliances[args['alliance']]
     button = args["button"]
     lb = alliance + "_" + str(button)
     if not timer_dictionary[lb].is_running():
@@ -395,7 +395,7 @@ def send_code(alliance, code):
 
 def auto_launch_button_triggered(args):
     ## TODO: add ten score, mark button as dirty, sent to sc (both things)
-    alliance = args["alliance"]
+    alliance = alliances[args['alliance']]
     button = args["button"]
     temp_str = alliance + "_" + str(button)
     if not buttons[temp_str]:
