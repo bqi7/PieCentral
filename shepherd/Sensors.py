@@ -31,7 +31,7 @@ def get_working_serial_ports(excludes: set):
     for p in maybe_ports:
         try:
             working.append(serial.Serial(p, baudrate=115200))
-        except serial.SerialException:
+        except:
             pass
 
     return working
