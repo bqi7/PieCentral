@@ -68,7 +68,6 @@ def tennis_ball(num):
     return num
 
 def most_common(num):
-<<<<<<< HEAD
     parse = []
     while num != 0:
         parse.append(num % 10)
@@ -156,24 +155,3 @@ def get_coins(num):
     nickels = (num - 25 * quarters) // 5
     pennies = num - nickels * 5 - quarters * 25
     return int(str(quarters) + str(nickels) + str(pennies))
-
-def most_common(num):
-    l = []
-    d = {}
-    while num % 10 != 0:
-        n = num % 10
-        if n not in d.keys():
-            d[n] = 1
-        else:
-            d[n] += 1
-    if len(d.keys()) <= 4:
-        keys = d.keys()
-        keys.sort()
-        final = 0
-        while keys ! = []:
-            e = key.
-    else:
-        return
-=======
-    pass
->>>>>>> 9cf8b630093c964c3cc8dbff57118c941f7f4cfd
