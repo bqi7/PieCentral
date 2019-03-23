@@ -115,6 +115,7 @@ def to_setup(args):
         "match_num" : match_number})
 
     game_state = STATE.SETUP
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     print("ENTERING SETUP STATE")
     print({"blue_score" : alliances[ALLIANCE_COLOR.BLUE].score,
            "gold_score" : alliances[ALLIANCE_COLOR.GOLD].score})
@@ -124,6 +125,7 @@ def to_perk_selection(args):
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
     game_state = STATE.PERK_SELCTION
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
              {"time" : CONSTANTS.PERK_SELECTION_TIME})
@@ -132,6 +134,7 @@ def to_perk_selection(args):
 def to_auto_wait(args):
     global game_state
     game_state = STATE.AUTO_WAIT
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_CODES)
     print("ENTERING AUTO_WAIT STATE")
 
@@ -144,6 +147,7 @@ def to_auto(args):
     global game_state
     game_timer.start_timer(CONSTANTS.AUTO_TIME)
     game_state = STATE.AUTO
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     enable_robots(True)
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
              {"time" : CONSTANTS.AUTO_TIME})
@@ -157,6 +161,7 @@ def to_wait(args):
     '''
     global game_state
     game_state = STATE.WAIT
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     disable_robots()
     print("ENTERING WAIT STATE")
 
@@ -167,6 +172,7 @@ def to_teleop(args):
     '''
     global game_state
     game_state = STATE.TELEOP
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
 
     Timer.reset_all()
     game_timer.start_timer(CONSTANTS.TELEOP_TIME)
@@ -194,6 +200,7 @@ def to_end(args):
              {"blue_score" : math.floor(alliances[ALLIANCE_COLOR.BLUE].score),
               "gold_score" : math.floor(alliances[ALLIANCE_COLOR.GOLD].score)})
     game_state = STATE.END
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     disable_robots()
     print("ENTERING END STATE")
 
