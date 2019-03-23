@@ -513,9 +513,6 @@ timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_butto
 
 
 overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
-code_solution = {}
-code_effect = {}
-codes = []
 codes_used = []
 
 #nothing
