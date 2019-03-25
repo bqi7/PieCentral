@@ -104,4 +104,7 @@ def stop(_signum, _stack_frame):
 def start(host, tcp_port, udp_send_port, udp_recv_port):
     signal.signal(signal.SIGTERM, stop)
     LOGGER.debug('Attached SIGTERM handler.')
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # open a socket on a port to broadcast on
+    sock.connect((UDP_IP, UDP_BROADCAST_PORT))
+    ##TODO: put sock as an argument to the hotplugging and device_disconnected async coroutines
     asyncio.run(run(host, tcp_port, udp_send_port, udp_recv_port))

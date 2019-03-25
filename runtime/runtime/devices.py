@@ -11,6 +11,7 @@ from collections import namedtuple
 from typing import List, Callable, Generator
 import ctypes
 import os
+import socket
 import serial
 import time
 
@@ -125,21 +126,6 @@ class DeviceStructure(ctypes.Structure):
         pass
 
 
-def get_device_dict(schema_path):
-    """
-    Returns a dict that other processes can use to instantiate DeviceStructure types
-    corresponding to the available device types.
-    """
-    schema = load_schema(schema_path)
-    device_dict = {}
-    for name, params in schema['smartsensor'].items(): # put all the smartsensors in the dict
-        device_dict[name] = params
-    for name, params in schema.items():
-        if not name == 'smartsensor':
-            device_dict[name] = params
-    return device_dict
-
-
 def is_sensor_device(vendor_id: int, product_id: int) -> bool:
     """
     Determine whether the USB descriptor belongs to an Arduino Micro (CDC ACM).
@@ -149,6 +135,21 @@ def is_sensor_device(vendor_id: int, product_id: int) -> bool:
     """
     return vendor_id == 0x2341 and product_id == 0x8037
 
+
+def get_device_dict(schema_path):
+    """
+    Returns a dict that other processes can use to instantiate DeviceStructure types
+    corresponding to the available device types. Includes GamePad and RobotState.
+    """
+    schema = load_schema(schema_path)
+    device_dict = {}
+    for name, params in schema['smartsensor'].items(): # put all the smartsensors in the dict
+        device_dict[name] = params
+    for name, params in schema.items(): # put GamePad and FieldControl in the dict
+        if not name == 'smartsensor':
+            device_dict[name] = params
+    return device_dict
+    
 
 def load_schema(schema_path):
     """
@@ -171,6 +172,9 @@ def load_schema(schema_path):
 def start(poll, poll_period, encoders, decoders):
     default_schema_path = os.path.join(os.path.dirname(__file__), 'devices.yaml')
     schema = load_schema(default_schema_path)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # open a socket on a port to broadcast on
+    sock.bind((UDP_IP, UDP_BROADCAST_PORT))
+    ##TODO: put sock as an argument to the hotplugging and device_disconnected async coroutines
     
     ####### for testing #######
     

@@ -1,11 +1,13 @@
 import os
 import sys
+import socket
 import time
 import inspect
 import importlib
 
 import runtime.logger
 from runtime.api import Robot
+import runtime.devices
 
 def blank_function():
     pass
@@ -86,5 +88,8 @@ def stop(_signum, _stack_frame):
 def start(student_code, student_freq, student_timeout):
     signal.signal(signal.SIGTERM, stop)
     LOGGER.debug('Attached SIGTERM handler.')
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # open a socket on a port to broadcast on
+    sock.connect((UDP_IP, UDP_BROADCAST_PORT))
+    ##TODO: put sock as an argument to the hotplugging and device_disconnected async coroutines
     sc_exc = StudentCodeExecutor(student_code)
     sc_exc(student_freq, student_timeout)
