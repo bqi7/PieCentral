@@ -1,6 +1,6 @@
 {
   "name": "Dawn",
-  "version": "2018.1.0",
+  "version": "2.0.0",
   "description": "Frontend for PIE Robotics System",
   "license": "Apache-2.0",
   "private": true,
@@ -12,6 +12,7 @@
   "scripts": {
     "start": "better-npm-run start",
     "build": "better-npm-run build",
+    "pkg": "node release.js",
     "lint": "eslint .",
     "watch": "webpack --mode development --watch --progress",
     "test": "mocha --require babel-core/register --recursive renderer/**/test/*.test.js",
