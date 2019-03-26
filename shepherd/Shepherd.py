@@ -321,14 +321,14 @@ def code_setup():
     '''
     global code_solution
     global code_effect
-    code_solution = Code.assign_code_solution()
-    code_effect = Code.assign_code_effect()
+    code_solution = assign_code_solution()
+    code_effect = assign_code_effect()
     msg = {"codes_solutions": code_solution}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
 def bounce_code(args):
     msg = {"alliance":args["alliance"], "result":args["result"]}
-    lcm.send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
+    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
 
 def apply_code(args):
     '''
@@ -502,10 +502,10 @@ events = None
 # Game Specific Variables
 ###########################################
 buttons = {'gold_1': False, 'gold_2': False, 'blue_1': False, 'blue_2': False}
-launch_button_timer_gold_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
-launch_button_timer_gold_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
-launch_button_timer_blue_1 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
-launch_button_timer_blue_2 = Timer(TIMER_TYPES.EXTENDED_TELEOP)
+launch_button_timer_gold_1 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
+launch_button_timer_gold_2 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
+launch_button_timer_blue_1 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
+launch_button_timer_blue_2 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
 timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_button_timer_gold_2,
              'blue_1': launch_button_timer_blue_1, 'blue_2': launch_button_timer_blue_2}
 

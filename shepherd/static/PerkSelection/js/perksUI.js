@@ -32,6 +32,7 @@ $(".image-checkbox").on("click", function (e) {
 
 var socket = io('http://127.0.0.1:5001');
 var t1_name, t1_num, t2_name, t2_num
+var cur_code = null
 var master_robot
 
 
@@ -103,6 +104,26 @@ socket.on('reset', function(data){
   window.location.href = origin + "/reset.html"
 })
 
+socket.on('code', function(data) {
+  console.log("got code")
+  console.log(JSON.parse(data).alliance)
+  console.log(JSON.parse(data).result)
+  console.log(getCookie('alliance'))
+  if (getCookie('alliance') == JSON.parse(data).alliance) {
+    console.log("setting text area value")
+    cur_code = JSON.parse(data).result
+    $("#text-area").attr("value", cur_code)
+  }
+})
+
+function submitCode() {
+  if (cur_code != null) {
+    msg = {"alliance": getCookie('alliance'), "answer": cur_code}
+    socket.emit('ui-to-server-code', JSON.stringify(msg))
+    cur_code = null
+    $("#text-area").attr("value", "")
+  }
+}
 
 function setTeams(t1_num, t2_num) {
     // TODO: Change name of elements

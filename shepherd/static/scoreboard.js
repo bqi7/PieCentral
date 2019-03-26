@@ -33,7 +33,9 @@ socket.on('stage_timer_start', function(secondsInStage) {
 })
 
 socket.on('stage', function(stage_name) {
-  stage = JSON.parse(stage_name).stage_name
+  stage = JSON.parse(stage_name).stage
+  console.log("got stage header")
+  console.log(stage)
   setStageName(stage)
 })
 
@@ -107,7 +109,6 @@ socket.on("applied_effect", function(data) {
 })
 
 socket.on("perks_selected", function(data) {
-  console.log('selecting perks')
   alliance = JSON.parse(data).alliance
   perk1 = JSON.parse(data).perk_1
   perk2 = JSON.parse(data).perk_2
@@ -119,7 +120,6 @@ socket.on("perks_selected", function(data) {
 })
 
 function selectPerk(alliance, perk_num, perk) {
-  console.log("selecting perk " + perk)
   id = '#' + alliance + "Perk" + perk_num.toString()
   if (perk == "empty") {
     $(id).attr('src', "/static/Perk_" + perk_num + ".png" );
@@ -159,13 +159,24 @@ function resetTimers(){
   timerD = false;
 }
 
+SETUP = "setup"
+PERK_SELCTION = "perk_selection"
+AUTO_WAIT = "auto_wait"
+AUTO = "auto"
+WAIT = "wait"
+TELEOP = "teleop"
+END = "end"
+
+stage_names = {"setup": "Setup", "perk_selection": "Perk Selection", 
+               "auto_wait": "Perk Selection", "auto": "Autonomous Period", "wait": "Autonomouse Period",
+               "teleop": "Teleop Period", "end": "Post-Match"}
+
 function setStageName(stage) {
-  $('#stage').html(stage)
+  $('#stage').html(stage_names[stage])
 }
 
 function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number){
   //set the names of all the teams and the match number
-  console.log(b1_name)
   $('#blue-1-name').html(b1_name)
   $('#blue-1-num').html(b1_num)
   $('#blue-2-name').html(b2_name)

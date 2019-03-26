@@ -79,7 +79,6 @@ class Timer:
             self.active = True
             Timer.queueLock.release()
 
-
     def reset(self):
         """Stops the current timer (if any) and sets timer to inactive"""
         if self.active and self.reset_all_count == Timer.globalResetCount:

@@ -40,6 +40,10 @@ def ui_to_server_perks(perks):
 def ui_to_server_perks(data):
     lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.MASTER_ROBOT, json.loads(data))
 
+@socketio.on('ui-to-server-code')
+def ui_to_server_code(data):
+    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.CODE_APPLICATION, json.loads(data))
+
 def receiver():
 
     events = gevent.queue.Queue()
@@ -57,6 +61,8 @@ def receiver():
                 socketio.emit(TABLET_HEADER.COLLECT_CODES, json.dumps(event[1], ensure_ascii=False))
             if event[0] == TABLET_HEADER.COLLECT_PERKS:
                 socketio.emit(TABLET_HEADER.COLLECT_PERKS, json.dumps(event[1], ensure_ascii=False))
+            if event[0] == TABLET_HEADER.CODE:
+                socketio.emit(TABLET_HEADER.CODE, json.dumps(event[1], ensure_ascii=False))
 
         socketio.sleep(0.1)
 
