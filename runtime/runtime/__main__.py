@@ -5,7 +5,8 @@ The runtime command-line interface.
 import os
 import click
 from runtime import __version__
-from runtime.control import bootstrap
+import runtime.logging
+import runtime.monitoring
 
 
 def get_module_path(filename):
@@ -13,7 +14,7 @@ def get_module_path(filename):
     return os.path.join(module_dir, filename)
 
 """
-Available command-line options.    
+Available command-line options.
 """
 @click.command()
 @click.option('-r', '--max-respawns', default=3,
@@ -34,6 +35,7 @@ Available command-line options.
               'By default, sensors are detected asynchronously with udev. '
               'For non-Linux platforms without udev, this flag is always set.')
 @click.option('--poll-period', default=0.04, help='Hotplug polling period.')
+@click.option('--monitor-period', default=60, help='Monitor logging period.')
 @click.option('-l', '--log-level', default='INFO', help='Lowest visible log level.',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']))
 @click.option('-d', '--device-schema', default=get_module_path('devices.yaml'),
@@ -54,7 +56,8 @@ def cli(version, **options):
     if version:
         print('.'.join(map(str, __version__)))
     else:
-        bootstrap(options) # starts control.py
+        runtime.logging.initialize(options['log_level'])
+        runtime.monitoring.bootstrap(options)
 
 
 if __name__ == '__main__':

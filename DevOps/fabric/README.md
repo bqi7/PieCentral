@@ -27,7 +27,6 @@ $ cp /path/to/fabric/wpa_supplicant.conf /path/to/boot
 ### Networking
 
 ### Raspi
-Run
 
 ```
 Boot Options > Desktop / CLI > Console
