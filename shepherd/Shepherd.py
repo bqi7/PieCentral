@@ -335,6 +335,19 @@ def apply_code(args):
     Send Scoreboard the effect if the answer is correct
     '''
     alliance = args["alliance"]
+    answer = alliances[args["answer"]]
+    if (answer is not None and answer in code_solution.values()):
+        code = [k for k, v in code_solution.items() if v == answer][0]
+        alliance.change_score(10)
+    else:
+        msg = {"alliance": alliance}
+        lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
+
+def auto_apply_code(args):
+    '''
+    Send Scoreboard the new score if the answer is correct #TODO
+    '''
+    alliance = args["alliance"]
     answer = args["answer"]
     if (answer is not None and answer in code_solution.values()):
         code = [k for k, v in code_solution.items() if v == answer][0]
@@ -398,7 +411,9 @@ def auto_launch_button_triggered(args):
     button = args["button"]
     temp_str = alliance.name + "_" + str(button)
     if not buttons[temp_str]:
-        alliance.change_score(10)
+        msg = {"alliance": alliance.name, "button": button}
+        code = next_code()
+        send_code(alliance, code)
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -444,6 +459,7 @@ auto_wait_functions = {
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
     SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
+    SHEPHERD_HEADER.CODE_APPLICATION : auto_apply_code,
     SHEPHERD_HEADER.GET_SCORES : get_score,
     SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
 }
