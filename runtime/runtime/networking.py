@@ -3,13 +3,13 @@ import signal
 import socket
 import time
 
-from runtime.logger import make_logger
+from runtime.journal import make_logger
 
 LOGGER = make_logger(__name__)
 
 class DawnStreamingProtocol(asyncio.DatagramProtocol):
     """UDP Send/Recv"""
-    
+
     def connection_made(self, transport):
         self.transport = transport
 
@@ -20,21 +20,21 @@ class DawnStreamingProtocol(asyncio.DatagramProtocol):
         """I'm assuming that data in is a string in the form:
         "state gamepad1 gamepad2 gamepad3 gamepad4 ..."
         """
-        
+
         processed_data = {} # dictionary for final returned data
-        
+
         raw = data.decode().split() # split received packet into list of strings
         new_state = raw[0] # first thing is the new state of the system
         unpackaged_data["student_code_status"] = [new_state, time.time()]
-        
+
         # somehow get the current robot state from statemanager (shard memory?)
         control_state = NULL # <-- change this
-        
+
         # send the new state to state manager
         if control_state is None or new_state != control_state:
             sm_state_command = self.sm_mapping[new_state]
             self.state_queue.put([sm_state_command, []])
-            
+
         all_gamepad_dict = {}
         for gamepad in raw[1:]:
             gamepad_dict = {}
@@ -42,7 +42,7 @@ class DawnStreamingProtocol(asyncio.DatagramProtocol):
             gamepad_dict["buttons"] = dict(enumerate(gamepad.buttons))
             all_gamepad_dict[gamepad.index] = gamepad_dict
         processed_data["gamepads"] = [all_gamepad_dict, time.time()]
-        
+
         # put processed_data onto shared memory to state manager
 
     def error_received(self, exc):
@@ -50,9 +50,9 @@ class DawnStreamingProtocol(asyncio.DatagramProtocol):
 
     async def send_datagrams(self):
         pass
-        
+
         # 1) have a clock that periodically pulls data from SM and sends it periodicaly
-            # probelm is, 
+            # probelm is,
             # probably better bc
         # 2) have thread wait for new data to arrive on SM
 
@@ -85,7 +85,7 @@ async def run(host: str, tcp_port: int, udp_send_port: int, udp_recv_port: int):
     try:
         streaming_server = await create_server(host, tcp_port, DawnStreamingProtocol) # UDP two-way connection to dawn
         command_server = await create_server(host, udp_recv_port, CommandProtocol) # TCP connection to dawn (will need another one for TCP to Shepherd)
-        
+
         async with streaming_server, command_server:
             await asyncio.gather(streaming_server.serve_forever(),
                                           command_server.serve_forever())

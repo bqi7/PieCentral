@@ -10,8 +10,8 @@ import time
 from types import ModuleType
 from typing import Callable, Tuple, Dict
 import aioprocessing
-import runtime.logger
-from runtime import networking, devices, executor
+import runtime.journal
+# from runtime import networking, devices, executor
 from runtime.util import (
     RuntimeException,
     RuntimeIPCException,
@@ -19,7 +19,7 @@ from runtime.util import (
 )
 from collections import UserDict
 
-LOGGER = runtime.logger.make_logger(__name__)
+LOGGER = runtime.journal.make_logger(__name__)
 
 
 class Mode(Enum):

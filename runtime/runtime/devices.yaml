@@ -1,18 +1,4 @@
 # devices.yaml -- A description of all Smart Sensors.
-#
-# Each type of sensor is described as follows:
-#
-#   <name: str>
-#     id: <id: uint16_t>
-#     params:
-#       <param_name: str>:
-#         id: <id: uint16_t>
-#         type: <type: str, examples: float, uint32_t, bool>
-#         read: <read: bool, optional, default: true>
-#         write: <write: bool, optional, default: false>
-#         lower: <lower bound for numeric types, optional, default: -inf>
-#         upper: <upper bound for numeric types, optional, default: inf>
-#         virt_default: <optional>
 
 smartsensor:
   LimitSwitch:

@@ -22,7 +22,7 @@ import yaml
 # from serial.aio import create_serial_connection
 # from serial.tools.list_ports import comports
 # Other modules in runtime package
-from logger import make_logger
+from runtime.journal import make_logger
 
 
 LOGGER = make_logger(__name__)
@@ -101,18 +101,18 @@ class DeviceStructure(ctypes.Structure):
         """ Instatiates a device by creating a piece of shared memory, then returns the device. """
         name = device_type.__name__ + '-' + str(uuid.uuid4())
         try:
-            memory = posix_ipc.SharedMemory(name, 
-                                    flags=posix_ipc.O_CREAT | posix_ipc.O_EXCL, 
+            memory = posix_ipc.SharedMemory(name,
+                                    flags=posix_ipc.O_CREAT | posix_ipc.O_EXCL,
                                     size=ctypes.sizeof(device_type))
         except ExistentialError:
             LOGGER.warning("Unable to create new shared memory segment")
-        
+
         try:
-            semaphore = posix_ipc.Semaphore(name, 
+            semaphore = posix_ipc.Semaphore(name,
                                     flags=posix_ipc.O_CREAT | posix_ipc.O_EXCL)
         except ExistentialError:
             LOGGER.warning("Unable to create new semaphore")
-        
+
         device = device_type.from_buffer(memory) # python buffer protocol
         device._buf = memory
         device._sem = semaphore
@@ -124,6 +124,10 @@ class DeviceStructure(ctypes.Structure):
 
     def __setstate__(self, state):
         pass
+
+
+class DeviceMonitor:
+    pass
 
 
 def is_sensor_device(vendor_id: int, product_id: int) -> bool:
@@ -149,7 +153,7 @@ def get_device_dict(schema_path):
         if not name == 'smartsensor':
             device_dict[name] = params
     return device_dict
-    
+
 
 def load_schema(schema_path):
     """
@@ -169,18 +173,18 @@ def load_schema(schema_path):
     return schema
 
 
-def start(poll, poll_period, encoders, decoders):
-    default_schema_path = os.path.join(os.path.dirname(__file__), 'devices.yaml')
-    schema = load_schema(default_schema_path)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # open a socket on a port to broadcast on
-    sock.bind((UDP_IP, UDP_BROADCAST_PORT))
-    ##TODO: put sock as an argument to the hotplugging and device_disconnected async coroutines
-    
-    ####### for testing #######
-    
-    device_dict = get_device_dict(default_schema_path)
-    for device, params in device_dict.items():
-        print(device + " : " + str(params))
+# def start(poll, poll_period, encoders, decoders):
+#     default_schema_path = os.path.join(os.path.dirname(__file__), 'devices.yaml')
+#     schema = load_schema(default_schema_path)
+#     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # open a socket on a port to broadcast on
+#     sock.bind((UDP_IP, UDP_BROADCAST_PORT))
+#     ##TODO: put sock as an argument to the hotplugging and device_disconnected async coroutines
+#
+#     ####### for testing #######
+#
+#     device_dict = get_device_dict(default_schema_path)
+#     for device, params in device_dict.items():
+#         print(device + " : " + str(params))
 
 
 """
@@ -189,7 +193,7 @@ def bootstrap(options):
     # event_loop.run_forever()
     default_schema_path = os.path.join(os.path.dirname(__file__), 'devices.yaml')
     schema = load_schema(default_schema_path)
-    
+
 if __name__ == '__main__':
     # cli()
     bootstrap({})

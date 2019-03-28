@@ -5,17 +5,16 @@ The runtime command-line interface.
 import os
 import click
 from runtime import __version__
-import runtime.logging
+import runtime.journal
 import runtime.monitoring
 
 
-def get_module_path(filename):
+def get_module_path(filename: str) -> str:
+    """ Return a path relative to the module's top-level directory. """
     module_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(module_dir, filename)
 
-"""
-Available command-line options.
-"""
+
 @click.command()
 @click.option('-r', '--max-respawns', default=3,
               help='Number of times to attempt to respawn a child process.')
@@ -47,7 +46,6 @@ Available command-line options.
               help='Show the runtime version and exit.')
 @click.argument('student-code', default=get_module_path('studentcode.py'),
                 type=click.Path(exists=True, dir_okay=False))
-
 def cli(version, **options):
     """
     The PiE runtime daemon manages the state of a robot, controls student code
@@ -56,7 +54,7 @@ def cli(version, **options):
     if version:
         print('.'.join(map(str, __version__)))
     else:
-        runtime.logging.initialize(options['log_level'])
+        runtime.journal.initialize(options['log_level'])
         runtime.monitoring.bootstrap(options)
 
 

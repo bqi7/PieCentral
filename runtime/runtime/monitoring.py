@@ -1,8 +1,13 @@
+import asyncio
+from collections import UserDict
 from typing import Callable, Tuple, Dict
-import aioprocessing
-import runtime.logging
 
-LOGGER = runtime.logger.make_logger(__name__)
+import aioprocessing
+import runtime.journal
+from runtime.control import StudentCodeExecutor
+from runtime.util import RuntimeIPCException, RuntimeException
+
+LOGGER = runtime.journal.make_logger(__name__)
 
 
 class SubprocessMonitor(UserDict):
@@ -21,8 +26,7 @@ class SubprocessMonitor(UserDict):
     async def start_process(self, name):
         """ Starts a long-term daemon process. """
         if name in self.subprocesses and self.subprocesses[name].is_alive():
-            raise RuntimeIPCException('Cannot start subprocess: already running.',
-                                      name=name)
+            raise RuntimeIPCException('Cannot start subprocess: already running.', name=name)
         target, args, kwargs = self[name]
         subprocess = self.subprocesses[name] = aioprocessing.AioProcess(
             name=name,
@@ -37,7 +41,7 @@ class SubprocessMonitor(UserDict):
     async def monitor_process(self, name):
         """ Run a daemon process indefinitely, restarting it if necessary. """
         failures = 0
-        while True:
+        while failures < self.max_respawns:
             start = time.time()
             subprocess = await self.start_process(name)
             await subprocess.coro_join()
@@ -46,11 +50,8 @@ class SubprocessMonitor(UserDict):
                 failures = 0
             failures += 1
             ctx = {'start': start, 'end': end, 'failures': failures, 'subprocess_name': name}
-            LOGGER.warn('Subprocess failed.', **ctx)
-            if failures >= self.max_respawns:
-                raise RuntimeIPCException('Subprocess failed too many times.', **ctx)
-            else:
-                LOGGER.warn('Attempting to respawn subprocess.', subprocess_name=name)
+            LOGGER.warn('Subprocess failed. Attempting to respawn.', **ctx)
+        raise RuntimeIPCException('Subprocess failed too many times.', **ctx)
 
     async def log_statistics(self, period: float):
         while True:
@@ -59,7 +60,7 @@ class SubprocessMonitor(UserDict):
     async def spin(self):
         """ Run multiple daemon processes indefinitely.  """
         monitors = [self.monitor_process(name) for name in self]
-        await asyncio.gather(*monitors, self.log_statistics())
+        await asyncio.gather(*monitors, self.log_statistics(1))
 
     def terminate(self, timeout=None):
         """
@@ -86,22 +87,22 @@ class SubprocessMonitor(UserDict):
 def bootstrap(options):
     """ Initializes subprocesses and catches any fatal exceptions. """
     monitor = SubprocessMonitor(options['max_respawns'], options['respawn_reset'])
-    monitor.add('networking', networking.start, (
-        options['host'],
-        options['tcp'],
-        options['udp_send'],
-        options['udp_recv'],
-    ))
-    monitor.add('devices', devices.start, (
-        options['poll'],
-        options['poll_period'],
-        options['encoders'],
-        options['decoders'],
-    ))
-    monitor.add('executor', StudentCodeExecutor(options['student_code']), (
-        options['student_freq'],
-        options['student_timeout'],
-    ))
+    # monitor.add('networking', networking.start, (
+    #     options['host'],
+    #     options['tcp'],
+    #     options['udp_send'],
+    #     options['udp_recv'],
+    # ))
+    # monitor.add('devices', devices.start, (
+    #     options['poll'],
+    #     options['poll_period'],
+    #     options['encoders'],
+    #     options['decoders'],
+    # ))
+    # monitor.add('executor', StudentCodeExecutor(options['student_code']), (
+    #     options['student_freq'],
+    #     options['student_timeout'],
+    # ))
 
     try:
         asyncio.run(monitor.spin())
