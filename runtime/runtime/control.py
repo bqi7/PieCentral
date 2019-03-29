@@ -13,7 +13,7 @@ import aioprocessing
 import runtime.journal
 # from runtime import networking, devices, executor
 from runtime.util import (
-    RuntimeException,
+    RuntimeBaseException,
     RuntimeIPCException,
     RuntimeExecutorException,
 )

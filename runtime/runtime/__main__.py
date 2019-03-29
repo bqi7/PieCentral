@@ -7,6 +7,7 @@ import click
 from runtime import __version__
 import runtime.journal
 import runtime.monitoring
+from runtime.util import read_conf_file, RuntimeBaseException
 
 
 def get_module_path(filename: str) -> str:
@@ -22,8 +23,6 @@ def get_module_path(filename: str) -> str:
               help='Seconds before the respawn counter is reset.')
 @click.option('--terminate-timeout', default=5,
               help='Timeout in seconds for subprocesses to terminate.')
-@click.option('-t', '--student-timeout', default=1.0,
-              help='Student code timeout in seconds.')
 @click.option('-f', '--student-freq', default=20,
               help='Number of times to execute student code per second.')
 @click.option('--host', default='127.0.0.1', help='Hostname to bind servers to.')
@@ -37,15 +36,17 @@ def get_module_path(filename: str) -> str:
 @click.option('--monitor-period', default=60, help='Monitor logging period.')
 @click.option('-l', '--log-level', default='INFO', help='Lowest visible log level.',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']))
-@click.option('-d', '--device-schema', default=get_module_path('devices.yaml'),
-              help='Path to device schema.',
-              type=click.Path(exists=True, dir_okay=False))
+@click.option('-d', '--data-schema', default=get_module_path('datasources.yaml'),
+              help='Path to data source schema.', type=click.Path(exists=True, dir_okay=False))
 @click.option('--decoders', default=2, help='Number of decoder threads.')
 @click.option('--encoders', default=2, help='Number of encoder threads.')
-@click.option('-v', '--version', is_flag=True,
-              help='Show the runtime version and exit.')
-@click.argument('student-code', default=get_module_path('studentcode.py'),
-                type=click.Path(exists=True, dir_okay=False))
+@click.option('-s', '--student-code', default=get_module_path('studentcode.py'),
+              type=click.Path(exists=True, dir_okay=False),
+              help='Path to student code module.')
+@click.option('-c', '--config', default=get_module_path('config.yaml'),
+              type=click.Path(dir_okay=False),
+              help='Path to configuration file. Overrides any command line options.')
+@click.option('-v', '--version', is_flag=True, help='Show the runtime version and exit.')
 def cli(version, **options):
     """
     The PiE runtime daemon manages the state of a robot, controls student code
@@ -54,6 +55,10 @@ def cli(version, **options):
     if version:
         print('.'.join(map(str, __version__)))
     else:
+        try:
+            options.update(read_conf_file(options['config']))
+        except (FileNotFoundError, RuntimeBaseException):
+            pass
         runtime.journal.initialize(options['log_level'])
         runtime.monitoring.bootstrap(options)
 

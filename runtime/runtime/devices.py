@@ -126,10 +126,6 @@ class DeviceStructure(ctypes.Structure):
         pass
 
 
-class DeviceMonitor:
-    pass
-
-
 def is_sensor_device(vendor_id: int, product_id: int) -> bool:
     """
     Determine whether the USB descriptor belongs to an Arduino Micro (CDC ACM).
@@ -171,6 +167,10 @@ def load_schema(schema_path):
             # TODO: add default lower and upper bounds
     # print(base_schema) # what does this do??
     return schema
+
+
+class DeviceMonitor(Monitor):
+    pass
 
 
 # def start(poll, poll_period, encoders, decoders):

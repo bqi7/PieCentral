@@ -1,5 +1,3 @@
-# devices.yaml -- A description of all Smart Sensors.
-
 smartsensor:
   LimitSwitch:
     id: 0

@@ -27,7 +27,7 @@ lint:
 
 test:
 	pytest \
-		runtime/logging.py \
+		runtime/journal.py \
 		runtime/util.py \
 		tests/test_asynciothread.py \
 		tests/test_executor.py

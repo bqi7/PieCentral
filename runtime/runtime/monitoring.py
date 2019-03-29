@@ -5,7 +5,7 @@ from typing import Callable, Tuple, Dict
 import aioprocessing
 import runtime.journal
 from runtime.control import StudentCodeExecutor
-from runtime.util import RuntimeIPCException, RuntimeException
+from runtime.util import RuntimeIPCException, RuntimeBaseException
 
 LOGGER = runtime.journal.make_logger(__name__)
 
@@ -110,7 +110,7 @@ def bootstrap(options):
         LOGGER.warn('Received keyboard interrupt. Exiting.')
     except Exception as exc:
         # If we reach the top of the call stack, something is seriously wrong.
-        ctx = exc.data if isinstance(exc, RuntimeException) else {}
+        ctx = exc.data if isinstance(exc, RuntimeBaseException) else {}
         msg = 'Fatal exception: Runtime cannot recover from this failure.'
         LOGGER.critical(msg, msg=str(exc), type=type(exc).__name__, ctx=ctx,
                         options=options)
