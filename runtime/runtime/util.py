@@ -1,10 +1,12 @@
 import asyncio
 from collections import UserDict
 from enum import IntEnum
+from functools import lru_cache
 import os
 import json
-import yaml
+import re
 import threading
+import yaml
 
 
 class RuntimeBaseException(UserDict, Exception):
@@ -56,10 +58,19 @@ class AutoIntEnum(IntEnum):
 
 
 CONF_FILE_FORMATS = {
-    '.yml': yaml.load,
-    '.yaml': yaml.load,
-    '.json': json.load,
+    re.compile(r'\.(yml|yaml)', flags=re.IGNORECASE): (yaml.load, yaml.dump),
+    re.compile(r'\.json', flags=re.IGNORECASE): (json.load, json.dump),
 }
+
+
+@lru_cache()
+def get_conf_file_serializer(filename: str):
+    _, extension = os.path.splitext(filename)
+    for ext_pattern, serializer in CONF_FILE_FORMATS.items():
+        if ext_pattern.match(extension):
+            return serializer
+    raise RuntimeBaseException('Configuration file format not recognized.',
+                               extension=extension, valid_formats=list(CONF_FILE_FORMATS))
 
 
 def read_conf_file(filename: str):
@@ -73,18 +84,28 @@ def read_conf_file(filename: str):
           ...
         runtime.util.RuntimeBaseException: Configuration file format not recognized.
     """
-    _, extension = os.path.splitext(filename)
-    if extension not in CONF_FILE_FORMATS:
-        raise RuntimeBaseException(f'Configuration file format not recognized.',
-                                   valid_formats=list(CONF_FILE_FORMATS))
+    load, _ = get_conf_file_serializer(filename)
     with open(filename) as conf_file:
         try:
-            return CONF_FILE_FORMATS[extension](conf_file)
+            return load(conf_file)
         except Exception as exc:
-            # The purpose of this `except` is to standardize the exception type
-            # raised when a third-party parser cannot parse a config file.
+            # Standardize exception types raised by third-party parsers.
             raise RuntimeBaseException(
                 'Unable to parse configuration file.',
+                filename=filename,
+            ) from exc
+
+
+def write_conf_file(filename: str, data):
+    """ Serialize and write a configuration file. """
+    _, dump = get_conf_file_serializer(filename)
+    with open(filename, 'w+') as conf_file:
+        try:
+            return dump(data, conf_file)
+        except Exception as exc:
+            # Standardize exception types raised by third-party parsers.
+            raise RuntimeBaseException(
+                'Unable to serialize data for configuration file.',
                 filename=filename,
             ) from exc
 

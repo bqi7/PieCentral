@@ -86,7 +86,7 @@ class SubprocessMonitor(UserDict):
 
 def bootstrap(options):
     """ Initializes subprocesses and catches any fatal exceptions. """
-    monitor = SubprocessMonitor(options['max_respawns'], options['respawn_reset'])
+    monitor = SubprocessMonitor(options['max_respawns'], options['fail_reset'])
     # monitor.add('networking', networking.start, (
     #     options['host'],
     #     options['tcp'],

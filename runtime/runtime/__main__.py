@@ -3,6 +3,7 @@ The runtime command-line interface.
 """
 
 import os
+import platform
 import click
 from runtime import __version__
 import runtime.journal
@@ -16,15 +17,21 @@ def get_module_path(filename: str) -> str:
     return os.path.join(module_dir, filename)
 
 
+def override_options(options: dict):
+    """ Override options with mandatory defaults. """
+    if 'linux' not in platform.system().casefold():
+        options['poll'] = True
+
+
 @click.command()
 @click.option('-r', '--max-respawns', default=3,
-              help='Number of times to attempt to respawn a child process.')
-@click.option('--respawn-reset', default=120,
-              help='Seconds before the respawn counter is reset.')
+              help='Number of times to attempt to respawn a failing subprocess.')
+@click.option('--fail-reset', default=120,
+              help='Seconds before the subprocess failure counter is reset.')
 @click.option('--terminate-timeout', default=5,
               help='Timeout in seconds for subprocesses to terminate.')
 @click.option('-f', '--student-freq', default=20,
-              help='Number of times to execute student code per second.')
+              help='Student code execution frequency in Hertz.')
 @click.option('--host', default='127.0.0.1', help='Hostname to bind servers to.')
 @click.option('--tcp', default=1234, help='TCP port.')
 @click.option('--udp-send', default=1235, help='UDP send port.')
@@ -55,6 +62,7 @@ def cli(version, **options):
     if version:
         print('.'.join(map(str, __version__)))
     else:
+        override_options(options)
         try:
             options.update(read_conf_file(options['config']))
         except (FileNotFoundError, RuntimeBaseException):
