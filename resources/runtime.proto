@@ -39,14 +39,15 @@ message Sensor {
     }
     string uid = 1;
     Type type = 2;
+    string name = 3;
 }
 
-message SensorMapping {
-    Sensor sensor = 1;
-    string name = 2;
+message Handshake {
+    uint64 heartbeat_window = 1;
+    uint64 heartbeat_period = 2;
 }
 
-message MessageStatistics {
+message Heartbeat {
     message Window {
         uint64 msg_sent = 1;
         uint64 msg_recv = 2;
@@ -55,11 +56,21 @@ message MessageStatistics {
     repeated Window stats = 2;
 }
 
+message StudentCodeMetadata {
+    string hash = 1;
+    uint64 len = 2;
+}
+
+message EmptyResponse {
+    /**
+     *  For remote procedures that need some sort of acknowledgement
+     */
+}
+
 service StateManager {
-    rpc ping (MessageStatistics) returns (MessageStatistics);
-    rpc wait_student_code (string) returns (bool);
-    rpc set_ping_window (uint64) returns (bool);
-    rpc set_ping_period (uint64) returns (bool);
+    rpc handshake (Handshake) returns ();
+    rpc ping (Heartbeat) returns (Heartbeat);
+    rpc confirm_student_code (string) returns (bool);
     rpc set_mode (Mode) returns (bool);
     rpc set_team (TeamColor) returns (bool);
     rpc set_starting_zone (StartingZone) returns (bool);
@@ -91,10 +102,10 @@ message Gamepad {
     uint32 index = 1;
     double left = 2;
     double right = 3;
-    bool a = 4;
-    bool b = 5;
-    bool x = 6;
-    bool y = 7;
+    bool a_button = 4;
+    bool b_button = 5;
+    bool x_button = 6;
+    bool y_button = 7;
     bool left_arrow = 8;
     bool right_arrow = 9;
     bool down_arrow = 10;

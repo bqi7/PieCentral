@@ -3,6 +3,11 @@
 build:
 	python setup.py build_ext --inplace
 
+package:
+	python setup.py sdist bdist_wheel
+
+
+
 clean:
 	rm -f runtime/*.cpython-*.so runtime/*.c
 	rm -f runtime/messaging.cpp runtime/statemanager.cpp
@@ -22,7 +27,7 @@ lint:
 
 test:
 	pytest \
-		runtime/logging.py \
+		runtime/journal.py \
 		runtime/util.py \
 		tests/test_asynciothread.py \
 		tests/test_executor.py

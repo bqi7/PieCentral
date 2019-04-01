@@ -89,7 +89,6 @@ class Gamepad(StudentAPI):
 class Robot(StudentAPI):
     """Main software interface for the robot."""
     deviceName_to_writeParams = {
-        "ServoControl": ["servo0", "servo1"],
         "YogiBear": ["duty_cycle", "pid_pos_setpoint", "pid_pos_kp", "pid_pos_ki",
                      "pid_pos_kd", "current_thresh", "enc_pos"],
         "PolarBear": ["duty_cycle", "pid_pos_setpoint", "pid_pos_kp", "pid_pos_ki",
@@ -99,7 +98,6 @@ class Robot(StudentAPI):
         "LimitSwitch": ["switch0", "switch1", "switch2"],
         "LineFollower": ["left", "center", "right"],
         "Potentiometer": ["pot0", "pot1", "pot2"],
-        "ServoControl": ["servo0", "servo1"],
         "YogiBear": ["duty_cycle", "enc_pos", "enc_vel"],
         "PolarBear": ["duty_cycle", "enc_pos", "enc_vel"],
         "RFID": ["id", "tag_detect"],

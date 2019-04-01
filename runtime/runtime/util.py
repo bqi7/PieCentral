@@ -7,13 +7,16 @@ import yaml
 import threading
 
 
-class RuntimeException(UserDict, Exception):
+class RuntimeBaseException(UserDict, Exception):
     """
     Base class for Runtime-specific exceptions.
 
+    Unlike built-in Exceptions, ``RuntimeBaseException`` accepts arbitrary data
+    that can be examined in post-mortems or written into structured logs.
+
     Example:
 
-        >>> err = RuntimeException('Error', input=1, valid=[2, 3])
+        >>> err = RuntimeBaseException('Error', input=1, valid=[2, 3])
         >>> err['input']
         1
         >>> err['valid']
@@ -31,11 +34,11 @@ class RuntimeException(UserDict, Exception):
         return f'{cls_name}({repr(msg)})'
 
 
-class RuntimeIPCException(RuntimeException):
+class RuntimeIPCException(RuntimeBaseException):
     pass
 
 
-class RuntimeExecutorException(RuntimeException):
+class RuntimeExecutorException(RuntimeBaseException):
     pass
 
 
@@ -65,17 +68,25 @@ def read_conf_file(filename: str):
 
     Example:
 
-        >>> read_conf_file('bad.csv')
+        >>> read_conf_file('badformat.csv')
         Traceback (most recent call last):
           ...
-        runtime.util.RuntimeException: Configuration file format not recognized.
+        runtime.util.RuntimeBaseException: Configuration file format not recognized.
     """
     _, extension = os.path.splitext(filename)
     if extension not in CONF_FILE_FORMATS:
-        raise RuntimeException(f'Configuration file format not recognized.',
-                               valid_formats=list(CONF_FILE_FORMATS))
+        raise RuntimeBaseException(f'Configuration file format not recognized.',
+                                   valid_formats=list(CONF_FILE_FORMATS))
     with open(filename) as conf_file:
-        return CONF_FILE_FORMATS[extension]
+        try:
+            return CONF_FILE_FORMATS[extension](conf_file)
+        except Exception as exc:
+            # The purpose of this `except` is to standardize the exception type
+            # raised when a third-party parser cannot parse a config file.
+            raise RuntimeBaseException(
+                'Unable to parse configuration file.',
+                filename=filename,
+            ) from exc
 
 
 class AsyncioThread(threading.Thread):

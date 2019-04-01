@@ -1,5 +1,5 @@
 r"""
-Runtime logging.
+Runtime structured logging.
 
 Example:
     The command-line tool ingests records from standard input to pretty-print
