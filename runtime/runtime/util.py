@@ -6,6 +6,7 @@ import os
 import json
 import re
 import threading
+import time
 import yaml
 
 
@@ -110,7 +111,7 @@ def write_conf_file(filename: str, data):
             ) from exc
 
 
-class AsyncioThread(threading.Thread):
+class AsyncThread(threading.Thread):
     def __init__(self, *thread_args, target=None, args=None, kwargs=None,
                  cleanup_timeout=5, **thread_kwargs):
         args, kwargs = args or (), kwargs or {}
@@ -149,3 +150,29 @@ class AsyncioThread(threading.Thread):
         if hasattr(self, 'loop') and hasattr(self, 'task'):
             if self.loop.is_running():
                 self.loop.call_soon_threadsafe(self.task.cancel)
+
+
+class AsyncTimer:
+    def __init__(self, callback, delay, args=None, kwargs=None):
+        self.callback, self.delay = callback, delay
+        self.args, self.kwargs = args or (), kwargs or {}
+        self.halt = asyncio.Event()
+
+    async def run(self):
+        start, tick = time.time(), 0
+        while not self.halt.is_set():
+            tick += 1
+            end = start + self.delay*tick
+            try:
+                stop = await asyncio.wait_for(self.callback(*self.args, **self.kwargs), self.delay)
+                if stop:
+                    self.stop()
+            except asyncio.TimeoutError:
+                pass  # TODO: LOGGER.warn('')
+            else:
+                delay = end - time.time()
+                if delay > 0:
+                    await asyncio.sleep(delay)
+
+    def stop(self):
+        self.halt.set()
