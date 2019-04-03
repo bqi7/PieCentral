@@ -114,9 +114,21 @@ class DeviceStructure(ctypes.Structure):
             LOGGER.warning("Unable to create new semaphore")
 
         device = device_type.from_buffer(memory) # python buffer protocol
-        device._buf = memory
+        device._mapfile = mmap.mmap(memory.fd, memory.size)
         device._sem = semaphore
+        #TODO: broadcast name of this device out on this socket, telling others that they should create a handle to this
         return device
+    
+    @staticmethod
+    def remove_shared_device(device):
+        """ 
+        Called when device disconnects from robot, releases its shared memory and semaphore.
+        Broadcasts to other processes that device has disconnected.
+        """
+        device._buf.unlink()
+        device._sem.unlink()
+        #TODO: delete this entry in device.py's copy of the connected devices dictionary
+        #TODO: broadcast name of this device out on the socket, telling others that they should unlink it as well
 
     def __getstate__(self):
         device_type = type(self)
@@ -124,7 +136,7 @@ class DeviceStructure(ctypes.Structure):
 
     def __setstate__(self, state):
         pass
-
+        
 
 def is_sensor_device(vendor_id: int, product_id: int) -> bool:
     """
