@@ -5,7 +5,6 @@ This module manages Smart Sensor communication.
 
 __all__ = ['SmartSensorObserver']
 
-# Python modules
 import asyncio
 from collections import namedtuple
 from typing import List, Callable, Generator
@@ -15,30 +14,21 @@ import socket
 import serial
 import time
 
-# 3rd party modules
 import posix_ipc
 import yaml
+from runtime.store import Parameter
 
 # from serial.aio import create_serial_connection
 # from serial.tools.list_ports import comports
 # Other modules in runtime package
-from runtime.journal import make_logger
-
-
-LOGGER = make_logger(__name__)
-
-UDP_BROADCAST_PORT = 1024 # port that devices.py uses to broadcast device connect/disconnects
-UDP_IP = "127.0.0.1" # IP address of all hosts and clients on our processes
+# from runtime.journal import make_logger
+#
+# LOGGER = make_logger(__name__)
 
 try:
     from pyudev import Context, Devices, Device, Monitor, MonitorObserver
 except ImportError:
     LOGGER.warning('Unable to import `pyudev`, which is Linux-only.')
-
-
-Parameter = namedtuple('Parameter',
-                       ['name', 'type', 'lower', 'upper', 'read', 'write'],
-                       defaults=[float('-inf'), float('inf'), True, False])
 
 
 class DeviceStructure(ctypes.Structure):
@@ -118,10 +108,10 @@ class DeviceStructure(ctypes.Structure):
         device._sem = semaphore
         #TODO: broadcast name of this device out on this socket, telling others that they should create a handle to this
         return device
-    
+
     @staticmethod
     def remove_shared_device(device):
-        """ 
+        """
         Called when device disconnects from robot, releases its shared memory and semaphore.
         Broadcasts to other processes that device has disconnected.
         """
@@ -136,16 +126,20 @@ class DeviceStructure(ctypes.Structure):
 
     def __setstate__(self, state):
         pass
-        
 
-def is_sensor_device(vendor_id: int, product_id: int) -> bool:
+
+def is_sensor(device: Device) -> bool:
     """
     Determine whether the USB descriptor belongs to an Arduino Micro (CDC ACM).
 
     .. _Linux USB Project ID List
         http://www.linux-usb.org/usb.ids
     """
-    return vendor_id == 0x2341 and product_id == 0x8037
+    try:
+        vendor_id, product_id, _ = device.properties['PRODUCT'].split('/')
+        return vendor_id == 0x2341 and product_id == 0x8037
+    except (KeyError, ValueError):
+        return False
 
 
 def get_device_dict(schema_path):
@@ -181,32 +175,63 @@ def load_schema(schema_path):
     return schema
 
 
-class DeviceMonitor(Monitor):
+class SmartSensorObserver(MonitorObserver):
+    subsystem, device_type = 'usb', 'usb_interface'
+
+    def __init__(self, callback: Callable[[Device], None],
+                 thread_name: str = 'device-observer'):
+        self.thread_name, self.context = thread_name, Context()
+        self.monitor = Monitor.from_netlink(self.context)
+        self.monitor.filter_by(self.subsystem, self.device_type)
+        def callback_filtered(device):
+            print(device)
+            if is_sensor(device):
+                callback(device)
+        super().__init__(self.monitor, callback=callback_filtered,
+                         name=self.thread_name)
+
+    def list_sensors(self) -> Generator[Device, None, None]:
+        for device in self.context.list_devices(subsystem=self.subsystem):
+            if is_sensor(device):
+                yield device
+
+
+class SmartSensorProtocol(asyncio.BufferedProtocol):
     pass
 
 
-# def start(poll, poll_period, encoders, decoders):
-#     default_schema_path = os.path.join(os.path.dirname(__file__), 'devices.yaml')
-#     schema = load_schema(default_schema_path)
-#     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # open a socket on a port to broadcast on
-#     sock.bind((UDP_IP, UDP_BROADCAST_PORT))
-#     ##TODO: put sock as an argument to the hotplugging and device_disconnected async coroutines
-#
-#     ####### for testing #######
-#
-#     device_dict = get_device_dict(default_schema_path)
-#     for device, params in device_dict.items():
-#         print(device + " : " + str(params))
+def cli():
+    import serial.tools.list_ports
+    def callback(device):
+        print(dict(device.properties))
+        print(device.device_path)
+    print([port.usb_info() for port in serial.tools.list_ports.comports()])
+    observer = SmartSensorObserver(callback)
+    actual_device = Devices.from_device_file(observer.context, '/dev/ttyACM0')
+    observer.start()
+    for device in observer.list_sensors():
+        for filename in os.listdir(device.sys_path):
+            if filename.startswith('tty'):
+                print(device.sys_path, filename)
+        print('->', device.device_number, device.device_node)
+    observer.join()
 
 
-"""
-def bootstrap(options):
-    # event_loop = asyncio.get_event_loop()
-    # event_loop.run_forever()
-    default_schema_path = os.path.join(os.path.dirname(__file__), 'devices.yaml')
-    schema = load_schema(default_schema_path)
+class SmartSensorService:
+    def __init__(self):
+        self.access = asyncio.Lock()
+        self.context = Context()
+
+    async def register_device(self):
+        pass
+
+    async def unregister_device(self):
+        pass
+
 
 if __name__ == '__main__':
-    # cli()
-    bootstrap({})
-"""
+    def callback(device):
+        print(device.device_path)
+    observer = SmartSensorObserver(callback)
+    observer.start()
+    observer.join()
