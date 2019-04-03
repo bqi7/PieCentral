@@ -1,0 +1,15 @@
+# runtime/conf/field-control-schema.yaml
+
+params:
+  - name: alliance
+    type: wchar_p
+    choices: [blue, gold, unknown]
+    default: unknown
+  - name: starting_zone
+    type: wchar_p
+    choices: [left, right, shelf, vending, unknown]
+    default: unknown
+  - name: codegen_seed
+    type: int64
+  - name: enable_flow_ctrl
+    type: bool

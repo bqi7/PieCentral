@@ -7,7 +7,7 @@ import platform
 import click
 from runtime import __version__
 import runtime.journal
-import runtime.monitoring
+import runtime.control
 from runtime.util import read_conf_file, RuntimeBaseException
 
 
@@ -43,14 +43,18 @@ def override_options(options: dict):
 @click.option('--monitor-period', default=60, help='Monitor logging period.')
 @click.option('-l', '--log-level', default='INFO', help='Lowest visible log level.',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']))
-@click.option('-d', '--data-schema', default=get_module_path('datasources.yaml'),
-              help='Path to data source schema.', type=click.Path(exists=True, dir_okay=False))
+@click.option('--fc-schema', default=get_module_path('conf/field-control-schema.yaml'),
+              help='Path to field control schema.', type=click.Path(exists=True, dir_okay=False))
+@click.option('--dev-schema', default=get_module_path('conf/device-schema.yaml'),
+              help='Path to device schema.', type=click.Path(exists=True, dir_okay=False))
+@click.option('--dev-names', default=get_module_path('conf/device-names.yaml'),
+              help='Path to device names map.', type=click.Path(dir_okay=False))
 @click.option('--decoders', default=2, help='Number of decoder threads.')
 @click.option('--encoders', default=2, help='Number of encoder threads.')
 @click.option('-s', '--student-code', default=get_module_path('studentcode.py'),
               type=click.Path(exists=True, dir_okay=False),
               help='Path to student code module.')
-@click.option('-c', '--config', default=get_module_path('config.yaml'),
+@click.option('-c', '--config', default=get_module_path('conf/config.yaml'),
               type=click.Path(dir_okay=False),
               help='Path to configuration file. Overrides any command line options.')
 @click.option('-v', '--version', is_flag=True, help='Show the runtime version and exit.')
@@ -62,13 +66,13 @@ def cli(version, **options):
     if version:
         print('.'.join(map(str, __version__)))
     else:
-        override_options(options)
         try:
             options.update(read_conf_file(options['config']))
         except (FileNotFoundError, RuntimeBaseException):
             pass
+        override_options(options)
         runtime.journal.initialize(options['log_level'])
-        runtime.monitoring.bootstrap(options)
+        runtime.control.bootstrap(options)
 
 
 if __name__ == '__main__':

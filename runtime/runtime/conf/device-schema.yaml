@@ -1,3 +1,5 @@
+# runtime/conf/device-schema.yaml
+
 smartsensor:
   LimitSwitch:
     id: 0
@@ -30,7 +32,7 @@ smartsensor:
     id: 3
     params:
       - name: rotation
-        type: int16_t
+        type: int16
   BatteryBuzzer:
     id: 4
     params:
@@ -150,23 +152,61 @@ smartsensor:
     id: 11
     params:
       - name: id
-        type: uint32_t
+        type: uint32
       - name: tag_detect
-        type: uint8_t
+        type: uint8
 
-Gamepad:
-  id: 12
-  protocol: gamepad
-  params:
-    - name: button_a
-      type: bool
-    - name: button_b
-      type: bool
-    - name: button_x
-      type: bool
-    - name: button_y
-      type: bool
-
-FieldControl:
-  id: 13
-  protocol: fieldcontrol
+dawn:
+  gamepad:
+    id: 12
+    params:
+      - name: button_a
+        type: bool
+      - name: button_b
+        type: bool
+      - name: button_x
+        type: bool
+      - name: button_y
+        type: bool
+      - name: l_bumper
+        type: bool
+      - name: r_bumper
+        type: bool
+      - name: l_trigger
+        type: bool
+      - name: r_trigger
+        type: bool
+      - name: button_back
+        type: bool
+      - name: button_start
+        type: bool
+      - name: l_stick
+        type: bool
+      - name: r_stick
+        type: bool
+      - name: dpad_up
+        type: bool
+      - name: dpad_down
+        type: bool
+      - name: dpad_left
+        type: bool
+      - name: dpad_right
+        type: bool
+      - name: button_xbox
+        type: bool
+      - name: joystick_left_x
+        type: float
+        lower: -1.0
+        upper: 1.0
+      - name: joystick_left_y
+        type: float
+        lower: -1.0
+        upper: 1.0
+      - type: joytick_right_x
+        type: float
+        lower: -1.0
+        upper: 1.0
+      - type: joytick_right_y
+        type: float
+        lower: -1.0
+        upper: 1.0
