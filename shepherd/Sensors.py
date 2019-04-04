@@ -6,10 +6,10 @@ import serial # pylint: disable=import-error
 from LCM import *
 from Utils import *
 
-linebreak_port_one = "/dev/ttyACM0" # change to correct port
-linebreak_port_two = "/dev/ttyACM0" # change to correct port
-bidding_port_blue = "/dev/ttyACM0" # change to correct port
-bidding_port_gold = "/dev/ttyACM0" # change to correct port
+# linebreak_port_one = "/dev/ttyACM0" # change to correct port
+# linebreak_port_two = "/dev/ttyACM0" # change to correct port
+# bidding_port_blue = "/dev/ttyACM0" # change to correct port
+# bidding_port_gold = "/dev/ttyACM0" # change to correct port
 
 alliance_mapping = {
     "gold": ALLIANCE_COLOR.GOLD,
