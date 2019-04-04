@@ -7,11 +7,13 @@ import ctypes
 import enum
 import collections
 from functools import lru_cache
-import inspect
 import time
-import aio_msgpack_rpc as rpc
+import posix_ipc
 from runtime import __version__
+from runtime.journal import make_logger
 from runtime.util import read_conf_file, RuntimeBaseException
+
+LOGGER = make_logger(__name__)
 
 
 Parameter = collections.namedtuple(
@@ -28,16 +30,50 @@ CTYPES_REAL = {ctypes.c_float, ctypes.c_double, ctypes.c_longdouble}
 CTYPES_NUMERIC = CTYPES_SIGNED_INT | CTYPES_UNSIGNED_INT | CTYPES_REAL
 
 
+class Alliance(enum.Enum):
+    BLUE = enum.auto()
+    GOLD = enum.auto()
+    UNKNOWN = enum.auto()
+
+
+class StartingZone(enum.Enum):
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
+    VENDING = enum.auto()
+    SHELF = enum.auto()
+    UNKNOWN = enum.auto()
+
+
+class Mode(enum.Enum):
+    IDLE = enum.auto()
+    AUTO = enum.auto()
+    TELEOP = enum.auto()
+    ESTOP = enum.auto()
+
+
 class StoreService(collections.UserDict):
     version_number_names = ('major', 'minor', 'patch')
 
-    def __init__(self, config: dict):
+    def __init__(self, options: dict):
         super().__init__()
         self.access = asyncio.Lock()
-        self.config = config
-        self.device_schema = read_conf_file(config['dev_schema'])
-        self.fc_schema = read_conf_file(config['fc_schema'])
-        self.device_names, self.device_uids = {}, {}
+        self.update({
+            'options': options,
+            'fieldcontrol': {
+                'alliance': Alliance.UNKNOWN,
+                'startingzone': StartingZone.UNKNOWN,
+                'mode': Mode.IDLE,
+            },
+            'smartsensor': {
+                'names': {},
+                'descriptors': {},
+            },
+        })
+
+        try:
+            self['smartsensor']['names'].update(read_conf_file(options['dev_names']))
+        except (FileNotFoundError, RuntimeBaseException):
+            LOGGER.warn('Unable to read Smart Sensor names.')
 
     def get_version(self):
         return dict(zip(self.version_number_names, __version__))
@@ -45,31 +81,78 @@ class StoreService(collections.UserDict):
     def get_time(self):
         return time.time()
 
-    async def get_field_param(self, key):
-        async with self.access:
-            return self[f'fieldcontrol:{key}']
+    @property
+    def options(self):
+        return self['options']
 
-    async def set_field_param(self, key, value):
+    @property
+    def field_params(self):
+        return self['fieldcontrol']
+
+    @property
+    def device_names(self):
+        return self['smartsensor']['names']
+
+    @property
+    def device_descriptors(self):
+        return self['smartsensor']['descriptors']
+
+    async def get_options(self):
         async with self.access:
-            pass
+            return self.options
+
+    async def set_options(self, persist=True, **options):
+        async with self.access:
+            self.options.update(options)
+            if persist:
+                with open(self.options['config']) as options_file:
+                    write_conf_file(options_file, self.options)
+
+    async def get_field_parameters(self):
+        return self.field_params
+
+    async def set_alliance(self, team: str):
+        async with self.access:
+            self.field_params['alliance'] = Alliance.__members__[team.upper()]
+
+    async def set_starting_zone(self, zone: str):
+        async with self.access:
+            self.field_params['startingzone'] = StartingZone.__members__[zone.upper()]
+
+    async def set_mode(self, mode: str):
+        async with self.access:
+            mode = mode.upper()
+            # TODO: dispatch to executor
+            self.field_params['mode'] = mode
+
+    async def run_coding_challenge(self, seed: int) -> int:
+        pass  # TODO
+
+    async def write_device_names(self):
+        with open(self.options['dev_names']) as dev_name_file:
+            write_conf_file(dev_name_file, self.device_names)
 
     async def get_device_names(self):
         async with self.access:
-            return self['smartsensor']['devicenames']
+            return self.device_names
 
     async def set_device_name(self, name: str, uid: str):
         async with self.access:
-            self['smartsensor']['devicenames'][uid] = name
+            self.device_names[uid] = name
+            await self.write_device_names()
 
     async def del_device_name(self, uid: str):
         async with self.access:
-            del self['smartsensor']['devicenames'][uid]
+            del self.device_names[uid]
+            await self.write_device_names()
 
     async def register_device(self, uid: str, description):
-        pass
+        async with self.access:
+            pass  # TODO
 
     async def unregister_device(self, uid: str):
-        pass
+        async with self.access:
+            pass  # TODO
 
 
 def validate_param_value(param: Parameter, value):

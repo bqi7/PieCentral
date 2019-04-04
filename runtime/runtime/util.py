@@ -176,3 +176,20 @@ class AsyncTimer:
 
     def stop(self):
         self.halt.set()
+
+
+class AsyncProcess:
+    def __init__(self, main, args=None, kwargs=None, logger=None):
+        self.main, self.args, self.kwargs, self.logger = main, args or (), kwargs or {}, logger
+
+    def __call__(self):
+        signal.signal(signal.SIGTERM, self.terminate_async_process)
+        if self.logger:
+            self.logger.debug('Starting event loop.')
+        asyncio.run(self.main(*args, **kwargs))
+
+    def terminate_process(self, _signum, _stack_frame):
+        if self.logger:
+            self.logger.debug('Terminating process and tasks.')
+        for task in asyncio.all_tasks():
+            task.cancel()

@@ -7,7 +7,7 @@ import platform
 import click
 from runtime import __version__
 import runtime.journal
-import runtime.control
+import runtime.monitoring
 from runtime.util import read_conf_file, RuntimeBaseException
 
 
@@ -30,12 +30,12 @@ def override_options(options: dict):
               help='Seconds before the subprocess failure counter is reset.')
 @click.option('--terminate-timeout', default=5,
               help='Timeout in seconds for subprocesses to terminate.')
-@click.option('-f', '--student-freq', default=20,
-              help='Student code execution frequency in Hertz.')
+@click.option('--student-freq', default=20, help='Student code execution frequency in Hertz.')
+@click.option('--stream-freq', default=40, help='Streaming server frequency in Hertz.')
 @click.option('--host', default='127.0.0.1', help='Hostname to bind servers to.')
-@click.option('--tcp', default=1234, help='TCP port.')
-@click.option('--udp-send', default=1235, help='UDP send port.')
-@click.option('--udp-recv', default=1236, help='UDP receive port.')
+@click.option('--tcp', default=6020, help='TCP port.')
+@click.option('--udp-send', default=6021, help='UDP send port.')
+@click.option('--udp-recv', default=6022, help='UDP receive port.')
 @click.option('-p', '--poll', is_flag=True, help='Poll for hotplugged sensors. '
               'By default, sensors are detected asynchronously with udev. '
               'For non-Linux platforms without udev, this flag is always set.')
@@ -72,7 +72,7 @@ def cli(version, **options):
             pass
         override_options(options)
         runtime.journal.initialize(options['log_level'])
-        runtime.control.bootstrap(options)
+        runtime.monitoring.bootstrap(options)
 
 
 if __name__ == '__main__':
