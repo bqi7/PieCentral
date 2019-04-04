@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from Utils import *
 
 codes = []
@@ -7,12 +8,32 @@ code_solution = {}
 code_effect = {}
 
 def generate_code(code_list):
-    ##: TODO
-    return 1234
+    '''
+    Take a list of codes that return a new random code
+    '''
+    temp = np.random.permutation(10)
+    num = 0
+    for a in temp:
+        num = num * 10 + a
+    while num in code_list:
+        temp = np.random.permutation(10)
+        num = 0
+        for a in temp:
+            temp = temp * 10 + a
+    return num
+
 
 def decode(code):
-    ##: TODO
-    return 1234
+    '''
+    Call all functions
+    '''
+    one = tennis_ball(code)
+    two = remove_duplicates(one)
+    three = rotate(two)
+    four = next_fib(three)
+    five = most_common(four)
+    final = get_coins(five)
+    return final
 
 def assign_code_solution():
     '''
