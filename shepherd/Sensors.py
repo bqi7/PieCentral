@@ -6,10 +6,8 @@ import serial # pylint: disable=import-error
 from LCM import *
 from Utils import *
 
-# linebreak_port_one = "/dev/ttyACM0" # change to correct port
-# linebreak_port_two = "/dev/ttyACM0" # change to correct port
-# bidding_port_blue = "/dev/ttyACM0" # change to correct port
-# bidding_port_gold = "/dev/ttyACM0" # change to correct port
+buttons_gold_port = "/dev/ttyACM2" # change to correct port
+buttons_blue_port = "/dev/ttyACM1" # change to correct port
 
 alliance_mapping = {
     "gold": ALLIANCE_COLOR.GOLD,
@@ -83,7 +81,7 @@ def recv_from_btn(ser, alliance_enum):
         sensor_msg = ser.readline().decode("utf-8")
         sensor_msg.lower()
         payload_list = sensor_msg.split(";")
-        if len(payload_list) == 2 and payload_list[1] == "hb\r\n":
+        if len(payload_list) == 1:
             continue
         print("<2> Message Received: ", payload_list, flush=True)
         button_num = payload_list[1]
@@ -101,24 +99,27 @@ def main():
 
     button_serial_blue = None
     button_serial_gold = None
+    
+    button_serial_gold = serial.Serial(buttons_gold_port, baudrate=115200)
 
-    for alliance, port in relevant_ports:
-        if alliance == 'b':
-            button_serial_blue = port
-        elif alliance == 'g':
-            button_serial_gold = port
+    # for alliance, port in relevant_ports:
+    #     if alliance == 'b':
+    #         button_serial_blue = port
+    #     elif alliance == 'g':
+    #         button_serial_gold = port
 
-    button_thread_blue = threading.Thread(
-        target = recv_from_btn, name="button blue", args=([button_serial_blue, ALLIANCE_COLOR.BLUE])
-        )
+
+    # button_thread_blue = threading.Thread(
+    #     target = recv_from_btn, name="button blue", args=([button_serial_blue, ALLIANCE_COLOR.BLUE])
+    #     )
     button_thread_gold = threading.Thread(
         target = recv_from_btn, name="buttons gold", args=([button_serial_gold, ALLIANCE_COLOR.GOLD])
         )
 
-    button_thread_blue.daemon = True
+    # button_thread_blue.daemon = True
     button_thread_gold.daemon = True
 
-    button_thread_blue.start()
+    # button_thread_blue.start()
     button_thread_gold.start()
 
     while True:
