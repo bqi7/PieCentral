@@ -1,5 +1,6 @@
 import random
-from Utils import *
+import numpy as np
+import math
 
 codes = []
 solutions = []
@@ -7,12 +8,28 @@ code_solution = {}
 code_effect = {}
 
 def generate_code(code_list):
-    ##: TODO
-    return 1234
+    ##: TODO take a list of codes that return a new random code
+    temp = np.random.permutation(10)
+    num = 0
+    for a in temp:
+        num = num * 10 + a
+    while num in code_list:
+        temp = np.random.permutation(10)
+        num = 0
+        for a in temp:
+            temp = temp * 10 + a
+    return num
+
 
 def decode(code):
-    ##: TODO
-    return 1234
+    ##: TODO call all functions
+    one = tennis_ball(code)
+    two = remove_duplicates(one)
+    three = rotate(two)
+    four = next_fib(three)
+    five = most_common(four)
+    final = get_coins(five)
+    return final
 
 def assign_code_solution():
     '''
@@ -68,7 +85,6 @@ def tennis_ball(num):
     return num
 
 def most_common(num):
-<<<<<<< HEAD
     parse = []
     while num != 0:
         parse.append(num % 10)
@@ -87,11 +103,9 @@ def most_common(num):
                 d[n] = 1
         final = []
         boolean = {}
-        print(d)
         for key, value in sorted(d.items(), key=lambda kv: kv[1], reverse = True):
             final.append(key)
             boolean[key] = False
-        print(final)
         boolean[final[3]] = True
         for key in final:
             if d[key] == d[final[3]]:
@@ -99,13 +113,10 @@ def most_common(num):
         for i in range(4):
             if boolean[final[i]] == False:
                 ret.append(final[i])
-        print(ret)
         left = 4 - len(ret)
-        print(left)
         if left != 0:
             for i in range(len(parse)):
                 if boolean[parse[i]] == True and parse[i] not in ret:
-                    print(parse[i])
                     ret.append(parse[i])
                     left -= 1
                     if left == 0:
@@ -156,24 +167,3 @@ def get_coins(num):
     nickels = (num - 25 * quarters) // 5
     pennies = num - nickels * 5 - quarters * 25
     return int(str(quarters) + str(nickels) + str(pennies))
-
-def most_common(num):
-    l = []
-    d = {}
-    while num % 10 != 0:
-        n = num % 10
-        if n not in d.keys():
-            d[n] = 1
-        else:
-            d[n] += 1
-    if len(d.keys()) <= 4:
-        keys = d.keys()
-        keys.sort()
-        final = 0
-        while keys ! = []:
-            e = key.
-    else:
-        return
-=======
-    pass
->>>>>>> 9cf8b630093c964c3cc8dbff57118c941f7f4cfd
