@@ -41,6 +41,7 @@ class RuntimeClient:
 
     async def __aenter__(self):
         await self.connect()
+        return self
 
     async def __aexit__(self, _exc_type, _exc, _tb):
         await self.disconnect()
@@ -51,16 +52,16 @@ class RuntimeClient:
     async def disconnect(self):
         if hasattr(self, 'client'):
             self.client.close()
-            self.client = None
+            delattr(self, 'client')
 
     def _get_client(self):
         try:
             return self.client
         except AttributeError as exc:
-            return ValueError('Must connect to runtime before issuing commands.') from exc
+            raise ValueError('Must connect to runtime before issuing commands.') from exc
 
     def _get_method_wrapper(self, name):
-        async def method_wrapper(name, *args, block=True, **kwargs):
+        async def method_wrapper(*args, block=True, **kwargs):
             client = self._get_client()
             if block:
                 return await client.call(name, *args, **kwargs)
@@ -70,8 +71,8 @@ class RuntimeClient:
         return method_wrapper
 
     def __getattr__(self, name):
-        if super().__hasattr__(name):
-            return super().__getattr__(name)
+        if name in self.__dict__:
+            return self.__dict__[name]
         return self._get_method_wrapper(name)
 
 

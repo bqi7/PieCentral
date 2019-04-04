@@ -29,6 +29,7 @@ test:
 		runtime/util.py \
 		tests/test_asyncutil.py \
 		tests/test_shm.py \
+		tests/test_storeservice.py \
 
 # 	tests/test_executor.py
 #	cd ../DevOps/frankfurter/scripts/update && ./create_update -p

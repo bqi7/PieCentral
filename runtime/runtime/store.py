@@ -73,7 +73,7 @@ class StoreService(collections.UserDict):
         try:
             self['smartsensor']['names'].update(read_conf_file(options['dev_names']))
         except (FileNotFoundError, RuntimeBaseException):
-            LOGGER.warn('Unable to read Smart Sensor names.')
+            LOGGER.warning('Unable to read Smart Sensor names.')
 
     def get_version(self):
         return dict(zip(self.version_number_names, __version__))
@@ -109,11 +109,12 @@ class StoreService(collections.UserDict):
                     write_conf_file(options_file, self.options)
 
     async def get_field_parameters(self):
-        return self.field_params
-
-    async def set_alliance(self, team: str):
         async with self.access:
-            self.field_params['alliance'] = Alliance.__members__[team.upper()]
+            return {name: value.name.lower() for name, value in self.field_params.items()}
+
+    async def set_alliance(self, alliance: str):
+        async with self.access:
+            self.field_params['alliance'] = Alliance.__members__[alliance.upper()]
 
     async def set_starting_zone(self, zone: str):
         async with self.access:
@@ -121,9 +122,8 @@ class StoreService(collections.UserDict):
 
     async def set_mode(self, mode: str):
         async with self.access:
-            mode = mode.upper()
             # TODO: dispatch to executor
-            self.field_params['mode'] = mode
+            self.field_params['mode'] = Mode.__members__[mode.upper()]
 
     async def run_coding_challenge(self, seed: int) -> int:
         pass  # TODO
