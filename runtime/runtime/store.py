@@ -12,6 +12,7 @@ import posix_ipc
 from runtime import __version__
 from runtime.journal import make_logger
 from runtime.util import read_conf_file, RuntimeBaseException
+from runtime.studentcode import *
 
 LOGGER = make_logger(__name__)
 
@@ -126,7 +127,17 @@ class StoreService(collections.UserDict):
             self.field_params['mode'] = Mode.__members__[mode.upper()]
 
     async def run_coding_challenge(self, seed: int) -> int:
-        pass  # TODO
+        async def get_student_solution(f, seed: int) -> int:
+            return f(seed)
+        challenge_functions = [tennis_ball, remove_duplicates, rotate, next_fib, most_common, get_coins]
+        solution = seed
+        for f in challenge_functions:
+            try:
+                solution = await asyncio.wait_for(get_student_solution(f, solution), timeout=1.0)
+            except asyncio.TimeoutError as e:
+                LOGGER.error(str(f) + " took too long to provide an answer")
+                raise e
+        return solution
 
     async def write_device_names(self):
         with open(self.options['dev_names']) as dev_name_file:
