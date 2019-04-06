@@ -77,3 +77,15 @@ class RuntimeClientManager:
         gold_master = self.clients[gold_team]
         if gold_master:
             gold_master.set_master()"""
+
+
+# client = RuntimeClient('0.0.0.0', 6020)
+# client.connect()
+# print('OK!')
+# import time
+# client.set_alliance('blue')
+# client.set_starting_zone('left')
+# client.set_mode('teleop')
+# time.sleep(1)
+# client.run_challenge(123)
+# print(client.get_challenge_solution())

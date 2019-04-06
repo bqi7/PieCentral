@@ -8,14 +8,14 @@ def autonomous_setup():
 
 
 def autonomous_main():
-    pass
+    print('Auto!')
 
 def teleop_setup():
     pass
 
 
 def teleop_main():
-    pass
+    print(Field.starting_zone, Field.time, Field.master)
 
 
 def setup():
@@ -285,8 +285,8 @@ async def asyncSleepHelper2(sleepTestVal):
     sleepTestVal['test'] = False
 
 ###########################
-# Solar Scramble Functions 
-###########################   
+# Solar Scramble Functions
+###########################
 
 def next_power(num):
     return num

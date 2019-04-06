@@ -228,7 +228,6 @@ def run_student_code(bad_things_queue, state_queue, pipe, fc_server, test_name="
         studentCode.run_async = studentCode.Robot.run
         studentCode.sleep_duration = studentCode.Actions.sleep
 
-        fc_server.load_coding_challenges(studentCode)
         check_timed_out(setup_fn)
         exception_cell = [None]
         clarify_coroutine_warnings(exception_cell)

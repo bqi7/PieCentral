@@ -504,12 +504,40 @@ class TCPClass(AnsibleHandler):
                     printStackTrace=True))
 
 
+def load_coding_challenges():
+    try:
+        import studentCode as student_code
+    except:
+        return []
+
+    def stub_out(funcname):
+        def stub(x):
+            if hasattr(student_code, 'print'):
+                student_code.print(f'"{funcname}" not defined.'
+                                   'Unable to run the coding challenge.')
+            return None
+        return stub
+
+    def get_or_stub_out(funcname):
+        try:
+            return getattr(student_code, funcname)
+        except AttributeError:
+            return stub_out(funcname)
+
+    return [
+        get_or_stub_out('tennis_ball'),
+        get_or_stub_out('remove_duplicates'),
+        get_or_stub_out('rotate'),
+        get_or_stub_out('next_fib'),
+        get_or_stub_out('most_common'),
+        get_or_stub_out('get_coins'),
+    ], getattr(student_code, 'print', lambda *args, **kwargs: None)
+
+
 class FieldControlServer:
     def __init__(self, state_queue):
         self.state_queue = state_queue
         self.access = asyncio.Lock()
-        self.print = print
-        self.solution, self.coding_challenges = None, []
 
     def set_alliance(self, alliance: str):
         self.state_queue.put([SM_COMMANDS.SET_TEAM, [alliance]])
@@ -527,57 +555,29 @@ class FieldControlServer:
         self.state_queue.put([modes[mode], []])
 
     def set_master(self, master: bool):
-        self.state_queue.put([SM_COMMANDS.SET_VAL, [master, ['master']]])
-
-    def load_coding_challenges(self, student_code):
-        def stub_out(funcname):
-            def stub(*_args, **_kwargs):
-                student_code.print(f'"{funcname}" not defined.'
-                                   'Unable to run the coding challenge.')
-                return lambda x: None
-            return stub
-
-        def get_or_stub_out(funcname):
-            try:
-                return getattr(student_code, funcname)
-            except AttributeError:
-                return stub_out(funcname)
-
-        self.print = student_code.print
-        self.coding_challenges.clear()
-        self.coding_challenges.extend([
-            get_or_stub_out('tennis_ball'),
-            get_or_stub_out('remove_duplicates'),
-            get_or_stub_out('rotate'),
-            get_or_stub_out('next_fib'),
-            get_or_stub_out('most_common'),
-            get_or_stub_out('get_coins'),
-        ])
+        pass  # self.state_queue.put([SM_COMMANDS.SET_VAL, [master, ['master']]])
 
     async def run_challenge_blocking(self, seed, timeout=1):
         async with self.access:
+            coding_challenges, _print = load_coding_challenges()
             try:
                 async def chain():
                     solution = seed
-                    # FIXME: list is empty?
-                    for challenge in self.coding_challenges:
+                    for challenge in coding_challenges:
                         try:
                             solution = challenge(solution)
                         except Exception as exc:
-                            self.print(str(exc))
                             return
                     return solution
                 self.solution = await asyncio.wait_for(chain(), timeout)
             except asyncio.TimeoutError:
                 self.solution = None
-                self.print('Coding challenge timed out.')
 
     def run_challenge(self, seed, timeout=1):
         asyncio.ensure_future(self.run_challenge_blocking(seed, timeout))
 
     async def get_challenge_solution(self):
         async with self.access:
-            print(self.coding_challenges)
             return self.solution
 
 
