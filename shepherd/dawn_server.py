@@ -11,9 +11,15 @@ from LCM import *
 HOST_URL = "0.0.0.0"
 PORT = 7000
 
+#TODO work on this, new headers and deprecated headers.
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'omegalul!'
 socketio = SocketIO(app)
+
+@socketio.on('dawn-to-server-alliance-codes')
+def ui_to_server_setup_match(alliance_codes):
+    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.CODE_APPLICATION, json.loads(alliance_codes))
 
 def receiver():
     events = gevent.queue.Queue()
@@ -26,8 +32,10 @@ def receiver():
             print("RECEIVED:", event)
             if eventDict["header"] == DAWN_HEADER.ROBOT_STATE:
                 socketio.emit(DAWN_HEADER.ROBOT_STATE, event)
-            # else:
-                # socketio.emit(DAWN_HEADER.CODES, event)
+            elif eventDict["header"] == DAWN_HEADER.CODES:
+                socketio.emit(DAWN_HEADER.CODES, event)
+            elif eventDict["header"] == DAWN_HEADER.MASTER:
+                socketio.emit(DAWN_HEADER.MASTER, event)
         socketio.emit(DAWN_HEADER.HEARTBEAT, json.dumps({"heartbeat" : 1}))
         socketio.sleep(1)
 

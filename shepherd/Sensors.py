@@ -23,14 +23,15 @@ def get_working_serial_ports(excludes: set):
     Returns a list of `serial.Serial` object.
     """
     import glob
-    maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    # maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    maybe_ports = set(glob.glob("/dev/tty.usb*"))
     maybe_ports.difference_update(excludes)
 
     working = []
     for p in maybe_ports:
         try:
             working.append(serial.Serial(p, baudrate=115200))
-        except serial.SerialException:
+        except:
             pass
 
     return working
@@ -44,7 +45,7 @@ def identify_relevant_ports(working_ports):
     def maybe_identify_sensor(serial_port, timeout, msg_q):
         """Check whether a serial port contains a sensor.
         Parameters:
-            serial_port -- the port to check
+            sewrial_port -- the port to check
             timeout -- quit reading from the serial port after this
             amount of time
             msg_q -- a queue to set if a device is successfully identified
@@ -53,10 +54,8 @@ def identify_relevant_ports(working_ports):
         serial_port.timeout = timeout
         try:
             msg = serial_port.readline().decode("utf-8")
-            if is_linebreak_sensor(msg) or is_bidding_station(msg):
-                object_type = msg[0:2]
-                object_alliance = msg[2:3]
-                msg_q.put((object_type, object_alliance, serial_port))
+            object_alliance = msg[0:1]
+            msg_q.put((object_alliance, serial_port))
         except serial.SerialTimeoutException:
             pass
         serial_port.timeout = prev_timeout
@@ -79,13 +78,21 @@ def identify_relevant_ports(working_ports):
     return sensor_ports
 
 
-def is_linebreak_sensor(sensor_msg):
-    """Check whether a message is sent from a linebreak sensor."""
-    return sensor_msg[0:2] == "lb"
+def recv_from_btn(ser, alliance_enum):
+    print("<1> Starting Button Receive Thread", flush = True)
+    while True:
+        sensor_msg = ser.readline().decode("utf-8")
+        sensor_msg.lower()
+        payload_list = sensor_msg.split(";")
+        if len(payload_list) == 2 and payload_list[1] == "hb\r\n":
+            continue
+        print("<2> Message Received: ", payload_list, flush=True)
+        button_num = payload_list[1]
+        send_dictionary = {"alliance" : alliance_enum, "button" : button_num}
+        lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED, send_dictionary)
+    print("sent dictionary:" + str(send_dictionary), flush=True)
+    time.sleep(0.01)
 
-def is_bidding_station(sensor_msg):
-    """Check whether a message is sent from a linebreak sensor."""
-    return sensor_msg[0:2] == "bs"
 
 def main():
     working_ports = get_working_serial_ports(set())
@@ -93,6 +100,27 @@ def main():
     relevant_ports = identify_relevant_ports(working_ports)
     print("relevant ports: ", relevant_ports)
 
+    button_serial_blue = None
+    button_serial_gold = None
+
+    for alliance, port in relevant_ports:
+        if alliance == 'b':
+            button_serial_blue = port
+        elif alliance == 'g':
+            button_serial_gold = port
+
+    button_thread_blue = threading.Thread(
+        target = recv_from_btn, name="button blue", args=([button_serial_blue, ALLIANCE_COLOR.BLUE])
+        )
+    button_thread_gold = threading.Thread(
+        target = recv_from_btn, name="buttons gold", args=([button_serial_gold, ALLIANCE_COLOR.GOLD])
+        )
+
+    button_thread_blue.daemon = True
+    button_thread_gold.daemon = True
+
+    button_thread_blue.start()
+    button_thread_gold.start()
 
     while True:
         time.sleep(100)
