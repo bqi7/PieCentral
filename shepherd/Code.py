@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import math
 from Utils import *
 
 codes = []
@@ -41,6 +42,8 @@ def assign_code_solution():
     '''
     codes.clear()
     solutions.clear()
+    code_solution.clear()
+    code_effect.clear()
     for i in range(16):
         # pylint: disable=assignment-from-no-return
         new_code = generate_code(codes)
