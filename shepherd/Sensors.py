@@ -9,8 +9,8 @@ from Utils import *
 
 # run ls /dev/tty* to obtain the two ACM ports.
 
-buttons_gold_port = "/dev/ttyACM0" # change to correct port
-# buttons_blue_port = "/dev/ttyACM1" # change to correct port
+buttons_gold_port = "/dev/ttyACM1" # change to correct port
+buttons_blue_port = "/dev/ttyACM2" # change to correct port
 
 alliance_mapping = {
     "gold": ALLIANCE_COLOR.GOLD,
@@ -106,6 +106,7 @@ def main():
     button_serial_gold = None
     
     button_serial_gold = serial.Serial(buttons_gold_port, baudrate=115200)
+    button_serial_blue = serial.Serial(buttons_blue_port, baudrate=115200)
 
     # for alliance, port in relevant_ports:
     #     if alliance == 'b':
@@ -114,17 +115,17 @@ def main():
     #         button_serial_gold = port
 
 
-    # button_thread_blue = threading.Thread(
-    #     target = recv_from_btn, name="button blue", args=([button_serial_blue, ALLIANCE_COLOR.BLUE])
-    #     )
+    button_thread_blue = threading.Thread(
+        target = recv_from_btn, name="button blue", args=([button_serial_blue, ALLIANCE_COLOR.BLUE])
+        )
     button_thread_gold = threading.Thread(
         target = recv_from_btn, name="buttons gold", args=([button_serial_gold, ALLIANCE_COLOR.GOLD])
         )
 
-    # button_thread_blue.daemon = True
+    button_thread_blue.daemon = True
     button_thread_gold.daemon = True
 
-    # button_thread_blue.start()
+    button_thread_blue.start()
     button_thread_gold.start()
 
     while True:
