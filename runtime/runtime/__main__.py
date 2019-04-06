@@ -43,8 +43,6 @@ def override_options(options: dict):
 @click.option('--monitor-period', default=60, help='Monitor logging period.')
 @click.option('-l', '--log-level', default='INFO', help='Lowest visible log level.',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']))
-@click.option('--fc-schema', default=get_module_path('conf/field-control-schema.yaml'),
-              help='Path to field control schema.', type=click.Path(exists=True, dir_okay=False))
 @click.option('--dev-schema', default=get_module_path('conf/device-schema.yaml'),
               help='Path to device schema.', type=click.Path(exists=True, dir_okay=False))
 @click.option('--dev-names', default=get_module_path('conf/device-names.yaml'),

@@ -1,11 +1,12 @@
 import asyncio
 from collections import UserDict
 from typing import Callable, Tuple, Dict
+import time
 
 import aioprocessing
 import runtime.journal
-from runtime.control import StudentCodeExecutor
-from runtime.util import RuntimeIPCException, RuntimeBaseException
+from runtime import networking
+from runtime.util import wrap_async_main, RuntimeBaseException, RuntimeIPCException
 
 LOGGER = runtime.journal.make_logger(__name__)
 
@@ -87,22 +88,9 @@ class SubprocessMonitor(UserDict):
 def bootstrap(options):
     """ Initializes subprocesses and catches any fatal exceptions. """
     monitor = SubprocessMonitor(options['max_respawns'], options['fail_reset'])
-    # monitor.add('networking', networking.start, (
-    #     options['host'],
-    #     options['tcp'],
-    #     options['udp_send'],
-    #     options['udp_recv'],
-    # ))
-    # monitor.add('devices', devices.start, (
-    #     options['poll'],
-    #     options['poll_period'],
-    #     options['encoders'],
-    #     options['decoders'],
-    # ))
-    # monitor.add('executor', StudentCodeExecutor(options['student_code']), (
-    #     options['student_freq'],
-    #     options['student_timeout'],
-    # ))
+    monitor.add('networking', wrap_async_main(networking.start), (options,))
+    # monitor.add('devices', wrap_async_main(devices.start))
+    # monitor.add('executor', StudentCodeExecutor(options['student_code']))
 
     try:
         asyncio.run(monitor.spin())

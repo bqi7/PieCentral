@@ -93,7 +93,7 @@ class RuntimeFormatter(logging.Formatter):
         return ''  # TODO
 
     def format(self, record):
-        record.msg = str(record.msg).replace('"', r'\"')
+        record.msg = str(record.msg).replace('"', r'\"').replace('\n', '')
         if not hasattr(record, 'context'):
             record.context = {}
         return super().format(record)

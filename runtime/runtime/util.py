@@ -1,10 +1,11 @@
 import asyncio
 from collections import UserDict
 from enum import IntEnum
-from functools import lru_cache
+import functools
 import os
 import json
 import re
+import signal
 import threading
 import time
 import yaml
@@ -64,7 +65,7 @@ CONF_FILE_FORMATS = {
 }
 
 
-@lru_cache()
+@functools.lru_cache()
 def get_conf_file_serializer(filename: str):
     _, extension = os.path.splitext(filename)
     for ext_pattern, serializer in CONF_FILE_FORMATS.items():
@@ -178,18 +179,14 @@ class AsyncTimer:
         self.halt.set()
 
 
-class AsyncProcess:
-    def __init__(self, main, args=None, kwargs=None, logger=None):
-        self.main, self.args, self.kwargs, self.logger = main, args or (), kwargs or {}, logger
+def handle_async_termination(_signum, _stack_frame):
+    for task in asyncio.all_tasks():
+        task.cancel()
 
-    def __call__(self):
-        signal.signal(signal.SIGTERM, self.terminate_async_process)
-        if self.logger:
-            self.logger.debug('Starting event loop.')
-        asyncio.run(self.main(*args, **kwargs))
 
-    def terminate_process(self, _signum, _stack_frame):
-        if self.logger:
-            self.logger.debug('Terminating process and tasks.')
-        for task in asyncio.all_tasks():
-            task.cancel()
+def wrap_async_main(async_main):
+    @functools.wraps(async_main)
+    def main(*args, **kwargs):
+        signal.signal(signal.SIGTERM, handle_async_termination)
+        return asyncio.run(async_main(*args, **kwargs))
+    return main

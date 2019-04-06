@@ -1,7 +1,7 @@
 import asyncio
-import unittest
 import threading
 import time
+import unittest
 from runtime.util import AsyncThread, AsyncTimer
 
 
