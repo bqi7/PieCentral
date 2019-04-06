@@ -515,7 +515,7 @@ class FieldControlServer:
         self.state_queue.put([SM_COMMANDS.SET_TEAM, [alliance]])
 
     def set_starting_zone(self, zone: str):
-        self.state_queue.put([SM_COMMANDS.SET_VAL, [zone, ['starting_zone']]])
+        pass  # self.state_queue.put([SM_COMMANDS.SET_VAL, [zone, ['starting_zone']]])
 
     def set_mode(self, mode: str):
         modes = {
