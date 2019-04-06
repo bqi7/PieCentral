@@ -5,7 +5,7 @@ import time
 
 import aioprocessing
 import runtime.journal
-from runtime import networking, devices
+from runtime import devices, executor, networking
 from runtime.util import wrap_async_main, RuntimeBaseException, RuntimeIPCException
 
 LOGGER = runtime.journal.make_logger(__name__)
@@ -90,7 +90,7 @@ def bootstrap(options):
     monitor = SubprocessMonitor(options['max_respawns'], options['fail_reset'])
     monitor.add('networking', wrap_async_main(networking.start), (options,))
     monitor.add('devices', wrap_async_main(devices.start))
-    # monitor.add('executor', StudentCodeExecutor(options['student_code']))
+    monitor.add('executor', wrap_async_main(executor.start))
 
     try:
         asyncio.run(monitor.spin())

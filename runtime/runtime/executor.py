@@ -3,6 +3,9 @@ runtime.executor
 """
 
 import asyncio
+import runtime.journal
+
+LOGGER = runtime.journal.make_logger(__name__)
 
 
 def blank_function():
@@ -29,13 +32,6 @@ class StudentCodeExecutor:
         if dirname not in sys.path:
             sys.path.append(dirname)
             LOGGER.debug(f'Added "{dirname}" to "sys.path".')
-
-    def __call__(self):
-        asyncio.run(self.main())
-
-    async def main():
-        while True:
-            mode = await
 
     # def patch(self, module):
     #     """ Monkey-patch student code. """
@@ -78,3 +74,7 @@ class StudentCodeExecutor:
     #     #                  msg=str(exc), type=type(exc).__name__)
     #     # else:
     #     #     LOGGER.debug('Imported student code module.')
+
+
+async def start():
+    pass

@@ -4,7 +4,7 @@
 Runtime buffer module.
 """
 
-from libc.errno cimport errno, ENOENT
+from libc.errno cimport errno, ENOENT, EPERM
 from libc.string cimport strcpy
 from libc.stdint cimport uint8_t
 from libcpp.string cimport string
@@ -26,7 +26,7 @@ cdef class SharedMemoryBuffer:
     _SHM_NAME_BASE = 'runtime-shm-buf'
     cdef Py_ssize_t size
     cdef char *name
-    cdef int fd
+    cdef readonly int fd
     cdef uint8_t *buf
     cdef Py_ssize_t shape[1]
     cdef Py_ssize_t ref_count
@@ -105,6 +105,41 @@ cdef class SharedMemoryBuffer:
 
     def __releasebuffer__(self, Py_buffer *buffer):
         self.ref_count -= 1
+
+
+cdef class SharedLock:
+    cdef SharedMemoryBuffer mem
+
+    def __cinit__(self, str name):
+        self.mem = SharedMemoryBuffer(name, sizeof(pthread_mutex_t) + sizeof(pthread_mutexattr_t))
+        attrs = self.mem.buf + sizeof(pthread_mutex_t)
+        pthread_mutexattr_init(<pthread_mutexattr_t *> attrs)
+        pthread_mutexattr_setpshared(<pthread_mutexattr_t *> attrs, PTHREAD_PROCESS_SHARED)
+        pthread_mutexattr_settype(<pthread_mutexattr_t *> attrs, PTHREAD_MUTEX_RECURSIVE)
+        pthread_mutex_init(<pthread_mutex_t *> self.mem.buf, <pthread_mutexattr_t *> attrs)
+
+    def __dealloc__(self):
+        # pthread_mutex_destroy(<pthread_mutex_t *> self.mem.buf)
+        # pthread_mutexattr_destroy(<pthread_mutexattr_t *> (self.mem.buf + sizeof(pthread_mutex_t)))
+        pass
+
+    cpdef acquire(self):
+        cdef int status = pthread_mutex_lock(<pthread_mutex_t *> self.mem.buf)
+        if status != 0:
+            raise ValueError(f'Unable to down semaphore ({status}).')
+
+    cpdef release(self):
+        cdef int status = pthread_mutex_unlock(<pthread_mutex_t *> self.mem.buf)
+        if status != 0 and status != EPERM:
+            raise ValueError(f'Unable to up semaphore ({status}).')
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, _exc_type, _exc, _traceback):
+        self.release()
+        return self
 
 
 @cython.final

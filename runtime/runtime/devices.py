@@ -109,17 +109,6 @@ class DeviceStructure(ctypes.Structure):
         #TODO: broadcast name of this device out on this socket, telling others that they should create a handle to this
         return device
 
-    @staticmethod
-    def remove_shared_device(device):
-        """
-        Called when device disconnects from robot, releases its shared memory and semaphore.
-        Broadcasts to other processes that device has disconnected.
-        """
-        device._buf.unlink()
-        device._sem.unlink()
-        #TODO: delete this entry in device.py's copy of the connected devices dictionary
-        #TODO: broadcast name of this device out on the socket, telling others that they should unlink it as well
-
     def __getstate__(self):
         device_type = type(self)
         return device_type.__name__, device_type._params_by_id, self._buf

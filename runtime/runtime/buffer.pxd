@@ -70,6 +70,26 @@ cdef extern from "<sys/mman.h>":
         MAP_SYNC
 
 
+cdef extern from "<pthread.h>" nogil:
+    ctypedef struct pthread_mutex_t:
+        pass
+    ctypedef struct pthread_mutexattr_t:
+        pass
+    cpdef enum:
+        PTHREAD_PROCESS_SHARED
+        PTHREAD_MUTEX_RECURSIVE
+        PTHREAD_PRIO_INHERIT
+    int pthread_mutex_init(pthread_mutex_t *, const pthread_mutexattr_t *)
+    int pthread_mutex_destroy(pthread_mutex_t *)
+    int pthread_mutex_lock(pthread_mutex_t *)
+    int pthread_mutex_unlock(pthread_mutex_t *)
+    int pthread_mutexattr_init(pthread_mutexattr_t *)
+    int pthread_mutexattr_destroy(pthread_mutexattr_t *)
+    int pthread_mutexattr_setpshared(pthread_mutexattr_t *, int)
+    int pthread_mutexattr_settype(pthread_mutexattr_t *, int)
+    int pthread_mutexattr_setprotocol(pthread_mutexattr_t *, int)
+
+
 cdef extern from "ringbuffer.cpp":
     pass
 
