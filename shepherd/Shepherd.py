@@ -325,8 +325,6 @@ def code_setup():
     global code_effect
     code_solution = assign_code_solution()
     code_effect = assign_code_effect()
-    msg = {"codes_solutions": code_solution}
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.CODES, msg)
 
 def bounce_code(args):
     msg = {"alliance":args["alliance"], "result":args["result"]}
