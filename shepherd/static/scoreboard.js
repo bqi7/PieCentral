@@ -15,14 +15,14 @@ socket.on('connect', function(data) {
   });
 
 socket.on('teams', function(match_info) {
-  b1_name = JSON.parse(match_info).b1_name
-  b1_num = JSON.parse(match_info).b1_num
-  b2_name = JSON.parse(match_info).b2_name
-  b2_num = JSON.parse(match_info).b2_num
-  g1_name = JSON.parse(match_info).g1_name
-  g1_num = JSON.parse(match_info).g1_num
-  g2_name = JSON.parse(match_info).g2_name
-  g2_num = JSON.parse(match_info).g2_num
+  b1_name = JSON.parse(match_info).b1name
+  b1_num = JSON.parse(match_info).b1num
+  b2_name = JSON.parse(match_info).b2name
+  b2_num = JSON.parse(match_info).b2num
+  g1_name = JSON.parse(match_info).g1name
+  g1_num = JSON.parse(match_info).g1num
+  g2_name = JSON.parse(match_info).g2name
+  g2_num = JSON.parse(match_info).g2num
   match_number = JSON.parse(match_info).match_number
   nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number)
 })
@@ -33,13 +33,16 @@ socket.on('stage_timer_start', function(secondsInStage) {
 })
 
 socket.on('stage', function(stage_name) {
-  stage = JSON.parse(stage_name).stage_name
+  stage = JSON.parse(stage_name).stage
+  console.log("got stage header")
+  console.log(stage)
   setStageName(stage)
 })
 
 socket.on('launch_button_timer_start', function(allianceButton) {
     alliance = JSON.parse(allianceButton).alliance
     button = JSON.parse(allianceButton).button
+    console.log("launch button timer start")
     if (alliance == "blue"){
         if (button == 1) {
             runTimer1();
@@ -71,7 +74,7 @@ socket.on("applied_effect", function(data) {
   alliance = JSON.parse(data).alliance
   effect = JSON.parse(data).effect
   if (alliance == "blue"){
-      if (effect == "blackmail") {
+      if (effect == "twist") {
           blueTwist();
       } else {
           var spoiledTimeBlue = 15
@@ -87,7 +90,7 @@ socket.on("applied_effect", function(data) {
           }, 1000)
       }
   } else {
-      if (effect == "blackmail") {
+      if (effect == "twist") {
           goldTwist();
       } else {
         var spoiledTimeGold = 15
@@ -106,27 +109,36 @@ socket.on("applied_effect", function(data) {
 })
 
 socket.on("perks_selected", function(data) {
-  console.log('selecting perks')
   alliance = JSON.parse(data).alliance
   perk1 = JSON.parse(data).perk_1
   perk2 = JSON.parse(data).perk_2
   perk3 = JSON.parse(data).perk_3
 
-  select_perk(alliance, 1, perk1)
-  select_perk(alliance, 2, perk2)
-  select_perk(alliance, 3, perk3)
+  selectPerk(alliance, 1, perk1)
+  selectPerk(alliance, 2, perk2)
+  selectPerk(alliance, 3, perk3)
 })
 
-function select_perk(alliance, perk_num, perk) {
+function selectPerk(alliance, perk_num, perk) {
   id = '#' + alliance + "Perk" + perk_num.toString()
-  $(id).attr('src', '../static/PerkSelection/assets/DummyPerks/' + perk + '.png');
+  if (perk == "empty") {
+    $(id).attr('src', "/static/Perk_" + perk_num + ".png" );
+  } else {
+    $(id).attr('src', "/static/PerkSelection/assets/DummyPerks/" + perk + ".png" );
+    // $(id).attr('src', "{{url_for( 'static', filename='PerkSelection/assets/DummyPerks/" + perk + ".png' )}}" );
+  }
+}
+
+function setScores(blueScore, goldScore) {
+  $('#blue-score').html(blueScore);
+  $('#gold-score').html(goldScore);
+
 }
 
 socket.on("score", function(scores) {
   blueScore = JSON.parse(scores).blue_score;
   goldScore = JSON.parse(scores).gold_score;
-  $('#blue-score').html(blueScore);
-  $('#gold-score').html(goldScore);
+  setScores(blueScore, goldScore)
 })
 
 function testScore(blueScore, goldScore) {
@@ -147,8 +159,20 @@ function resetTimers(){
   timerD = false;
 }
 
+SETUP = "setup"
+PERK_SELCTION = "perk_selection"
+AUTO_WAIT = "auto_wait"
+AUTO = "auto"
+WAIT = "wait"
+TELEOP = "teleop"
+END = "end"
+
+stage_names = {"setup": "Setup", "perk_selection": "Perk Selection", 
+               "auto_wait": "Perk Selection", "auto": "Autonomous Period", "wait": "Autonomouse Period",
+               "teleop": "Teleop Period", "end": "Post-Match"}
+
 function setStageName(stage) {
-  $('#stage').html(stage)
+  $('#stage').html(stage_names[stage])
 }
 
 function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g2_num, match_number){
@@ -161,9 +185,21 @@ function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g
   $('#gold-1-num').html(g1_num)
   $('#gold-2-name').html(g2_name)
   $('#gold-2-num').html(g2_num)
+
+  selectPerk("blue", 1, "empty")
+  selectPerk("blue", 2, "empty")
+  selectPerk("blue", 3, "empty")
+  selectPerk("gold", 1, "empty")
+  selectPerk("gold", 2, "empty")
+  selectPerk("gold", 3, "empty")
+  setScores(0, 0)
 }
 
 function stageTimerStart(timeleft) {
+  // timerA = false;
+  // timerB = false;
+  // timerC = false;
+  // timerD = false;
   stageTimer = true;
   runStageTimer(timeleft);
 }
@@ -197,7 +233,7 @@ function progress(timeleft, timetotal, $element) {
     } else {
         $element.find('div').animate({ width: progressBarWidth }, 1000, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
     }
-    if(timeleft > 0) {
+    if (timeleft > 0) {
         setTimeout(function() {
             if(overTimer) {
               progress(timeleft - 1, timetotal, $element);
@@ -269,6 +305,8 @@ function goldTwist() {
 
 function runTimer1() {
   timerA = true;
+  console.log("timerA set to true")
+  console.log(timerA)
   //setTimeout(timer1, 0)
   launchButtonTimer('.timer1', '.circle_animation1', timerA);
 }

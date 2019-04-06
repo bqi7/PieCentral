@@ -24,14 +24,15 @@ def get_working_serial_ports(excludes: set):
     Returns a list of `serial.Serial` object.
     """
     import glob
-    maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    # maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    maybe_ports = set(glob.glob("/dev/tty.usb*"))
     maybe_ports.difference_update(excludes)
 
     working = []
     for p in maybe_ports:
         try:
             working.append(serial.Serial(p, baudrate=115200))
-        except serial.SerialException:
+        except:
             pass
 
     return working
