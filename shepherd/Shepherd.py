@@ -152,11 +152,11 @@ def to_auto(args):
     game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
 
     clients = RuntimeClientManager((
-        alliances[ALLIANCE_COLOR.BLUE].team_1_number,
-        alliances[ALLIANCE_COLOR.BLUE].team_2_number,
+        int(alliances[ALLIANCE_COLOR.BLUE].team_1_number),
+        int(alliances[ALLIANCE_COLOR.BLUE].team_2_number),
     ), (
-        alliances[ALLIANCE_COLOR.GOLD].team_1_number,
-        alliances[ALLIANCE_COLOR.GOLD].team_2_number,
+        int(alliances[ALLIANCE_COLOR.GOLD].team_1_number),
+        int(alliances[ALLIANCE_COLOR.GOLD].team_2_number),
     ))
     clients.set_master_robots(master_robots[ALLIANCE_COLOR.BLUE],
                               master_robots[ALLIANCE_COLOR.GOLD])
@@ -293,14 +293,20 @@ def enable_robots(autonomous):
     Sends message to Dawn to enable all robots. The argument should be a boolean
     which is true if we are entering autonomous mode
     '''
-    clients.set_mode("auto" if autonomous else "teleop")
+    try:
+        clients.set_mode("auto" if autonomous else "teleop")
+    except Exception as exc:
+        print(exc)
 
 
 def disable_robots():
     '''
     Sends message to Dawn to disable all robots
     '''
-    clients.set_mode("idle")
+    try:
+        clients.set_mode("idle")
+    except Exception as exc:
+        print(exc)
 
 
 ###########################################
@@ -311,7 +317,9 @@ def disable_robot(args):
     Send message to Dawn to disable the robots of team
     '''
     team_number = args["team_number"]
-    clients.clients[team_number].set_mode("idle")
+    client = clients.clients[int(team_number)]
+    if client:
+        client.set_mode("idle")
 
 
 def set_master_robot(args):
@@ -433,7 +441,9 @@ def launch_button_triggered(args):
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        clients.clients[master_robots[alliance.name]].run_challenge(code)
+        client = clients.clients[int(master_robots[alliance.name])]
+        if client:
+            client.run_challenge(code)
         student_decode_timer.start(STUDENT_DECODE_TIME)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -447,7 +457,9 @@ def auto_launch_button_triggered(args):
     if not buttons[temp_str]:
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        clients.clients[master_robots[alliance.name]].run_challenge(code, timeout=1)
+        client = clients.clients[int(master_robots[alliance.name])]
+        if client:
+            client.run_challenge(code, timeout=1)
 
         student_decode_timer.start(STUDENT_DECODE_TIME)
         buttons[temp_str] = True

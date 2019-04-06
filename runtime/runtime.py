@@ -92,7 +92,7 @@ def runtime(test_name=""): # pylint: disable=too-many-statements
         spawn_process(PROCESS_NAMES.UDP_RECEIVE_PROCESS, start_udp_receiver)
         spawn_process(PROCESS_NAMES.HIBIKE, start_hibike)
         fc_server = FieldControlServer(state_queue)
-        fc_thread = threading.Thread(target=lambda: asyncio.run(run_field_control_server(fc_server, '127.0.0.1', 6020, state_queue)), daemon=True)
+        fc_thread = threading.Thread(target=lambda: asyncio.run(run_field_control_server(fc_server, '0.0.0.0', 6020, state_queue)), daemon=True)
         fc_thread.start()
         control_state = "idle"
         dawn_connected = False
