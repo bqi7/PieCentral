@@ -10,16 +10,21 @@ from functools import lru_cache
 import time
 import posix_ipc
 from runtime import __version__
-from runtime.journal import make_logger
+import runtime.journal
 from runtime.util import read_conf_file, RuntimeBaseException
 
-LOGGER = make_logger(__name__)
+LOGGER = runtime.journal.make_logger(__name__)
 
 
 Parameter = collections.namedtuple(
     'Parameter',
     ['name', 'type', 'lower', 'upper', 'read', 'write', 'choices', 'default'],
     defaults=[float('-inf'), float('inf'), True, False, [], None],
+)
+
+Device = collections.namedtuple(
+    'Device',
+    ['name'],
 )
 
 CTYPES_SIGNED_INT = {ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long,
@@ -126,7 +131,13 @@ class StoreService(collections.UserDict):
             self.field_params['mode'] = Mode.__members__[mode.upper()]
 
     async def run_coding_challenge(self, seed: int) -> int:
-        pass  # TODO
+        async with self.access:
+            # TODO
+            self.field_params['challengesolution'] = None
+
+    async def get_challenge_solution(self):
+        async with self.access:
+            return self.field_params.get('challengesolution')
 
     async def write_device_names(self):
         with open(self.options['dev_names']) as dev_name_file:

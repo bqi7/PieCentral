@@ -7,7 +7,7 @@ __all__ = ['SmartSensorObserver']
 
 import asyncio
 import collections
-from typing import List, Callable, Generator
+from typing import List, Callable, Generator, Sequence
 import ctypes
 import os
 import socket
@@ -20,8 +20,7 @@ import runtime.journal
 from runtime.store import Parameter
 
 # from serial.aio import create_serial_connection
-# from serial.tools.list_ports import comports
-# Other modules in runtime package
+from serial.tools.list_ports import comports
 
 LOGGER = runtime.journal.make_logger(__name__)
 
@@ -29,6 +28,71 @@ try:
     from pyudev import Context, Devices, Device, Monitor, MonitorObserver
 except ImportError:
     LOGGER.warning('Unable to import `pyudev`, which is Linux-only.')
+
+
+def is_sensor(device: Device) -> bool:
+    """
+    Determine whether the USB descriptor belongs to an Arduino Micro (CDC ACM).
+
+    .. _Linux USB Project ID List
+        http://www.linux-usb.org/usb.ids
+    """
+    try:
+        vendor_id, product_id, _ = device.properties['PRODUCT'].split('/')
+        return int(vendor_id, 16) == 0x2341 and int(product_id, 16) == 0x8037
+    except (KeyError, ValueError):
+        return False
+
+
+def get_com_ports(devices: Sequence[Device]):
+    ports = serial.tools.list_ports.comports(include_links=True)
+    port_devices = {port.location: port.device for port in ports}
+    for device in devices:
+        for filename in os.listdir(device.sys_path):
+            if filename.startswith('tty'):
+                for port in ports:
+                    if port.location in device.sys_path:
+                        yield port.device
+                        break
+
+
+class SmartSensorObserver(MonitorObserver):
+    subsystem, device_type = 'usb', 'usb_interface'
+
+    def __init__(self, callback: Callable[[Device], None],
+                 thread_name: str = 'device-observer'):
+        self.thread_name, self.context = thread_name, Context()
+        self.monitor = Monitor.from_netlink(self.context)
+        self.monitor.filter_by(self.subsystem, self.device_type)
+        def callback_filtered(device):
+            if is_sensor(device):
+                callback(device)
+        super().__init__(self.monitor, callback=callback_filtered,
+                         name=self.thread_name)
+
+    def list_sensors(self) -> Generator[Device, None, None]:
+        for device in self.context.list_devices(subsystem=self.subsystem):
+            if is_sensor(device):
+                yield device
+
+
+class SmartSensorProtocol(asyncio.Protocol):
+    # TODO: investigate using `asyncio.BufferedProtocol`
+
+    def __init__(self):
+        pass
+
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def connection_lost(self, exc):
+        pass
+
+    def data_received(self, data: bytes):
+        pass
+
+    def eof_received(self):
+        pass
 
 
 class DeviceStructure(ctypes.Structure):
@@ -117,69 +181,23 @@ class DeviceStructure(ctypes.Structure):
         pass
 
 
-def is_sensor(device: Device) -> bool:
-    """
-    Determine whether the USB descriptor belongs to an Arduino Micro (CDC ACM).
-
-    .. _Linux USB Project ID List
-        http://www.linux-usb.org/usb.ids
-    """
-    try:
-        vendor_id, product_id, _ = device.properties['PRODUCT'].split('/')
-        return vendor_id == 0x2341 and product_id == 0x8037
-    except (KeyError, ValueError):
-        return False
-
-
-class SmartSensorObserver(MonitorObserver):
-    subsystem, device_type = 'usb', 'usb_interface'
-
-    def __init__(self, callback: Callable[[Device], None],
-                 thread_name: str = 'device-observer'):
-        self.thread_name, self.context = thread_name, Context()
-        self.monitor = Monitor.from_netlink(self.context)
-        self.monitor.filter_by(self.subsystem, self.device_type)
-        def callback_filtered(device):
-            print(device)
-            if is_sensor(device):
-                callback(device)
-        super().__init__(self.monitor, callback=callback_filtered,
-                         name=self.thread_name)
-
-    def list_sensors(self) -> Generator[Device, None, None]:
-        for device in self.context.list_devices(subsystem=self.subsystem):
-            if is_sensor(device):
-                yield device
-
-
-class SmartSensorProtocol(asyncio.BufferedProtocol):
-    pass
-
-
-def cli():
-    import serial.tools.list_ports
-    def callback(device):
-        print(dict(device.properties))
-        print(device.device_path)
-    print([port.usb_info() for port in serial.tools.list_ports.comports()])
-    observer = SmartSensorObserver(callback)
-    actual_device = Devices.from_device_file(observer.context, '/dev/ttyACM0')
+async def start():
+    observer = SmartSensorObserver(LOGGER.info)
     observer.start()
-    for device in observer.list_sensors():
-        for filename in os.listdir(device.sys_path):
-            if filename.startswith('tty'):
-                print(device.sys_path, filename)
-        print('->', device.device_number, device.device_node)
+    LOGGER.debug(f'{list(get_com_ports(observer.list_sensors()))}')
+    # for device in observer.list_sensors():
+    #     for filename in os.listdir(device.sys_path):
+    #         if filename.startswith('tty'):
+    #             LOGGER.debug(device.sys_path)
+    #             LOGGER.debug([(port.device, port.location) for port in serial.tools.list_ports.comports(include_links=True)])
     observer.join()
 
-
-async def start():
-    from runtime.networking import ClientCircuitbreaker
-    client = ClientCircuitbreaker(host='127.0.0.1', port=6020)
-    await client.set_alliance('blue')
-    while True:
-        await asyncio.sleep(1)
-        LOGGER.info(str(await client.get_field_parameters()))
+    # from runtime.networking import ClientCircuitbreaker
+    # client = ClientCircuitbreaker(host='127.0.0.1', port=6020)
+    # await client.set_alliance('blue')
+    # while True:
+    #     await asyncio.sleep(1)
+    #     LOGGER.info(str(await client.get_field_parameters()))
 
 
 class SmartSensorService(collections.UserDict):
