@@ -30,7 +30,7 @@ from runtimeUtil import (
     StudentAPIError,
 )
 from statemanager import StateManager
-from studentapi import Actions, Gamepad, Robot
+from studentapi import Actions, Gamepad, Field, Robot
 
 COROUTINE_WARNING = """
 The PiE API has upgraded the above RuntimeWarning to a runtime error!
@@ -91,9 +91,8 @@ def runtime(test_name=""): # pylint: disable=too-many-statements
         spawn_process(PROCESS_NAMES.STATE_MANAGER, start_state_manager)
         spawn_process(PROCESS_NAMES.UDP_RECEIVE_PROCESS, start_udp_receiver)
         spawn_process(PROCESS_NAMES.HIBIKE, start_hibike)
-        fc_server_loop = asyncio.new_event_loop()
         fc_server = FieldControlServer(state_queue)
-        fc_thread = threading.Thread(target=lambda: fc_server_loop.run_until_complete(run_field_control_server(fc_server, '127.0.0.1', 6020, state_queue)), daemon=True)
+        fc_thread = threading.Thread(target=lambda: asyncio.run(run_field_control_server(fc_server, '127.0.0.1', 6020, state_queue)), daemon=True)
         fc_thread.start()
         control_state = "idle"
         dawn_connected = False
@@ -118,7 +117,6 @@ def runtime(test_name=""): # pylint: disable=too-many-statements
             non_test_mode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
             non_test_mode_print("Starting studentCode attempt: %s" % (restart_count,))
             while True:
-                fc_server_loop.call_soon_threadsafe(fc_server.reset)
                 new_bad_thing = bad_things_queue.get(block=True)
                 if new_bad_thing.event == BAD_EVENTS.NEW_IP and not dawn_connected:
                     spawn_process(PROCESS_NAMES.UDP_SEND_PROCESS, start_udp_sender)
@@ -218,6 +216,7 @@ def run_student_code(bad_things_queue, state_queue, pipe, fc_server, test_name="
 
         studentCode.Robot = Robot(state_queue, pipe)
         studentCode.Gamepad = Gamepad(state_queue, pipe)
+        studentCode.Field = Field(state_queue, pipe)
         studentCode.Actions = Actions
         studentCode.print = studentCode.Robot._print # pylint: disable=protected-access
 

@@ -7,6 +7,7 @@ import time
 import sys
 import selectors
 import csv
+import aio_msgpack_rpc as rpc
 import runtime_pb2
 import ansible_pb2
 import notification_pb2
@@ -507,7 +508,8 @@ class FieldControlServer:
     def __init__(self, state_queue):
         self.state_queue = state_queue
         self.access = asyncio.Lock()
-        self.reset()
+        self.print = print
+        self.solution, self.coding_challenges = None, []
 
     def set_alliance(self, alliance: str):
         self.state_queue.put([SM_COMMANDS.SET_TEAM, [alliance]])
@@ -552,11 +554,12 @@ class FieldControlServer:
             get_or_stub_out('get_coins'),
         ])
 
-    async def run_challenge(self, seed, timeout=1.0):
-        async with self.lock:
+    async def run_challenge_blocking(self, seed, timeout=1):
+        async with self.access:
             try:
                 async def chain():
                     solution = seed
+                    # FIXME: list is empty?
                     for challenge in self.coding_challenges:
                         try:
                             solution = challenge(solution)
@@ -564,23 +567,23 @@ class FieldControlServer:
                             self.print(str(exc))
                             return
                     return solution
-                self.solution = await asyncio.wait_for(chain, timeout)
+                self.solution = await asyncio.wait_for(chain(), timeout)
             except asyncio.TimeoutError:
                 self.solution = None
+                self.print('Coding challenge timed out.')
+
+    def run_challenge(self, seed, timeout=1):
+        asyncio.ensure_future(self.run_challenge_blocking(seed, timeout))
 
     async def get_challenge_solution(self):
-        async with self.lock:
+        async with self.access:
+            print(self.coding_challenges)
             return self.solution
-
-    def reset(self):
-        print('Reset FC server.')
-        self.print = print
-        self.solution, self.coding_challenges = None, []
 
 
 async def run_field_control_server(server, host, port, state_queue):
     try:
-        server = await asyncio.start_server(server, host=host, port=port)
+        server = await asyncio.start_server(rpc.Server(server), host=host, port=port)
         async with server:
             print('Starting field control server.')
             await server.serve_forever()
