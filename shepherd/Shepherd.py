@@ -143,7 +143,11 @@ def to_auto(args):
     stage to be called and autonomous match timer should have begun.
     '''
     global game_state
+    global runtime_client_manager
     game_timer.start_timer(CONSTANTS.AUTO_TIME)
+    runtime_client_manager = connect_to_robots(team1, team2, team3, team4)
+    #creates a client_manager instance with mapings to clients for those 4 teams
+    #Jonathan
     game_state = STATE.AUTO
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     enable_robots(True)
@@ -273,9 +277,8 @@ def enable_robots(autonomous):
     Sends message to Dawn to enable all robots. The argument should be a boolean
     which is true if we are entering autonomous mode
     '''
-    msg = {"autonomous": autonomous, "enabled": True}
-
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
+    runtime_client_manager.set_mode("auto" if autonomous else "teleop")
+    #Jonathan
 
 
 
@@ -283,8 +286,9 @@ def disable_robots():
     '''
     Sends message to Dawn to disable all robots
     '''
-    msg = {"autonomous": False, "enabled": False}
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.ROBOT_STATE, msg)
+    runtime_client_manager.set_mode("idle")
+    #Jonathan
+
 
 
 
@@ -296,8 +300,8 @@ def disable_robot(args):
     Send message to Dawn to disable the robots of team
     '''
     team_number = args["team_number"]
-    msg = {"team_number": team_number, "autonomous": False, "enabled": False}
-    lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.SPECIFIC_ROBOT_STATE, msg)
+    runtime_client_manager.clients[team_number].set_mode("idle")
+    #Jonathan
 
 def set_master_robot(args):
     '''
@@ -327,6 +331,10 @@ def code_setup():
     code_effect = assign_code_effect()
 
 def bounce_code(args):
+    student_solutions = runtime_client_manager.get_student_solutions()
+    #returns dict of team numbers and answers, with None for no answer
+    #Jonathan
+    for
     msg = {"alliance":args["alliance"], "result":args["result"]}
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
 
@@ -398,19 +406,21 @@ def launch_button_triggered(args):
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        student_solution = run_coding_challenge(alliance, code)
-        code_msg = {"alliance": alliance.name, "code": student_solution}
-        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, code_msg)
+        runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
+        #send code to that team number
+        #Jonathan
+        timer.start(1)
+        #Matthew
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
 
 def run_coding_challenge(alliance, code):
-    client = RuntimeClient("192.168.218.2" + str(master_robots[alliance]), 6020) # TODO: Save master robot info at beginning and pass in master robot address/port here
+    client = RuntimeClient("192.168.128.2" + str(master_robots[alliance]), 6020) # TODO: Save master robot info at beginning and pass in master robot address/port here
     student_solution = client.run_coding_challenge(code)
     return student_solution
 
 def auto_launch_button_triggered(args):
-    ## TODO: add ten score, mark button as dirty, sent to sc (both things)
+    ##  mark button as dirty, sent to sc (both things)
     ## Isn't this already done in auto_apply_code?
     alliance = alliances[args['alliance']]
     button = args["button"]
@@ -520,6 +530,8 @@ extended_teleop_timer = Timer(TIMER_TYPES.EXTENDED_TELEOP)
 match_number = -1
 alliances = {ALLIANCE_COLOR.GOLD: None, ALLIANCE_COLOR.BLUE: None}
 events = None
+
+runtime_client_manager
 
 ###########################################
 # Game Specific Variables
