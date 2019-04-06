@@ -16,7 +16,7 @@ class Runtime_client_manager:
         self.team_2 = team_2
         self.team_3 = team_3
         self.team_4 = team_4
-        self.clients{team_1: connection(1111), team_2: connection(2222), team_3: connection(3333), team_4: connection(4444)}
+        self.clients = {team_1: self.connection(1111), team_2: self.connection(2222), team_3: self.connection(3333), team_4: self.connection(4444)}
         self.team_1_code = None
         self.team_2_code = None
         self.team_3_code = None
@@ -26,20 +26,20 @@ class Runtime_client_manager:
         pass
 
     def get_student_solutions(self):
-        thingy = self.clients{self.team_1: self.team_1_code, self.team_2: self.team_2_code, self.team_3: self.team_3_code, self.team_4: self.team_4_code}
+        thingy = {self.team_1: self.team_1_code, self.team_2: self.team_2_code, self.team_3: self.team_3_code, self.team_4: self.team_4_code}
         self.team_1_code = None
         self.team_2_code = None
         self.team_3_code = None
         self.team_4_code = None
         return thingy
 
-    def run_coding_challenge(team, code)
-        if team = self.team_1:
+    def run_coding_challenge(self, team, code):
+        if team == self.team_1:
             self.team_1_code = decode(code)
-        if team = self.team_2:
+        if team == self.team_2:
             self.team_2_code = decode(code)
-        if team = self.team_3:
+        if team == self.team_3:
             self.team_3_code = decode(code)
-        if team = self.team_4:
+        if team == self.team_4:
             self.team_4_code = decode(code)
     

@@ -93,8 +93,8 @@ class TABLET_HEADER():
 # pylint: disable=invalid-name
 class CONSTANTS():
     PERK_SELECTION_TIME = 10 # actually supposed to be 30
-    AUTO_TIME = 30
-    TELEOP_TIME = 180
+    AUTO_TIME = 15 # 30
+    TELEOP_TIME = 30 # 180
     OVERDRIVE_TIME = 30
     SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
     CSV_FILE_NAME = "Sheets/schedule.csv"

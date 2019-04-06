@@ -62,8 +62,8 @@ function checkCookie() {
 
 function storeTeams(t1, t2) {
     var ca = document.cookie.split(';')
-    document.cookie = "t1="+t1
-    document.cookie = "t2="+t2
+    document.cookie = "t1="+t1+";path=/;"
+    document.cookie = "t2="+t2+";path=/;"
 }
 
 window.onload = checkCookie
@@ -134,16 +134,16 @@ function setTeams(t1_num, t2_num) {
 
 function blueClick() {
     hideButtons()
-    document.cookie = "alliance=blue"
+    document.cookie = "alliance=blue;path=/"
 }
 
 function goldClick() {
     hideButtons()
-    document.cookie = "alliance=gold"
+    document.cookie = "alliance=gold;path=/"
 }
 
 function murderCookie() {
-    document.cookie = "alliance="
+    document.cookie = "alliance=;path=/"
     showButtons()
 }
 

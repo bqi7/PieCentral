@@ -7,7 +7,7 @@ from LCM import *
 from Timer import *
 from Utils import *
 from Code import *
-from runtimeclient import RuntimeClient
+from DummyRuntime_client_manager import *
 import Sheet
 
 __version__ = (1, 0, 0)
@@ -121,7 +121,7 @@ def to_setup(args):
 
 def to_perk_selection(args):
     global game_state
-    game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME)
+    game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME + 2)
     game_state = STATE.PERK_SELCTION
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.COLLECT_PERKS)
@@ -144,8 +144,8 @@ def to_auto(args):
     '''
     global game_state
     global runtime_client_manager
-    game_timer.start_timer(CONSTANTS.AUTO_TIME)
-    runtime_client_manager = connect_to_robots(team1, team2, team3, team4)
+    game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
+    runtime_client_manager = connect_to_robots(alliances[ALLIANCE_COLOR.BLUE].team_1_number, alliances[ALLIANCE_COLOR.BLUE].team_2_number, alliances[ALLIANCE_COLOR.GOLD].team_1_number, alliances[ALLIANCE_COLOR.GOLD].team_2_number)
     #creates a client_manager instance with mapings to clients for those 4 teams
     #Jonathan
     game_state = STATE.AUTO
@@ -177,7 +177,7 @@ def to_teleop(args):
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
 
     Timer.reset_all()
-    game_timer.start_timer(CONSTANTS.TELEOP_TIME)
+    game_timer.start_timer(CONSTANTS.TELEOP_TIME + 2)
     overdrive_time = random.randint(0,CONSTANTS.TELEOP_TIME -
                                       CONSTANTS.OVERDRIVE_TIME)
     overdrive_timer.start_timer(overdrive_time)
@@ -286,7 +286,10 @@ def disable_robots():
     '''
     Sends message to Dawn to disable all robots
     '''
-    runtime_client_manager.set_mode("idle")
+    try:
+        runtime_client_manager.set_mode("idle")
+    except:
+        pass
     #Jonathan
 
 
@@ -345,46 +348,54 @@ def bounce_code(args):
                 alliance = ALLIANCE_COLOR.BLUE
             if alliances[ALLIANCE_COLOR.GOLD].team_2_number == ss:
                 alliance = ALLIANCE_COLOR.GOLD
-        msg = {"alliance":alliance, "result":student_solution[ss]}
-        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
+            msg = {"alliance": alliance, "result": student_solutions[ss]}
+            lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
 
-def apply_code(args):
+def auto_apply_code(args):
     '''
     Send Scoreboard the effect if the answer is correct
     '''
-    alliance = args["alliance"]
-    answer = alliances[args["answer"]]
+    alliance = alliances[args["alliance"]]
+    answer = int(args["answer"])
     if (answer is not None and answer in code_solution.values()):
         code = [k for k, v in code_solution.items() if v == answer][0]
         alliance.change_score(10)
     else:
-        msg = {"alliance": alliance}
+        msg = {"alliance": alliance.name}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
 
-def auto_apply_code(args):
+def apply_code(args):
     '''
     Send Scoreboard the new score if the answer is correct #TODO
     '''
-    alliance = args["alliance"]
-    answer = args["answer"]
+    alliance = alliances[args["alliance"]]
+    answer = int(args["answer"])
     if (answer is not None and answer in code_solution.values()):
         code = [k for k, v in code_solution.items() if v == answer][0]
-        msg = {"alliance": alliance, "effect": code_effect[code]}
+        if code_effect[code] == EFFECTS.TWIST:
+            if alliance.name == ALLIANCE_COLOR.BLUE:
+                msg = {"alliance": ALLIANCE_COLOR.GOLD, "effect": code_effect[code]}
+            else:
+                msg = {"alliance": ALLIANCE_COLOR.BLUE, "effect": code_effect[code]}
+        else:
+            msg = {"alliance": alliance.name, "effect": code_effect[code]}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
     else:
-        msg = {"alliance": alliance}
+        msg = {"alliance": alliance.name}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
 
 
 def end_teleop(args):
     blue_robots_disabled = False
     gold_robots_disabled = False
-    if PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]):
-        extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
+    if PERKS.TAFFY not in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]):
         blue_robots_disabled = True
-    elif PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
+    if PERKS.TAFFY not in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
+        gold_robots_disabled = True
+    if PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.BLUE]) or PERKS.TAFFY in alliance_perks(alliances[ALLIANCE_COLOR.GOLD]):
         extended_teleop_timer.start_timer(CONSTANTS.TAFFY_TIME)
-        gold_robots_disabled = False
+        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
+                 {"time" : CONSTANTS.TAFFY_TIME})
     else:
         to_end(args)
     if gold_robots_disabled:
@@ -416,20 +427,12 @@ def launch_button_triggered(args):
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
+        runtime_client_manager.run_coding_challenge(master_robots[alliance.name], code)
         #send code to that team number
         #Jonathan
-        student_decode_timer.start(STUDENT_DECODE_TIME)
+        student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
-
-def run_coding_challenge(alliance, code):
-    end = str(master_robots[alliance.name])
-    if int(master_robots[alliance.name]) < 10:
-        end = "0" + end
-    client = RuntimeClient("192.168.218.2" + end, 6020) # TODO: Save master robot info at beginning and pass in master robot address/port here
-    student_solution = client.run_coding_challenge(code)
-    return student_solution
 
 def auto_launch_button_triggered(args):
     ##  mark button as dirty, sent to sc (both things)
@@ -440,10 +443,10 @@ def auto_launch_button_triggered(args):
     if not buttons[temp_str]:
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
+        runtime_client_manager.run_coding_challenge(master_robots[alliance.name], code)
         #send code to that team number
         #Jonathan
-        student_decode_timer.start(STUDENT_DECODE_TIME)
+        student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -498,7 +501,7 @@ auto_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.STAGE_TIMER_END : to_wait,
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : auto_launch_button_triggered,
-    SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
+    SHEPHERD_HEADER.CODE_APPLICATION : auto_apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
     SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
 
@@ -513,7 +516,7 @@ wait_functions = {
 
 teleop_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
-    SHEPHERD_HEADER.STAGE_TIMER_END : to_end,
+    SHEPHERD_HEADER.STAGE_TIMER_END : end_teleop,
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
@@ -544,7 +547,7 @@ match_number = -1
 alliances = {ALLIANCE_COLOR.GOLD: None, ALLIANCE_COLOR.BLUE: None}
 events = None
 
-runtime_client_manager
+runtime_client_manager = None;
 
 ###########################################
 # Game Specific Variables

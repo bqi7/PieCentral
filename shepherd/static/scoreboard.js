@@ -86,6 +86,7 @@ socket.on("applied_effect", function(data) {
             }
             else {
               spoiledTimeBlue -= 1
+              setImageVisible('#blueSpoiled', true)
             }
           }, 1000)
       }
@@ -102,6 +103,7 @@ socket.on("applied_effect", function(data) {
           }
           else {
             spoiledTimeGold -= 1
+            setImageVisible('#goldSpoiled', true)
           }
         }, 1000)
       }
@@ -129,16 +131,14 @@ function selectPerk(alliance, perk_num, perk) {
   }
 }
 
-function setScores(blueScore, goldScore) {
-  $('#blue-score').html(blueScore);
-  $('#gold-score').html(goldScore);
-
+function setScore(alliance, score) {
+  $('#' + alliance + '-score').html(score);
 }
 
 socket.on("score", function(scores) {
-  blueScore = JSON.parse(scores).blue_score;
-  goldScore = JSON.parse(scores).gold_score;
-  setScores(blueScore, goldScore)
+  alliance = JSON.parse(scores).alliance;
+  score = JSON.parse(scores).score;
+  setScore(alliance, score)
 })
 
 function testScore(blueScore, goldScore) {
@@ -192,7 +192,12 @@ function nextMatch(b1_name, b1_num, b2_name, b2_num, g1_name, g1_num, g2_name, g
   selectPerk("gold", 1, "empty")
   selectPerk("gold", 2, "empty")
   selectPerk("gold", 3, "empty")
-  setScores(0, 0)
+
+  setImageVisible('#blueTwist', false)
+  setImageVisible('#goldTwist', false)
+
+  setScore("blue", 0)
+  setScore("gold", 0)
 }
 
 function stageTimerStart(timeleft) {
@@ -296,11 +301,13 @@ function draw() {
 };
 
 function blueTwist() {
-   $('#blueTwist').attr('src', '../static/Twisted.png');
+   // $('#blueTwist').attr('src', '../static/Twisted.png');
+   setImageVisible('#blueTwist', true)
 }
 
 function goldTwist() {
-   $('#goldTwist').attr('src', '../static/Twisted.png');
+   // $('#goldTwist').attr('src', '../static/Twisted.png');
+   setImageVisible('#goldTwist', true)
 }
 
 function runTimer1() {
