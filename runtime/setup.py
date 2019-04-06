@@ -44,8 +44,8 @@ setup(
             Extension(
                 'runtime.buffer',
                 ['runtime/buffer.pyx'],
-                extra_compile_args=['-lrt'],
-                extra_link_args=['-lrt'],
+                extra_compile_args=['-lrt', '-lpthread'],
+                extra_link_args=['-lrt', '-lpthread'],
             ),
         ],
         language_level=3,

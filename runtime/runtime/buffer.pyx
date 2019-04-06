@@ -4,6 +4,7 @@
 Runtime buffer module.
 """
 
+import os
 from libc.errno cimport errno, ENOENT, EPERM
 from libc.string cimport strcpy
 from libc.stdint cimport uint8_t
@@ -42,15 +43,20 @@ cdef class SharedMemoryBuffer:
             raise MemoryError('Failed to allocate memory for shared memory object name.')
         strcpy(self.name, full_name.encode('utf-8'))
 
+        existed = os.path.exists(os.path.join('/dev/shm', full_name))
         self.fd = shm_open(self.name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
         if self.fd == -1:
             raise OSError('Failed to open shared memory object.')
-        ftruncate(self.fd, size)
+        ftruncate(self.fd, size + 1)
 
         self.buf = <uint8_t *> mmap(NULL, size, PROT_READ | PROT_WRITE,
                                     MAP_SHARED, self.fd, 0)
+        if not existed:
+            self.buf[size] = 0
+        self.buf[size] += 1
 
     def __dealloc__(self):
+        self.buf[self.size] -= 1
         message = None
         if munmap(self.buf, self.size):
             message = 'Failed to munmap buffer in memory.'
@@ -70,6 +76,10 @@ cdef class SharedMemoryBuffer:
     @property
     def fileno(self):
         return self.fd
+
+    @property
+    def peers(self):
+        return self.buf[self.size]
 
     cdef _check_bounds(self, index):
         if not 0 <= index < self.size:
@@ -113,15 +123,16 @@ cdef class SharedLock:
     def __cinit__(self, str name):
         self.mem = SharedMemoryBuffer(name, sizeof(pthread_mutex_t) + sizeof(pthread_mutexattr_t))
         attrs = self.mem.buf + sizeof(pthread_mutex_t)
-        pthread_mutexattr_init(<pthread_mutexattr_t *> attrs)
-        pthread_mutexattr_setpshared(<pthread_mutexattr_t *> attrs, PTHREAD_PROCESS_SHARED)
-        pthread_mutexattr_settype(<pthread_mutexattr_t *> attrs, PTHREAD_MUTEX_RECURSIVE)
-        pthread_mutex_init(<pthread_mutex_t *> self.mem.buf, <pthread_mutexattr_t *> attrs)
+        if self.mem.peers <= 1:
+            pthread_mutexattr_init(<pthread_mutexattr_t *> attrs)
+            pthread_mutexattr_setpshared(<pthread_mutexattr_t *> attrs, PTHREAD_PROCESS_SHARED)
+            pthread_mutexattr_settype(<pthread_mutexattr_t *> attrs, PTHREAD_MUTEX_RECURSIVE)
+            pthread_mutex_init(<pthread_mutex_t *> self.mem.buf, <pthread_mutexattr_t *> attrs)
 
     def __dealloc__(self):
-        # pthread_mutex_destroy(<pthread_mutex_t *> self.mem.buf)
-        # pthread_mutexattr_destroy(<pthread_mutexattr_t *> (self.mem.buf + sizeof(pthread_mutex_t)))
-        pass
+        if self.mem.peers == 1:
+            pthread_mutex_destroy(<pthread_mutex_t *> self.mem.buf)
+            pthread_mutexattr_destroy(<pthread_mutexattr_t *> (self.mem.buf + sizeof(pthread_mutex_t)))
 
     cpdef acquire(self):
         cdef int status = pthread_mutex_lock(<pthread_mutex_t *> self.mem.buf)
