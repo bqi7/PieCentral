@@ -1,4 +1,4 @@
-var socket = io('http://127.0.0.1:5500');
+var socket = io('http://192.168.128.64:5500');
 var overTimer = true;
 var stageTimer = true;
 var timerA = true;

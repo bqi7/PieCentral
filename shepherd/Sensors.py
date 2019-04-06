@@ -10,7 +10,7 @@ from Utils import *
 # run ls /dev/tty* to obtain the two ACM ports.
 
 buttons_gold_port = "/dev/ttyACM1" # change to correct port
-buttons_blue_port = "/dev/ttyACM2" # change to correct port
+buttons_blue_port = "/dev/ttyACM0" # change to correct port
 
 alliance_mapping = {
     "gold": ALLIANCE_COLOR.GOLD,
@@ -24,8 +24,8 @@ def get_working_serial_ports(excludes: set):
     Returns a list of `serial.Serial` object.
     """
     import glob
-    # maybe_ports = set(glob.glob("/dev/ttyACM*"))
-    maybe_ports = set(glob.glob("/dev/tty.usb*"))
+    maybe_ports = set(glob.glob("/dev/ttyACM*"))
+    # maybe_ports = set(glob.glob("/dev/tty.usb*"))
     maybe_ports.difference_update(excludes)
 
     working = []
@@ -88,6 +88,7 @@ def recv_from_btn(ser, alliance_enum):
         
         if len(payload_list) == 1:
             continue
+        payload_list[1] = payload_list[1][:-2]
         print("<2> Message Received: ", payload_list, flush=True)
         button_num = payload_list[1]
         send_dictionary = {"alliance" : alliance_enum, "button" : button_num}

@@ -306,7 +306,7 @@ def set_master_robot(args):
     alliance = args["alliance"]
     team_number = args["team_num"]
     master_robots[alliance] = team_number
-    msg = {"alliance": alliance, "master": team_number}
+    msg = {"alliance": alliance, "team_number": int(team_number)}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
 
 def next_code():
@@ -405,7 +405,12 @@ def launch_button_triggered(args):
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
 
 def run_coding_challenge(alliance, code):
-    client = RuntimeClient("192.168.218.2" + str(master_robots[alliance]), 6020) # TODO: Save master robot info at beginning and pass in master robot address/port here
+    end = str(master_robots[alliance.name])
+    print(master_robots[alliance.name])
+    print(int(master_robots[alliance.name]))
+    if int(master_robots[alliance.name]) < 10:
+        end = "0" + end
+    client = RuntimeClient("192.168.218.2" + end, 6020) # TODO: Save master robot info at beginning and pass in master robot address/port here
     student_solution = client.run_coding_challenge(code)
     return student_solution
 

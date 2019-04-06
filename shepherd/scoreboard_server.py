@@ -8,7 +8,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, send # pylint:
 from Utils import *
 from LCM import *
 
-HOST_URL = "127.0.0.1"
+HOST_URL = "192.168.128.64" # "127.0.0.1"
 PORT = 5500
 
 app = Flask(__name__)
@@ -17,11 +17,11 @@ socketio = SocketIO(app, async_mode='gevent')
 
 @app.route('/')
 def hello():
-    return "go to /scoreboard.html"
+    return "go to /Scoreboard.html"
 
-@app.route('/scoreboard.html/')
+@app.route('/Scoreboard.html/')
 def scoreboard():
-    return render_template('scoreboard.html')
+    return render_template('Scoreboard.html')
 
 def receiver():
 

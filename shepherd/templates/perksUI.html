@@ -6,9 +6,11 @@
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
   <script type="text/javascript" src={{url_for( 'static', filename='socket.io.js' )}}></script>
 
+  <link rel="stylesheet" type="text/css" href={{url_for( 'static', filename="bootstrap.min.css")}} media="screen" />
   <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.js" crossorigin="anonymous"></script> -->
   <link rel="stylesheet" type="text/css" href={{url_for( 'static', filename="PerkSelection/css/perksUI.css")}} media="screen" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  <script src={{url_for( 'static', filename="jquery.min.js")}}></script>
   <script src={{url_for( 'static', filename="PerkSelection/js/perksUI.js")}}></script>
 </head>
 
@@ -24,9 +26,9 @@
       <div id="div_top_hypers">
         <ul id="masterrobot">
       <li><input type="radio" id="mr1" class="MasterRobot" name="master_robot" checked=true>
-        <label for="mr1" onmouseover="select('mr1')">Team Number 1</label></li>
+        <label for="mr1" id="mr1label" onmouseover="select('mr1')">Team Number 1</label></li>
         <li><input type="radio" id="mr2" class="MasterRobot" name="master_robot">
-           <label for="mr2" onmouseover="select('mr2')">Team Number 2</label></li>
+           <label for="mr2" id="mr2label" onmouseover="select('mr2')">Team Number 2</label></li>
         </ul>
     </div>
     </h5>

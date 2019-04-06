@@ -45,6 +45,7 @@ class DAWN_HEADER():
     MASTER = "master"
     IP_ADDRESS = "ip_address"
     ROBOT_STATE = "rs"
+    HEARTBEAT = "heartbeat"
     #TODO this^
 
 class RUNTIME_HEADER():
