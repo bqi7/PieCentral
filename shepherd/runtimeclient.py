@@ -42,3 +42,18 @@ class RuntimeClientManager:
             self.clients[team].set_alliance('blue')
         for team in self.gold_alliance:
             self.clients[team].set_alliance('gold')
+
+    def set_starting_zones(self, zones):
+        for team, zone in zip(self.blue_alliance + self.gold_alliance, zones):
+            self.clients[team].set_starting_zone(zone)
+
+    def set_mode(self, mode):
+        for client in self.clients.values():
+            client.set_mode(mode)
+
+    def get_challenge_solutions(self):
+        return {team: client.get_challenge_solution() for team, client in self.clients.items()}
+
+    def set_master_robots(self, blue_team, gold_team):
+        self.clients[blue_team].set_master()
+        self.clients[gold_team].set_master()

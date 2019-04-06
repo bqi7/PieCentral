@@ -7,8 +7,10 @@ from LCM import *
 from Timer import *
 from Utils import *
 from Code import *
-from runtimeclient import RuntimeClient
+from runtimeclient import RuntimeClientManager
 import Sheet
+
+clients = RuntimeClientManager((), ())
 
 __version__ = (1, 0, 0)
 
@@ -146,16 +148,20 @@ def to_auto(args):
     stage to be called and autonomous match timer should have begun.
     '''
     global game_state
-    global runtime_client_manager
+    global clients
     game_timer.start_timer(CONSTANTS.AUTO_TIME)
-    runtime_client_manager = connect_to_robots(team1, team2, team3, team4)
-    #creates a client_manager instance with mapings to clients for those 4 teams
-    #Jonathan
-    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.BLUE].team_1_number].set_starting_zone(starting_spots[1])
-    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.BLUE].team_2_number].set_starting_zone(starting_spots[2])
-    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.GOLD].team_1_number].set_starting_zone(starting_spots[3])
-    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.GOLD].team_2_number].set_starting_zone(starting_spots[4])
-    #Jonathan
+
+    clients = RuntimeClientManager((
+        alliances[ALLIANCE_COLOR.BLUE].team_1_number,
+        alliances[ALLIANCE_COLOR.BLUE].team_2_number,
+    ), (
+        alliances[ALLIANCE_COLOR.GOLD].team_1_number,
+        alliances[ALLIANCE_COLOR.GOLD].team_2_number,
+    ))
+    clients.set_master_robots(master_robots[ALLIANCE_COLOR.BLUE],
+                              master_robots[ALLIANCE_COLOR.GOLD])
+    clients.set_starting_zones(starting_spots)
+
     game_state = STATE.AUTO
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     enable_robots(True)
@@ -218,7 +224,7 @@ def reset(args=None):
     Should reset all state being tracked by Shepherd.
     ****THIS METHOD MIGHT NEED UPDATING EVERY YEAR BUT SHOULD ALWAYS EXIST****
     '''
-    global game_state, events
+    global game_state, events, clients
     game_state = STATE.SETUP
     Timer.reset_all()
     events = queue.Queue()
@@ -228,6 +234,7 @@ def reset(args=None):
         if alliance is not None:
             alliance.reset()
     starting_spots = ["unknown","unknown","unknown","unknown"]
+    clients = RobotClientManager((), ())
     disable_robots()
     buttons['gold_1'] = False
     buttons['gold_2'] = False
@@ -286,19 +293,14 @@ def enable_robots(autonomous):
     Sends message to Dawn to enable all robots. The argument should be a boolean
     which is true if we are entering autonomous mode
     '''
-    runtime_client_manager.set_mode("auto" if autonomous else "teleop")
-    #Jonathan
-
+    clients.set_mode("auto" if autonomous else "teleop")
 
 
 def disable_robots():
     '''
     Sends message to Dawn to disable all robots
     '''
-    runtime_client_manager.set_mode("idle")
-    #Jonathan
-
-
+    clients.set_mode("idle")
 
 
 ###########################################
@@ -309,8 +311,8 @@ def disable_robot(args):
     Send message to Dawn to disable the robots of team
     '''
     team_number = args["team_number"]
-    runtime_client_manager.clients[team_number].set_mode("idle")
-    #Jonathan
+    clients.clients[team_number].set_mode("idle")
+
 
 def set_master_robot(args):
     '''
@@ -340,9 +342,7 @@ def code_setup():
     code_effect = assign_code_effect()
 
 def bounce_code(args):
-    student_solutions = runtime_client_manager.get_student_solutions()
-    #returns dict of team numbers and answers, with None for no answer
-    #Jonathan
+    student_solutions = clients.get_challenge_solutions()
     for ss in student_solutions.keys():
         if student_solutions[ss] != None:
             alliance = None
@@ -425,9 +425,7 @@ def launch_button_triggered(args):
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
-        #send code to that team number
-        #Jonathan
+        clients.clients[master_robots[alliance.name]].run_challenge(code)
         student_decode_timer.start(STUDENT_DECODE_TIME)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -449,9 +447,8 @@ def auto_launch_button_triggered(args):
     if not buttons[temp_str]:
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
-        #send code to that team number
-        #Jonathan
+        clients.clients[master_robots[alliance]].run_challenge(code, timeout=1)
+
         student_decode_timer.start(STUDENT_DECODE_TIME)
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
@@ -475,9 +472,6 @@ def final_score(args):
 def overdrive_triggered(args):
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START)
     print("overdrive is active for the next 30 seconds")
-
-def set_starting_spots(args):
-
 
 ###########################################
 # Event to Function Mappings for each Stage
@@ -556,13 +550,11 @@ match_number = -1
 alliances = {ALLIANCE_COLOR.GOLD: None, ALLIANCE_COLOR.BLUE: None}
 events = None
 
-runtime_client_manager
-starting_spots = ["unknown","unknown","unknown","unknown"]
-
 ###########################################
 # Game Specific Variables
 ###########################################
 buttons = {'gold_1': False, 'gold_2': False, 'blue_1': False, 'blue_2': False}
+starting_spots = ["unknown","unknown","unknown","unknown"]
 launch_button_timer_gold_1 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
 launch_button_timer_gold_2 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
 launch_button_timer_blue_1 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
