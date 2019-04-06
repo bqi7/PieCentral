@@ -7,6 +7,7 @@ from LCM import *
 from Timer import *
 from Utils import *
 from Code import *
+from runtimeclient import RuntimeClient
 import Sheet
 
 __version__ = (1, 0, 0)
@@ -304,6 +305,7 @@ def set_master_robot(args):
     '''
     alliance = args["alliance"]
     team_number = args["team_num"]
+    master_robots[alliance] = team_number
     msg = {"alliance": alliance, "master": team_number}
     lcm_send(LCM_TARGETS.DAWN, DAWN_HEADER.MASTER, msg)
 
@@ -398,22 +400,29 @@ def launch_button_triggered(args):
     if not timer_dictionary[lb].is_running():
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        send_code(alliance, code)
+        student_solution = run_coding_challenge(alliance, code)
+        code_msg = {"alliance": alliance.name, "code": student_solution}
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, code_msg)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
 
-def send_code(alliance, code):
-    pass
+def run_coding_challenge(alliance, code):
+    client = RuntimeClient("192.168.218.2" + str(master_robots[alliance]), 6020) # TODO: Save master robot info at beginning and pass in master robot address/port here
+    student_solution = client.run_coding_challenge(code)
+    return student_solution
 
 def auto_launch_button_triggered(args):
     ## TODO: add ten score, mark button as dirty, sent to sc (both things)
+    ## Isn't this already done in auto_apply_code?
     alliance = alliances[args['alliance']]
     button = args["button"]
     temp_str = alliance.name + "_" + str(button)
     if not buttons[temp_str]:
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        send_code(alliance, code)
+        student_solution = run_coding_challenge(alliance, code)
+        code_msg = {"alliance": alliance.name, "code": student_solution}
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, code_msg)
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -524,6 +533,7 @@ launch_button_timer_blue_1 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
 launch_button_timer_blue_2 = Timer(TIMER_TYPES.LAUNCH_BUTTON)
 timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_button_timer_gold_2,
              'blue_1': launch_button_timer_blue_1, 'blue_2': launch_button_timer_blue_2}
+master_robots = {ALLIANCE_COLOR.BLUE: None, ALLIANCE_COLOR.GOLD: None}
 
 
 
