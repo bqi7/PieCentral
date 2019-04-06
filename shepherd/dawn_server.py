@@ -37,11 +37,12 @@ def receiver():
                 socketio.emit(DAWN_HEADER.CODES, event)
             elif eventDict["header"] == DAWN_HEADER.MASTER:
                 master_robots[eventDict["alliance"]] = eventDict["team_number"]
-                socketio.emit(DAWN_HEADER.MASTER, event)
-        print({"alliance": ALLIANCE_COLOR.BLUE, "team_number": master_robots[ALLIANCE_COLOR.BLUE]})
-        print({"alliance": ALLIANCE_COLOR.GOLD, "team_number": master_robots[ALLIANCE_COLOR.GOLD]})
-        socketio.emit(DAWN_HEADER.MASTER, json.dumps({"alliance": ALLIANCE_COLOR.BLUE, "team_number": master_robots[ALLIANCE_COLOR.BLUE]}))
-        socketio.emit(DAWN_HEADER.MASTER, json.dumps({"alliance": ALLIANCE_COLOR.GOLD, "team_number": master_robots[ALLIANCE_COLOR.GOLD]}))
+                # socketio.emit(DAWN_HEADER.MASTER, event)
+        # print({"alliance": ALLIANCE_COLOR.BLUE, "team_number": master_robots[ALLIANCE_COLOR.BLUE]})
+        # print({"alliance": ALLIANCE_COLOR.GOLD, "team_number": master_robots[ALLIANCE_COLOR.GOLD]})
+        socketio.emit(DAWN_HEADER.MASTER, master_robots)
+        # socketio.emit(DAWN_HEADER.MASTER, json.dumps({"alliance": ALLIANCE_COLOR.BLUE, "team_number": master_robots[ALLIANCE_COLOR.BLUE]}))
+        # socketio.emit(DAWN_HEADER.MASTER, json.dumps({"alliance": ALLIANCE_COLOR.GOLD, "team_number": master_robots[ALLIANCE_COLOR.GOLD]}))
         socketio.emit(DAWN_HEADER.HEARTBEAT, json.dumps({"heartbeat" : 1}))
         socketio.sleep(1)
 
