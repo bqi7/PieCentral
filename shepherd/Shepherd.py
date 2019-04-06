@@ -428,9 +428,9 @@ def auto_launch_button_triggered(args):
     if not buttons[temp_str]:
         msg = {"alliance": alliance.name, "button": button}
         code = next_code()
-        student_solution = run_coding_challenge(alliance, code)
-        code_msg = {"alliance": alliance.name, "code": student_solution}
-        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, code_msg)
+        runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
+        #send code to that team number
+        #Jonathan
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
