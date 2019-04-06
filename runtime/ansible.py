@@ -1,5 +1,6 @@
 """Functions and classes for communication with Dawn."""
 
+import asyncio
 import socket
 import threading
 import time
@@ -484,14 +485,6 @@ class TCPClass(AnsibleHandler):
                     continue
                 if unpackaged_data.header == notification_pb2.Notification.STUDENT_SENT:
                     state_queue.put([SM_COMMANDS.STUDENT_UPLOAD, []])
-                if unpackaged_data.header == notification_pb2.Notification.GAMECODE_TRANSMISSION:
-                    state_queue.put([SM_COMMANDS.SET_VAL,
-                                     [list(unpackaged_data.gamecode_solutions),
-                                      ["gamecodes_check"], False]])
-                    state_queue.put([SM_COMMANDS.SET_VAL,
-                                     [list(unpackaged_data.gamecodes), ["gamecodes"], False]])
-                    state_queue.put([SM_COMMANDS.SET_VAL,
-                                     [list(unpackaged_data.rfids), ["rfids"], False]])
 
         except ConnectionResetError:
             bad_things_queue.put(
@@ -508,3 +501,88 @@ class TCPClass(AnsibleHandler):
                     str(e),
                     event=BAD_EVENTS.TCP_ERROR,
                     printStackTrace=True))
+
+
+class FieldControlServer:
+    def __init__(self, state_queue):
+        self.state_queue = state_queue
+        self.access = asyncio.Lock()
+        self.reset()
+
+    def set_alliance(self, alliance: str):
+        self.state_queue.put([SM_COMMANDS.SET_TEAM, [alliance]])
+
+    def set_starting_zone(self, zone: str):
+        self.state_queue.put([SM_COMMANDS.SET_VAL, [zone, ['starting_zone']]])
+
+    def set_mode(self, mode: str):
+        modes = {
+            'idle': SM_COMMANDS.ENTER_IDLE,
+            'auto': SM_COMMANDS.ENTER_AUTO,
+            'teleop': SM_COMMANDS.ENTER_TELEOP,
+            'estop': SM_COMMANDS.EMERGENCY_STOP,
+        }
+        self.state_queue.put([modes[mode], []])
+
+    def set_master(self, master: bool):
+        self.state_queue.put([SM_COMMANDS.SET_VAL, [master, ['master']]])
+
+    def load_coding_challenges(self, student_code):
+        def stub_out(funcname):
+            def stub(*_args, **_kwargs):
+                student_code.print(f'"{funcname}" not defined.'
+                                   'Unable to run the coding challenge.')
+                return lambda x: None
+            return stub
+
+        def get_or_stub_out(funcname):
+            try:
+                return getattr(student_code, funcname)
+            except AttributeError:
+                return stub_out(funcname)
+
+        self.print = student_code.print
+        self.coding_challenges.clear()
+        self.coding_challenges.extend([
+            get_or_stub_out('tennis_ball'),
+            get_or_stub_out('remove_duplicates'),
+            get_or_stub_out('rotate'),
+            get_or_stub_out('next_fib'),
+            get_or_stub_out('most_common'),
+            get_or_stub_out('get_coins'),
+        ])
+
+    async def run_challenge(self, seed, timeout=1.0):
+        async with self.lock:
+            try:
+                async def chain():
+                    solution = seed
+                    for challenge in self.coding_challenges:
+                        try:
+                            solution = challenge(solution)
+                        except Exception as exc:
+                            self.print(str(exc))
+                            return
+                    return solution
+                self.solution = await asyncio.wait_for(chain, timeout)
+            except asyncio.TimeoutError:
+                self.solution = None
+
+    async def get_challenge_solution(self):
+        async with self.lock:
+            return self.solution
+
+    def reset(self):
+        print('Reset FC server.')
+        self.print = print
+        self.solution, self.coding_challenges = None, []
+
+
+async def run_field_control_server(server, host, port, state_queue):
+    try:
+        server = await asyncio.start_server(server, host=host, port=port)
+        async with server:
+            print('Starting field control server.')
+            await server.serve_forever()
+    except asyncio.CancelledError:
+        print('Gracefully shutting down field control server.')
