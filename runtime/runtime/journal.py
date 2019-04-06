@@ -157,9 +157,6 @@ def make_colorizer(use_color: bool) -> Callable[[str, ConsoleCode, bool], str]:
 
 
 def separate_optional_attrs(record: dict) -> Tuple[dict, dict]:
-    """
-    >>>
-    """
     primitives, objs = {}, {}
     for attr, value in record.items():
         if attr not in RuntimeFormatter.REQUIRED_ATTRS:

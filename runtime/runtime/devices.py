@@ -6,7 +6,7 @@ This module manages Smart Sensor communication.
 __all__ = ['SmartSensorObserver']
 
 import asyncio
-from collections import namedtuple
+import collections
 from typing import List, Callable, Generator
 import ctypes
 import os
@@ -14,16 +14,16 @@ import socket
 import serial
 import time
 
-import posix_ipc
 import yaml
+from runtime.buffer import SharedMemoryBuffer
+import runtime.journal
 from runtime.store import Parameter
 
 # from serial.aio import create_serial_connection
 # from serial.tools.list_ports import comports
 # Other modules in runtime package
-# from runtime.journal import make_logger
-#
-# LOGGER = make_logger(__name__)
+
+LOGGER = runtime.journal.make_logger(__name__)
 
 try:
     from pyudev import Context, Devices, Device, Monitor, MonitorObserver
@@ -142,39 +142,6 @@ def is_sensor(device: Device) -> bool:
         return False
 
 
-def get_device_dict(schema_path):
-    """
-    Returns a dict that other processes can use to instantiate DeviceStructure types
-    corresponding to the available device types. Includes GamePad and RobotState.
-    """
-    schema = load_schema(schema_path)
-    device_dict = {}
-    for name, params in schema['smartsensor'].items(): # put all the smartsensors in the dict
-        device_dict[name] = params
-    for name, params in schema.items(): # put GamePad and FieldControl in the dict
-        if not name == 'smartsensor':
-            device_dict[name] = params
-    return device_dict
-
-
-def load_schema(schema_path):
-    """
-    Opens 'devices.yaml', puts default parameters if they're missing.
-    Returns validated schema of all devices as a dictinoary.
-    """
-    with open(schema_path, 'r') as schema_file:
-        schema = yaml.load(schema_file)
-    for device in schema['smartsensor'].values():
-        for param in device['params']:
-            if 'read' not in param:
-                param['read'] = True
-            if 'write' not in param:
-                param['write'] = False
-            # TODO: add default lower and upper bounds
-    # print(base_schema) # what does this do??
-    return schema
-
-
 class SmartSensorObserver(MonitorObserver):
     subsystem, device_type = 'usb', 'usb_interface'
 
@@ -217,16 +184,30 @@ def cli():
     observer.join()
 
 
-class SmartSensorService:
+async def start():
+    from runtime.networking import ClientCircuitbreaker
+    client = ClientCircuitbreaker(host='127.0.0.1', port=6020)
+    await client.set_alliance('blue')
+    while True:
+        await asyncio.sleep(1)
+        LOGGER.info(str(await client.get_field_parameters()))
+
+
+class SmartSensorService(collections.UserDict):
     def __init__(self):
         self.access = asyncio.Lock()
-        self.context = Context()
+        self.buffers = {}
+        super().__init__()
 
-    async def register_device(self):
-        pass
+    async def register_device(self, uid: str):
+        async with self.access:
+            self.buffers[uid] = None
 
     async def unregister_device(self):
-        pass
+        async with self.access:
+            del self.buffers[uid]
+
+    # async def
 
 
 if __name__ == '__main__':
