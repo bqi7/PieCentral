@@ -334,9 +334,19 @@ def bounce_code(args):
     student_solutions = runtime_client_manager.get_student_solutions()
     #returns dict of team numbers and answers, with None for no answer
     #Jonathan
-    for
-    msg = {"alliance":args["alliance"], "result":args["result"]}
-    lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
+    for ss in student_solutions.keys():
+        if student_solutions[ss] != None:
+            alliance = None
+            if alliances[ALLIANCE_COLOR.BLUE].team_1_number == ss:
+                alliance = ALLIANCE_COLOR.BLUE
+            if alliances[ALLIANCE_COLOR.GOLD].team_1_number == ss:
+                alliance = ALLIANCE_COLOR.GOLD
+            if alliances[ALLIANCE_COLOR.BLUE].team_2_number == ss:
+                alliance = ALLIANCE_COLOR.BLUE
+            if alliances[ALLIANCE_COLOR.GOLD].team_2_number == ss:
+                alliance = ALLIANCE_COLOR.GOLD
+        msg = {"alliance":alliance, "result":student_solution[ss]}
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
 
 def apply_code(args):
     '''
@@ -409,8 +419,7 @@ def launch_button_triggered(args):
         runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
         #send code to that team number
         #Jonathan
-        timer.start(1)
-        #Matthew
+        student_decode_timer.start(STUDENT_DECODE_TIME)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
 
@@ -431,6 +440,7 @@ def auto_launch_button_triggered(args):
         runtime_client_manager.run_coding_challenge(master_robots[alliance], code)
         #send code to that team number
         #Jonathan
+        student_decode_timer.start(STUDENT_DECODE_TIME)
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
@@ -545,7 +555,7 @@ timer_dictionary = {'gold_1': launch_button_timer_gold_1, 'gold_2': launch_butto
              'blue_1': launch_button_timer_blue_1, 'blue_2': launch_button_timer_blue_2}
 master_robots = {ALLIANCE_COLOR.BLUE: None, ALLIANCE_COLOR.GOLD: None}
 
-
+student_decode_timer = Timer(TIMER_TYPES.STUDENT_DECODE)
 
 overdrive_timer = Timer(TIMER_TYPES.OVERDRIVE_DELAY)
 codes_used = []
