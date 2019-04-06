@@ -81,11 +81,14 @@ def to_setup(args):
     '''
     global match_number
     global game_state
+    global starting_spots
 
-    b1_name, b1_num = args["b1name"], args["b1num"]
-    b2_name, b2_num = args["b2name"], args["b2num"]
-    g1_name, g1_num = args["g1name"], args["g1num"]
-    g2_name, g2_num = args["g2name"], args["g2num"]
+    b1_name, b1_num, b1_starting_spot = args["b1name"], args["b1num"], args["b1_starting_spot"]
+    b2_name, b2_num, b2_starting_spot = args["b2name"], args["b2num"], args["b2_starting_spot"]
+    g1_name, g1_num, g1_starting_spot = args["g1name"], args["g1num"], args["g1_starting_spot"]
+    g2_name, g2_num, g2_starting_spot = args["g2name"], args["g2num"], args["g2_starting_spot"]
+
+    starting_spots = [b1_starting_spot, b2_starting_spot, g1_starting_spot, g2_starting_spot]
 
     if game_state == STATE.END:
         flush_scores()
@@ -147,6 +150,11 @@ def to_auto(args):
     game_timer.start_timer(CONSTANTS.AUTO_TIME)
     runtime_client_manager = connect_to_robots(team1, team2, team3, team4)
     #creates a client_manager instance with mapings to clients for those 4 teams
+    #Jonathan
+    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.BLUE].team_1_number].set_starting_zone(starting_spots[1])
+    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.BLUE].team_2_number].set_starting_zone(starting_spots[2])
+    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.GOLD].team_1_number].set_starting_zone(starting_spots[3])
+    runtime_client_manager.clients[alliances[ALLIANCE_COLOR.GOLD].team_2_number].set_starting_zone(starting_spots[4])
     #Jonathan
     game_state = STATE.AUTO
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
@@ -219,6 +227,7 @@ def reset(args=None):
     for alliance in alliances.values():
         if alliance is not None:
             alliance.reset()
+    starting_spots = ["unknown","unknown","unknown","unknown"]
     disable_robots()
     buttons['gold_1'] = False
     buttons['gold_2'] = False
@@ -467,6 +476,9 @@ def overdrive_triggered(args):
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START)
     print("overdrive is active for the next 30 seconds")
 
+def set_starting_spots(args):
+
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -545,6 +557,7 @@ alliances = {ALLIANCE_COLOR.GOLD: None, ALLIANCE_COLOR.BLUE: None}
 events = None
 
 runtime_client_manager
+starting_spots = ["unknown","unknown","unknown","unknown"]
 
 ###########################################
 # Game Specific Variables
