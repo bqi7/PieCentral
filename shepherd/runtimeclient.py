@@ -91,9 +91,10 @@ print('Robot answer:', client.get_challenge_solution())
 print('Authoritative answer:', decode(x))
 """
 
-client = RuntimeClient('192.168.128.115', 6020)
-client.connect()
-client.set_mode('idle')
+# client = RuntimeClient('192.168.128.115', 6020)
+# client.connect()
+# client.set_mode('idle')
+
 # print('OK!')
 # client.set_alliance('blue')
 # client.set_starting_zone('left')

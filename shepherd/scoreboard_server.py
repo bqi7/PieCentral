@@ -8,7 +8,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, send # pylint:
 from Utils import *
 from LCM import *
 
-HOST_URL = "192.168.128.64" # "127.0.0.1"
+HOST_URL = "127.0.0.1" # "192.168.128.64" # "127.0.0.1"
 PORT = 5500
 
 app = Flask(__name__)
