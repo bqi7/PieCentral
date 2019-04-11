@@ -31,7 +31,7 @@ class SHEPHERD_HEADER():
     TEAM_RETRIEVAL = "team_retrieval"
         # TEAM_RETRIEVAL{}
     TRIGGER_OVERDRIVE = "trigger_overdrive"
-        #TRIGGER_OVERDRIVE{}
+        #TRIGGER_OVERDRIVE{size}
 
 # pylint: disable=invalid-name
 class SENSORS_HEADER():
@@ -103,6 +103,7 @@ class CONSTANTS():
     TWIST_CHANCE = .3 #a value 0<x<1
     COOLDOWN = 30
     STUDENT_DECODE_TIME = 1
+    CRATE_SIZES = ["fun", "full", "king"]
 
 # pylint: disable=invalid-name
 class ALLIANCE_COLOR():

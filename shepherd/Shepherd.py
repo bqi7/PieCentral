@@ -241,7 +241,7 @@ def reset(args=None):
     buttons['blue_1'] = False
     buttons['blue_2'] = False
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.RESET)
-    lcm_send(LCM_TARGETS.DAWN,DAWN_HEADER.RESET) 
+    lcm_send(LCM_TARGETS.DAWN,DAWN_HEADER.RESET)
     print("RESET MATCH, MOVE TO SETUP")
 
 def get_match(args):
@@ -485,8 +485,10 @@ def final_score(args):
 
 
 def overdrive_triggered(args):
-    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START)
-    print("overdrive is active for the next 30 seconds")
+    size = random.choice(CONSTANTS.CRATE_SIZES)
+    msg = {"size": size}
+    lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START,msg)
+    print("overdrive is active for the next 30 seconds for "+size+" size crates.")
 
 ###########################################
 # Event to Function Mappings for each Stage
