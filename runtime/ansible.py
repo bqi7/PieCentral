@@ -534,6 +534,9 @@ def load_coding_challenges():
     ], getattr(student_code, 'print', lambda *args, **kwargs: None)
 
 
+solution = None
+
+
 class FieldControlServer:
     def __init__(self, state_queue):
         self.state_queue = state_queue
@@ -562,23 +565,24 @@ class FieldControlServer:
             coding_challenges, _print = load_coding_challenges()
             try:
                 async def chain():
+                    global solution
                     solution = seed
                     for challenge in coding_challenges:
                         try:
                             solution = challenge(solution)
                         except Exception as exc:
                             return
-                    return solution
-                self.solution = await asyncio.wait_for(chain(), timeout)
+                await asyncio.wait_for(chain(), timeout)
             except asyncio.TimeoutError:
-                self.solution = None
+                global solution
+                solution = None
 
     def run_challenge(self, seed, timeout=1):
         asyncio.ensure_future(self.run_challenge_blocking(seed, timeout))
 
     async def get_challenge_solution(self):
         async with self.access:
-            return self.solution
+            return solution
 
 
 async def run_field_control_server(server, host, port, state_queue):
