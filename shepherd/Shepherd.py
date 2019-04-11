@@ -234,13 +234,14 @@ def reset(args=None):
         if alliance is not None:
             alliance.reset()
     starting_spots = ["unknown","unknown","unknown","unknown"]
-    clients = RobotClientManager((), ())
+    clients = RuntimeClientManager((), ())
     disable_robots()
     buttons['gold_1'] = False
     buttons['gold_2'] = False
     buttons['blue_1'] = False
     buttons['blue_2'] = False
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.RESET)
+    lcm_send(LCM_TARGETS.DAWN,DAWN_HEADER.RESET) 
     print("RESET MATCH, MOVE TO SETUP")
 
 def get_match(args):
@@ -351,16 +352,17 @@ def code_setup():
 
 def bounce_code(args):
     student_solutions = clients.get_challenge_solutions()
+    print(student_solutions)
     for ss in student_solutions.keys():
         if student_solutions[ss] != None:
             alliance = None
-            if alliances[ALLIANCE_COLOR.BLUE].team_1_number == ss:
+            if int(alliances[ALLIANCE_COLOR.BLUE].team_1_number) == int(ss):
                 alliance = ALLIANCE_COLOR.BLUE
-            if alliances[ALLIANCE_COLOR.GOLD].team_1_number == ss:
+            if int(alliances[ALLIANCE_COLOR.GOLD].team_1_number) == int(ss):
                 alliance = ALLIANCE_COLOR.GOLD
-            if alliances[ALLIANCE_COLOR.BLUE].team_2_number == ss:
+            if int(alliances[ALLIANCE_COLOR.BLUE].team_2_number) == int(ss):
                 alliance = ALLIANCE_COLOR.BLUE
-            if alliances[ALLIANCE_COLOR.GOLD].team_2_number == ss:
+            if int(alliances[ALLIANCE_COLOR.GOLD].team_2_number) == int(ss):
                 alliance = ALLIANCE_COLOR.GOLD
             msg = {"alliance": alliance, "result": student_solutions[ss]}
             lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
@@ -371,6 +373,7 @@ def auto_apply_code(args):
     '''
     alliance = alliances[args["alliance"]]
     answer = int(args["answer"])
+    print('Codegen answers:', answer, code_solution)
     if (answer is not None and answer in code_solution.values()):
         code = [k for k, v in code_solution.items() if v == answer][0]
         alliance.change_score(10)
@@ -444,7 +447,7 @@ def launch_button_triggered(args):
         client = clients.clients[int(master_robots[alliance.name])]
         if client:
             client.run_challenge(code)
-        student_decode_timer.start(STUDENT_DECODE_TIME)
+        student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
         timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
 
@@ -461,7 +464,7 @@ def auto_launch_button_triggered(args):
         if client:
             client.run_challenge(code, timeout=1)
 
-        student_decode_timer.start(STUDENT_DECODE_TIME)
+        student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
         buttons[temp_str] = True
         msg = {"alliance": alliance.name, "button": button}
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)

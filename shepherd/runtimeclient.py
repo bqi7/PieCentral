@@ -79,10 +79,19 @@ class RuntimeClientManager:
             gold_master.set_master()"""
 
 
-# client = RuntimeClient('0.0.0.0', 6020)
-# client.connect()
+"""
+client = RuntimeClient('192.168.128.107', 6020)
+client.connect()
+import time
+from Code import decode
+x = 1
+client.run_challenge(x)
+time.sleep(0.2)
+print('Robot answer:', client.get_challenge_solution())
+print('Authoritative answer:', decode(x))
+"""
+
 # print('OK!')
-# import time
 # client.set_alliance('blue')
 # client.set_starting_zone('left')
 # client.set_mode('teleop')
