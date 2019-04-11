@@ -62,9 +62,10 @@ socket.on("reset_timers", function() {
   resetTimers();
 })
 
-socket.on("overdrive_start", function() {
+socket.on("overdrive_start", function(data) {
+  block = JSON.parse(data).size
   overTimer = true;
-  startOverdrive(30);
+  startOverdrive(30, block);
 })
 
 
@@ -231,7 +232,7 @@ function setImageVisible(id, visible) {
   $(id).css("visibility", (visible ? 'visible' : 'hidden'));
 }
 
-function progress(timeleft, timetotal, $element) {
+function progress(timeleft, timetotal, $element, block) {
     var progressBarWidth = timeleft * $element.width() / timetotal;
     if (timeleft == timetotal) {
         $element.find('div').animate({ width: progressBarWidth }, 0, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
@@ -249,6 +250,7 @@ function progress(timeleft, timetotal, $element) {
     } else {
       $element.find('div').animate({ width: 0 }, 1000, 'linear').html("")
       $('#overdriveText').css('color', 'white');
+      $('#overdriveText').html("OVERDRIVE!!! " + block + " size!!!");
     }
 };
 
