@@ -233,6 +233,7 @@ def reset(args=None):
     for alliance in alliances.values():
         if alliance is not None:
             alliance.reset()
+    send_connections(None)
     starting_spots = ["unknown","unknown","unknown","unknown"]
     clients = RuntimeClientManager((), ())
     disable_robots()
@@ -490,6 +491,29 @@ def overdrive_triggered(args):
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START,msg)
     print("overdrive is active for the next 30 seconds for "+size+" size crates.")
 
+def set_connections(args):
+    team = args["team_number"]
+    connection = boolean(args["connection"])
+    dirty = False
+    for alliance in alliances.values:
+        if team == alliance.team_1_number:
+            if alliance.team_1_connection != connection:
+                alliance.team_1_connection = connection
+                dirty = True
+        if team == alliance.team_2_number:
+            if alliance.team_2_connection != connection:
+                alliance.team_2_connection = connection
+                dirty = True
+    if dirty:
+        send_connections(None)
+
+def send_connections(args):
+    msg = {"g_1_connection" : alliances[ALLIANCE_COLOR.GOLD].team_1_connection,
+           "g_2_connection" : alliances[ALLIANCE_COLOR.GOLD].team_2_connection,
+           "b_1_connection" : alliances[ALLIANCE_COLOR.BLUE].team_1_connection,
+           "b_2_connection" : alliances[ALLIANCE_COLOR.BLUE].team_2_connection}
+    lcm_send(LCM_TARGETS.UI, UI_HEADER.CONNECTIONS, msg)
+
 ###########################################
 # Event to Function Mappings for each Stage
 ###########################################
@@ -497,14 +521,18 @@ def overdrive_triggered(args):
 setup_functions = {
     SHEPHERD_HEADER.SETUP_MATCH: to_setup,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
-    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 }
 
 perk_selection_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.APPLY_PERKS: apply_perks,
     SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
-    SHEPHERD_HEADER.STAGE_TIMER_END: to_auto_wait
+    SHEPHERD_HEADER.STAGE_TIMER_END: to_auto_wait,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 }
 
 auto_wait_functions = {
@@ -514,7 +542,9 @@ auto_wait_functions = {
     SHEPHERD_HEADER.MASTER_ROBOT: set_master_robot,
     SHEPHERD_HEADER.CODE_APPLICATION : auto_apply_code,
     SHEPHERD_HEADER.GET_SCORES : get_score,
-    SHEPHERD_HEADER.START_NEXT_STAGE : to_auto
+    SHEPHERD_HEADER.START_NEXT_STAGE : to_auto,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 }
 
 auto_functions = {
@@ -523,7 +553,9 @@ auto_functions = {
     SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED : auto_launch_button_triggered,
     SHEPHERD_HEADER.CODE_APPLICATION : auto_apply_code,
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
-    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
+    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 
     }
 
@@ -531,7 +563,9 @@ wait_functions = {
     SHEPHERD_HEADER.RESET_MATCH : reset,
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.GET_SCORES : get_score,
-    SHEPHERD_HEADER.START_NEXT_STAGE : to_teleop
+    SHEPHERD_HEADER.START_NEXT_STAGE : to_teleop,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 }
 
 teleop_functions = {
@@ -542,7 +576,9 @@ teleop_functions = {
     SHEPHERD_HEADER.ROBOT_OFF : disable_robot,
     SHEPHERD_HEADER.END_EXTENDED_TELEOP : to_end,
     SHEPHERD_HEADER.TRIGGER_OVERDRIVE : overdrive_triggered,
-    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code
+    SHEPHERD_HEADER.CODE_RETRIEVAL : bounce_code,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 
 }
 
@@ -552,7 +588,9 @@ end_functions = {
     SHEPHERD_HEADER.GET_SCORES : get_score,
     SHEPHERD_HEADER.SETUP_MATCH : to_setup,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
-    SHEPHERD_HEADER.FINAL_SCORE : final_score
+    SHEPHERD_HEADER.FINAL_SCORE : final_score,
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
+    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
 }
 
 ###########################################

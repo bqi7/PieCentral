@@ -27,6 +27,8 @@ class Alliance:
         self.perk_2 = 0
         self.perk_3 = 0
         self.can_twist = True
+        self.team_1_connection = False
+        self.team_2_connection = False
 
     def change_score(self, amount):
         """ changes score of this alliance by Amount,
@@ -42,6 +44,8 @@ class Alliance:
         self.perk_2 = 0
         self.perk_3 = 0
         self.can_twist = True
+        self.team_1_connection = False
+        self.team_2_connection = False
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.SCORE,
                  {"alliance" : self.name, "score" : math.floor(self.score)})
         #TODO: Send info to sensors about reset
