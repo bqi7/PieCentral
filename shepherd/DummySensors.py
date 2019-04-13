@@ -28,6 +28,12 @@ def sender():
         "spoil" : EFFECTS.SPOILED_CANDY
     }
 
+    input_to_size = {
+        "fun" : "fun",
+        "full" : "full",
+        "king" : "king"
+    }
+
     while True:
         new_input = input_to_header.get(input("Command: {launch, code, effect, overdrive, timer, perk} "))
         if new_input == SHEPHERD_HEADER.LAUNCH_BUTTON_TRIGGERED:
@@ -56,7 +62,11 @@ def sender():
             lcm_send(LCM_TARGETS.SCOREBOARD, new_input, {"alliance" : alliance, "effect" : effect})
 
         elif new_input == SCOREBOARD_HEADER.OVERDRIVE_START:
-            lcm_send(LCM_TARGETS.SCOREBOARD, new_input, {})
+            size = input_to_size.get(input("Size: fun full king "))
+            if size is None:
+                print("Invalid input")
+                continue
+            lcm_send(LCM_TARGETS.SCOREBOARD, new_input, {"size": size})
 
         elif new_input == SCOREBOARD_HEADER.STAGE_TIMER_START:
             try:

@@ -1,4 +1,4 @@
-var socket = io('http://192.168.128.64:5500');
+var socket = io('http://127.0.0.1:5500') // io('http://192.168.128.64:5500');
 var overTimer = true;
 var stageTimer = true;
 var timerA = true;
@@ -169,7 +169,7 @@ TELEOP = "teleop"
 END = "end"
 
 stage_names = {"setup": "Setup", "perk_selection": "Perk Selection", 
-               "auto_wait": "Perk Selection", "auto": "Autonomous Period", "wait": "Autonomouse Period",
+               "auto_wait": "Perk Selection", "auto": "Autonomous Period", "wait": "Autonomousse Period",
                "teleop": "Teleop Period", "end": "Post-Match"}
 
 function setStageName(stage) {
@@ -232,7 +232,7 @@ function setImageVisible(id, visible) {
   $(id).css("visibility", (visible ? 'visible' : 'hidden'));
 }
 
-function progress(timeleft, timetotal, $element, block) {
+function progress(timeleft, timetotal, $element) {
     var progressBarWidth = timeleft * $element.width() / timetotal;
     if (timeleft == timetotal) {
         $element.find('div').animate({ width: progressBarWidth }, 0, 'linear').html(Math.floor(timeleft/60) + ":"+ pad(timeleft%60));
@@ -250,12 +250,13 @@ function progress(timeleft, timetotal, $element, block) {
     } else {
       $element.find('div').animate({ width: 0 }, 1000, 'linear').html("")
       $('#overdriveText').css('color', 'white');
-      $('#overdriveText').html("OVERDRIVE!!! " + block + " size!!!");
+      // $('#overdriveText').html("OVERDRIVE!!! " + block + " size!!!");
     }
 };
 
-function startOverdrive(time) {
+function startOverdrive(time, block) {
     overTimer = true;
+    $('#overdriveText').html("OVERDRIVE - " + block + " size!!!");
     $('#overdriveText').css('color', 'DarkGreen');
     progress(time, time, $('#progressBar'));
 }
