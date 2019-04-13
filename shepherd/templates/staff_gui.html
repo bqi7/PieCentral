@@ -178,33 +178,38 @@
         socket.emit('ui-to-server-reset-match')
       });
 
-      /* Heartbeat
-      $("#toggle-all").click(
-      function() {
-        toggleLed($(".heartbeat-light"));
+      socket.on('server-to-ui-connections', function(data) {
+        parsed_data = JSON.parse(data)
+        toggleBlue1(parsed_data.b_1_connection)
+        toggleBlue2(parsed_data.b_2_connection)
+        toggleGold1(parsed_data.g_1_connection)
+        toggleGold2(parsed_data.g_2_connection)
       });
 
-      function toggleBlue1() {
-        toggleLed($(".blue-1-hb"));
+      // Heartbeat
+      function toggleBlue1(connected) {
+        toggleLed($(".blue-1-hb"), connected);
       }
 
-      function toggleBlue2() {
-        toggleLed($(".blue-2-hb"));
+      function toggleBlue2(connected) {
+        toggleLed($(".blue-2-hb"), connected);
       }
 
-      function toggleGold1() {
-        toggleLed($(".gold-1-hb"));
+      function toggleGold1(connected) {
+        toggleLed($(".gold-1-hb"), connected);
       }
 
-      function toggleGold2() {
-        toggleLed($(".gold-2-hb"));
+      function toggleGold2(connected) {
+        toggleLed($(".gold-2-hb"), connected);
       }
 
-      function toggleLed(lightName) {
-        lightName.toggleClass("led-red");
+      function toggleLed(lightName, connected) {
+        if (connected) {
+          lightName.toggleClass("led-red", false);
+        } else {
+          lightName.toggleClass("led-red", true);
+        }
       }
-      */
-
     });
   </script>
 </head>
@@ -223,9 +228,6 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="../score_adjustment.html">Score Adjustment</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="../RFID_control.html">RFID Control</a>
       </li>
     </ul>
   </div>
