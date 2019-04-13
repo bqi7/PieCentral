@@ -38,6 +38,9 @@ class SHEPHERD_HEADER():
     ROBOT_CONNECTION_STATUS = "robot_connection_status"
         #ROBOT_CONNECTION_STATUS{team_number, connection[True/False]}
 
+    REQUEST_CONNECTIONS = "request_connections"
+        #REQUEST_CONNECTIONS{}
+
 # pylint: disable=invalid-name
 class SENSORS_HEADER():
     FAILED_POWERUP = "failed_powerup"
