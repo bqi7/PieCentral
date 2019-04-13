@@ -6,6 +6,8 @@ class SHEPHERD_HEADER():
 
     GET_MATCH_INFO = "get_match_info"
     SETUP_MATCH = "setup_match"
+    GET_CONNECTION_STATUS = "get_connection_status"
+        #{}
 
     STOP_ROBOT = "stop_robot"
 
@@ -32,6 +34,9 @@ class SHEPHERD_HEADER():
         # TEAM_RETRIEVAL{}
     TRIGGER_OVERDRIVE = "trigger_overdrive"
         #TRIGGER_OVERDRIVE{size}
+
+    ROBOT_CONNECTION_STATUS = "robot_connection_status"
+        #ROBOT_CONNECTION_STATUS{team_number, connection[True/False]}
 
 # pylint: disable=invalid-name
 class SENSORS_HEADER():
@@ -60,6 +65,8 @@ class RUNTIME_HEADER():
 class UI_HEADER():
     TEAMS_INFO = "teams_info"
     SCORES = "scores"
+    CONNECTIONS = "connections"
+        #CONNECTIONS{g_1_connection[True/False], g_2_connection[True/False], b_1_connection[True/False], b_2_connection[True/False]}
 
 # pylint: disable=invalid-name
 class SCOREBOARD_HEADER():
@@ -97,7 +104,7 @@ class CONSTANTS():
     AUTO_TIME = 30 # 30
     TELEOP_TIME = 180 # 180
     OVERDRIVE_TIME = 30
-    SPREADSHEET_ID = "1F_fRPZ2Whe3f8ssniqh1uWFfc8dU8LfElY51R4EtJDY"
+    SPREADSHEET_ID = "1tqjoym6MBpzwC2FqioR32s7oOLxbZfY5HrGunVuELMU"
     CSV_FILE_NAME = "Sheets/schedule.csv"
     TAFFY_TIME = 15
     TWIST_CHANCE = .3 #a value 0<x<1
