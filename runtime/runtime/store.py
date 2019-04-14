@@ -8,7 +8,6 @@ import enum
 import collections
 from functools import lru_cache
 import time
-import posix_ipc
 from runtime import __version__
 import runtime.journal
 from runtime.util import read_conf_file, RuntimeBaseException
@@ -167,14 +166,6 @@ class StoreService(collections.UserDict):
         async with self.access:
             del self.device_names[uid]
             await self.write_device_names()
-
-    async def register_device(self, uid: str, description):
-        async with self.access:
-            pass  # TODO
-
-    async def unregister_device(self, uid: str):
-        async with self.access:
-            pass  # TODO
 
 
 def validate_param_value(param: Parameter, value):

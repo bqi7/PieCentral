@@ -6,7 +6,7 @@ Example:
     them::
 
         $ echo '{
-        >   "name": "runtime.monitoring",
+        >   "name": "runtime.journal",
         >   "level": 30,
         >   "pid": 460,
         >   "time": "Mon Apr 10 20:26:26 2017",
@@ -17,11 +17,11 @@ Example:
         >       "083940": 129384
         >     }
         >   }
-        > }' | tr '\n' ' ' | python -m runtime.monitoring
+        > }' | tr '\n' ' ' | python -m runtime.journal
 
     This gives the following output::
 
-        [Mon Apr 10 20:26:26 2017] WARN runtime.monitoring: Logging OK (pid=460)
+        [Mon Apr 10 20:26:26 2017] WARN runtime.journal: Logging OK (pid=460)
           {
             "readings": [
               1.1,

@@ -89,7 +89,7 @@ def bootstrap(options):
     """ Initializes subprocesses and catches any fatal exceptions. """
     monitor = SubprocessMonitor(options['max_respawns'], options['fail_reset'])
     monitor.add('networking', wrap_async_main(networking.start), (options,))
-    monitor.add('devices', wrap_async_main(devices.start))
+    monitor.add('devices', wrap_async_main(devices.start), (options,))
     monitor.add('executor', wrap_async_main(executor.start))
 
     try:

@@ -52,6 +52,7 @@ def override_options(options: dict):
 @click.option('-s', '--student-code', default=get_module_path('studentcode.py'),
               type=click.Path(exists=True, dir_okay=False),
               help='Path to student code module.')
+@click.option('--baud-rate', default=115200, help='Smart sensor baud rate.')
 @click.option('-c', '--config', default=get_module_path('conf/config.yaml'),
               type=click.Path(dir_okay=False),
               help='Path to configuration file. Overrides any command line options.')
