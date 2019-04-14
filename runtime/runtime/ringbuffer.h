@@ -3,7 +3,7 @@
 
 namespace ringbuffer {
     /**
-     *  A fixed-length, synchronized, non-blocking ring buffer implementation.
+     *  A fixed-length, synchronized, blocking ring buffer implementation.
      */
     class RingBuffer {
     private:

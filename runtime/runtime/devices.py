@@ -238,7 +238,5 @@ if __name__ == '__main__':
     t.start()
     import time
     while True:
-        # read_queue.extend(b'123\x00'*10)
-        # print('Read queue extended!')
-        print('Master')
-        time.sleep(0.1)
+        read_queue.extend(b'123\x00')
+        print('Read queue extended!')

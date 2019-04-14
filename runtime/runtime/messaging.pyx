@@ -4,6 +4,8 @@
 Runtime module for encoding and decoding Smart Sensor messages.
 """
 
+from libc.stdint cimport uint8_t, uint16_t, uint64_t
+from libcpp.string cimport string
 from runtime.buffer cimport SharedMemoryBuffer, BinaryRingBuffer
 
 
@@ -24,18 +26,25 @@ def map_parameters():
     pass
 
 
+cpdef uint8_t compute_checksum(string message) nogil:
+    cdef uint8_t checksum = 0
+    for i in range(message.size()):
+        checksum ^= message[i]
+    return checksum
+
+
 cdef void _encode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer write_queue) nogil:
     while True:
         pass
 
 
-from libc.stdio cimport printf
-from posix.unistd cimport usleep
 cdef void _decode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer read_queue) nogil:
     while True:
-        # packet = read_queue.read()
-        printf("OK!\n")
-        usleep(100000)
+        packet = read_queue.read()
+        packet = cobs_decode(packet)
+        if packet.size() < 3:
+            continue
+        checksum = compute_checksum(packet.substr(0, packet.size() - 1))
 
 
 def encode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer write_queue):
