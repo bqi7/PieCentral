@@ -20,15 +20,29 @@ cpdef enum PacketType:
     ERROR         = 0xFF
 
 
-cdef class Parameter:
+def map_parameters():
     pass
 
 
-cpdef void encode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer write_queue) nogil:
+cdef void _encode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer write_queue) nogil:
     while True:
         pass
 
 
-cpdef void decode_spin(SharedMemoryBuffer sm_buf, BinaryRingBuffer read_queue) nogil:
+from libc.stdio cimport printf
+from posix.unistd cimport usleep
+cdef void _decode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer read_queue) nogil:
     while True:
-        pass
+        # packet = read_queue.read()
+        printf("OK!\n")
+        usleep(100000)
+
+
+def encode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer write_queue):
+    with nogil:
+        _encode_loop(sm_buf, write_queue)
+
+
+def decode_loop(SharedMemoryBuffer sm_buf, BinaryRingBuffer read_queue):
+    with nogil:
+        _decode_loop(sm_buf, read_queue)

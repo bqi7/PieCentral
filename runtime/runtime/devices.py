@@ -20,6 +20,7 @@ import yaml
 
 from runtime.buffer import SharedMemoryBuffer
 import runtime.journal
+from runtime.messaging import encode_loop, decode_loop
 from runtime.networking import ClientCircuitbreaker
 from runtime.store import Parameter
 
@@ -226,3 +227,18 @@ async def start(options):
             await asyncio.sleep(1)
     except asyncio.CancelledError:
         observer.stop()
+
+
+if __name__ == '__main__':
+    import threading
+    from runtime.buffer import SharedMemoryBuffer, BinaryRingBuffer
+    buf = SharedMemoryBuffer('test', 10)
+    read_queue = BinaryRingBuffer()
+    t = threading.Thread(target=decode_loop, args=(buf, read_queue))
+    t.start()
+    import time
+    while True:
+        # read_queue.extend(b'123\x00'*10)
+        # print('Read queue extended!')
+        print('Master')
+        time.sleep(0.1)

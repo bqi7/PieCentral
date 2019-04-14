@@ -4,7 +4,7 @@
 #include <condition_variable>
 #include "ringbuffer.h"
 
-#define DEFAULT_TIMEOUT 10000
+#define DEFAULT_TIMEOUT 100000  // 10^5 us = 0.1s
 
 namespace ringbuffer {
     RingBuffer::RingBuffer(size_t capacity) {
