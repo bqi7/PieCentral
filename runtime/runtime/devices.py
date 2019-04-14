@@ -106,18 +106,16 @@ class SensorObserver(MonitorObserver):
         asyncio.ensure_future(conn, loop=self.loop)
 
     def handle_hotplug_event(self, action, device):
+        path, product = device.sys_path, device.properties.get('PRODUCT')
         if self.is_sensor(device):
             if action == 'add':
                 for com_port in self.get_com_ports({device}):
                     self.open_serial_conn(com_port)
+                return
             elif action == 'remove':
-                pass
-            else:
-                LOGGER.debug('Ignoring irrelevant hotplug event.', action=action)
-        else:
-            # For debugging erroneously ignored sensors.
-            LOGGER.debug('Ignoring non-sensor hotplug event.',
-                         path=device.sys_path, product=device.properties.get('PRODUCT'))
+                return
+        LOGGER.debug('Ignoring irrelevant hotplug event.',
+                     action=action, path=path, product=product)
 
     def load_initial_sensors(self):
         for com_port in self.get_com_ports(self.list_devices()):
@@ -125,15 +123,13 @@ class SensorObserver(MonitorObserver):
 
 
 class SensorProtocol(asyncio.Protocol):
-    def __init__(self):
-        pass
-
     def connection_made(self, transport):
         self.transport = transport
-        LOGGER.debug('Connection made to sensor transport.')
+        transport.serial.rts = False
+        LOGGER.debug('Connection made to serial transport.')
 
     def connection_lost(self, exc):
-        pass
+        LOGGER.debug('Connection to serial transport lost.')
 
     def data_received(self, data: bytes):
         pass
@@ -213,22 +209,6 @@ async def start(options):
     client = ClientCircuitbreaker(host=options['host'], port=options['tcp'])
     try:
         while True:
-            pass
+            await asyncio.sleep(1)
     except asyncio.CancelledError:
         observer.stop()
-
-    # LOGGER.debug(f'{list(get_com_ports(observer.list_sensors()))}')
-    # observer.join()
-
-    # await client.set_alliance('blue')
-    # while True:
-    #     await asyncio.sleep(1)
-    #     LOGGER.info(str(await client.get_field_parameters()))
-
-
-if __name__ == '__main__':
-    def callback(device):
-        print(device.device_path)
-    observer = SmartSensorObserver(callback)
-    observer.start()
-    observer.join()
