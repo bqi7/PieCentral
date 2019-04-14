@@ -101,3 +101,21 @@ cdef extern from "ringbuffer.cpp" namespace "ringbuffer":
         uint8_t operator[](size_t) nogil except +
         void extend(string) nogil except +
         string read() nogil except +
+
+
+cdef class SharedMemoryBuffer:
+    cdef Py_ssize_t size
+    cdef char *name
+    cdef readonly int fd
+    cdef uint8_t *buf
+    cdef Py_ssize_t shape[1]
+    cdef Py_ssize_t ref_count
+
+    cdef _check_bounds(self, index)
+
+
+cdef class BinaryRingBuffer:
+    cdef RingBuffer *buf
+
+    cpdef void extend(self, string buf) nogil
+    cpdef string read(self) nogil

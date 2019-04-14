@@ -47,6 +47,7 @@ setup(
                 extra_compile_args=['-lrt', '-lpthread'],
                 extra_link_args=['-lrt', '-lpthread'],
             ),
+            'runtime/messaging.pyx',
         ],
         language_level=3,
         nthreads=4,

@@ -15,21 +15,22 @@ import serial
 import serial_asyncio
 import time
 
+from serial.tools.list_ports import comports
 import yaml
+
 from runtime.buffer import SharedMemoryBuffer
 import runtime.journal
 from runtime.networking import ClientCircuitbreaker
 from runtime.store import Parameter
 
-# from serial.aio import create_serial_connection
-from serial.tools.list_ports import comports
-
 LOGGER = runtime.journal.make_logger(__name__)
 
 try:
     from pyudev import Context, Devices, Device, Monitor, MonitorObserver
+    udev_enabled = True
 except ImportError:
     LOGGER.warning('Unable to import `pyudev`, which is Linux-only.')
+    udev_enabled = False
 
 
 class SensorService:
@@ -43,7 +44,7 @@ class SensorService:
             self.read_buffers[uid] = None
             self.write_buffers[uid] = None
 
-    async def unregister_device(self):
+    async def unregister_device(self, uid: str):
         async with self.access:
             del self.read_buffers[uid]
             del self.write_buffers[uid]
@@ -108,11 +109,11 @@ class SensorObserver(MonitorObserver):
     def handle_hotplug_event(self, action, device):
         path, product = device.sys_path, device.properties.get('PRODUCT')
         if self.is_sensor(device):
-            if action == 'add':
+            if action.lower() == 'add':
                 for com_port in self.get_com_ports({device}):
                     self.open_serial_conn(com_port)
                 return
-            elif action == 'remove':
+            elif action.lower() == 'remove':
                 return
         LOGGER.debug('Ignoring irrelevant hotplug event.',
                      action=action, path=path, product=product)
@@ -123,6 +124,9 @@ class SensorObserver(MonitorObserver):
 
 
 class SensorProtocol(asyncio.Protocol):
+    """
+    An implementation of the Smart Sensor protocol.
+    """
     def connection_made(self, transport):
         self.transport = transport
         transport.serial.rts = False
@@ -135,6 +139,9 @@ class SensorProtocol(asyncio.Protocol):
         pass
 
     def eof_received(self):
+        pass
+
+    async def register(self):
         pass
 
 
@@ -201,11 +208,18 @@ class SensorStructure(ctypes.Structure):
         pass
 
 
+def initialize_hotplugging(service, options):
+    if options['poll'] or not udev_enabled:
+        pass
+    else:
+        observer = SensorObserver(service, options['baud_rate'])
+        observer.start()
+        observer.load_initial_sensors()
+
+
 async def start(options):
-    sensor_service = SensorService()
-    observer = SensorObserver(sensor_service, options['baud_rate'])
-    observer.start()
-    observer.load_initial_sensors()
+    service = SensorService()
+    initialize_hotplugging(service, options)
     client = ClientCircuitbreaker(host=options['host'], port=options['tcp'])
     try:
         while True:

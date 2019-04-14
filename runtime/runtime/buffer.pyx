@@ -25,12 +25,6 @@ cdef class SharedMemoryBuffer:
     This object supports the pickling and writeable buffer protocols.
     """
     _SHM_NAME_BASE = 'runtime-shm-buf'
-    cdef Py_ssize_t size
-    cdef char *name
-    cdef readonly int fd
-    cdef uint8_t *buf
-    cdef Py_ssize_t shape[1]
-    cdef Py_ssize_t ref_count
 
     def __cinit__(self, str name, Py_ssize_t size):
         self.size = size
@@ -156,7 +150,6 @@ cdef class SharedLock:
 @cython.final
 cdef class BinaryRingBuffer:
     DEFAULT_CAPACITY = 16 * 1024
-    cdef RingBuffer *buf
 
     def __cinit__(self, size_t capacity = DEFAULT_CAPACITY):
         self.buf = new RingBuffer(capacity)
