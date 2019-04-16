@@ -1,21 +1,25 @@
 import unittest
 import multiprocessing
-from runtime.buffer import SharedMemoryBuffer, SharedLock
+from runtime.buffer import SharedMemory, SharedLock
 
 
 class TestSharedMemory(unittest.TestCase):
     def setUp(self):
-        self.buf = SharedMemoryBuffer('test', 8)
+        self.buf = SharedMemory('test', 8)
 
     def tearDown(self):
         del self.buf
 
+    def test_zeroed(self):
+        for byte in self.buf:
+            self.assertEqual(byte, 0)
+
     def test_shared(self):
         def target(ready):
             ready.wait()
-            buf = SharedMemoryBuffer('test', 8)
+            buf = SharedMemory('test', 8)
             self.assertEqual(buf[0], 1)
-            buf[0] = buf.peers
+            buf[0] = 2
         ready = multiprocessing.Event()
         child = multiprocessing.Process(target=target, args=(ready, ))
         child.start()
@@ -24,7 +28,12 @@ class TestSharedMemory(unittest.TestCase):
         ready.set()
         child.join()
         self.assertEqual(self.buf[0], 2)
-        self.assertEqual(self.buf.peers, 1)
+
+    def test_out_of_bounds(self):
+        with self.assertRaises(IndexError):
+            print(self.buf[-9])
+        with self.assertRaises(IndexError):
+            print(self.buf[8])
 
 
 class TestSharedLock(unittest.TestCase):

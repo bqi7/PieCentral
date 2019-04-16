@@ -61,7 +61,7 @@ class TestAsyncTimer(unittest.TestCase):
         asyncio.run(main())
         self.assertEqual(len(self.timestamps), 5)
         for start, end in zip(self.timestamps[:-1], self.timestamps[1:]):
-            self.assertAlmostEqual(end - start, 0.05, delta=0.001)
+            self.assertAlmostEqual(end - start, 0.05, delta=0.002)
 
 
 if __name__ == '__main__':

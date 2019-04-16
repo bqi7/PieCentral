@@ -9,13 +9,13 @@ from runtimeclient import RuntimeClient
 class TestStoreService(asynctest.TestCase):
     host, port = '127.0.0.1', 6200
 
-    # async def setUp(self):
-    #     self.service = StoreService({
-    #         'dev_names': 'test-dev-names.yaml',
-    #     })
-    #     self.thread = AsyncThread(target=run_rpc_server,
-    #                               args=(self.service, self.host, self.port))
-    #     self.thread.start()
+    async def setUp(self):
+        self.service = StoreService({
+            'dev_names': 'test-dev-names.yaml',
+        })
+        # self.thread = AsyncThread(target=run_rpc_server,
+        #                           args=(self.service, self.host, self.port))
+        # self.thread.start()
 
     # async def test_set_alliance(self):
     #     async with RuntimeClient(self.host, self.port) as client:

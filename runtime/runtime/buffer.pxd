@@ -4,6 +4,10 @@ from posix.stat cimport mode_t
 from posix.types cimport off_t
 
 
+cpdef enum:
+    MAX_PARAMETERS = 16
+
+
 cdef extern from "<fcntl.h>":
     cpdef enum:
         O_CREAT
@@ -103,15 +107,46 @@ cdef extern from "ringbuffer.cpp" namespace "ringbuffer":
         string read() nogil except +
 
 
-cdef class SharedMemoryBuffer:
+cdef class SharedMemory:
+    cdef string name
     cdef Py_ssize_t size
-    cdef char *name
-    cdef readonly int fd
-    cdef uint8_t *buf
     cdef Py_ssize_t shape[1]
     cdef Py_ssize_t ref_count
+    cdef readonly int fd
+    cdef uint8_t *buf
 
-    cdef _check_bounds(self, index)
+
+cdef struct Lock:
+    pthread_mutex_t lock
+    pthread_mutexattr_t settings
+    Py_ssize_t peers
+
+
+cdef class SharedLock:
+    cdef SharedMemory mem
+    cdef Lock *lock
+
+    cpdef void acquire(self)
+    cpdef void release(self)
+
+
+cpdef enum ParameterStatus:
+    DIRTY       = 0x1
+    READABLE    = 0x2
+    WRITEABLE   = 0x4
+
+
+cdef struct ParameterOffsets:
+    size_t value
+    size_t modified
+    size_t status
+
+
+cdef class SensorBuffer:
+    cdef SharedMemory buf
+    cdef SharedLock access
+    cdef size_t num_params
+    cdef ParameterOffsets offsets[MAX_PARAMETERS]
 
 
 cdef class BinaryRingBuffer:

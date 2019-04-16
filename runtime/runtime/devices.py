@@ -18,11 +18,11 @@ import time
 from serial.tools.list_ports import comports
 import yaml
 
-from runtime.buffer import SharedMemoryBuffer
+from runtime.buffer import SharedMemory, MAX_PARAMETERS
 import runtime.journal
 from runtime.messaging import encode_loop, decode_loop
 from runtime.networking import ClientCircuitbreaker
-from runtime.store import Parameter
+from runtime.util import RuntimeBaseException
 
 LOGGER = runtime.journal.make_logger(__name__)
 
@@ -32,6 +32,20 @@ try:
 except ImportError:
     LOGGER.warning('Unable to import `pyudev`, which is Linux-only.')
     udev_enabled = False
+
+
+Parameter = collections.namedtuple(
+    'Parameter',
+    ['name', 'type', 'lower', 'upper', 'read', 'write', 'choices', 'default'],
+    defaults=[float('-inf'), float('inf'), True, False, [], None],
+)
+
+CTYPES_SIGNED_INT = {ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long,
+                     ctypes.c_longlong, ctypes.c_ssize_t}
+CTYPES_UNSIGNED_INT = {ctypes.c_ubyte, ctypes.c_ushort, ctypes.c_uint,
+                       ctypes.c_ulong, ctypes.c_ulonglong, ctypes.c_size_t}
+CTYPES_REAL = {ctypes.c_float, ctypes.c_double, ctypes.c_longdouble}
+CTYPES_NUMERIC = CTYPES_SIGNED_INT | CTYPES_UNSIGNED_INT | CTYPES_REAL
 
 
 class SensorService:
@@ -146,7 +160,7 @@ class SensorProtocol(asyncio.Protocol):
         pass
 
 
-class SensorStructure(ctypes.Structure):
+class SensorStructure(ctypes.LittleEndianStructure):
     """
     A struct representing a device (for example, a Smart Sensor).
 
@@ -164,14 +178,16 @@ class SensorStructure(ctypes.Structure):
           ...
         ValueError: Assigned invalid value -1.1 to "YogiBear.duty_cycle" (not in bounds).
     """
-    TIMESTAMP_SUFFIX = '_ts'
+    @staticmethod
+    def _get_timestamp_name(param_name: str) -> str:
+        return param_name + '_ts'
 
     @staticmethod
-    def _get_timestamp_name(param_name: str):
-        return param_name + DeviceStructure.TIMESTAMP_SUFFIX
+    def _get_status_name(param_name: str) -> str:
+        return param_name + '_status'
 
     def last_modified(self, param_name: str) -> float:
-        return getattr(self, DeviceStructure._get_timestamp_name(param_name))
+        return getattr(self, self._get_timestamp_name(param_name))
 
     def __setattr__(self, param_name: str, value):
         """ Validate and assign the parameter's value, and update its timestamp. """
@@ -181,22 +197,27 @@ class SensorStructure(ctypes.Structure):
                 cls_name = self.__class__.__name__
                 raise ValueError(f'Assigned invalid value {value} to '
                                  f'"{cls_name}.{param_name}" (not in bounds).')
-        super().__setattr__(DeviceStructure._get_timestamp_name(param_name), time.time())
+        super().__setattr__(self._get_timestamp_name(param_name), time.time())
+        super().__setattr__(self._get_status_name(param_name), True)
         super().__setattr__(param_name, value)
 
     def __getitem__(self, param_id):
         return self.__class__._params_by_id[param_id]
 
-    @staticmethod
-    def make_device_type(dev_name: str, params: List[Parameter]) -> type:
-        """ Produce and defines a named struct type. """
-        fields = {}
+    @classmethod
+    def make_sensor_type(cls, dev_name: str, params: List[Parameter]) -> type:
+        if len(params) > MAX_PARAMETERS:
+            raise RuntimeBaseException('Device has too many parameters.',
+                                       max_params=MAX_PARAMETERS)
+        fields = []
         for param in params:
-            fields[param.name] = param.type
-            timestamp_name = DeviceStructure._get_timestamp_name(param.name)
-            fields[timestamp_name] = ctypes.c_double
-        return type(dev_name, (DeviceStructure,), {
-            '_fields_': list(fields.items()),
+            fields.extend([
+                (param.name, param.type),
+                (cls._get_timestamp_name(param.name), ctypes.c_double),
+                (cls._get_status_name(param.name), ctypes.c_uint8),
+            ])
+        return type(dev_name, (SensorStructure,), {
+            '_fields_': fields,
             '_params': {param.name: param for param in params},
             '_params_by_id': params
         })
@@ -230,13 +251,17 @@ async def start(options):
 
 
 if __name__ == '__main__':
-    import threading
-    from runtime.buffer import SharedMemoryBuffer, BinaryRingBuffer
-    buf = SharedMemoryBuffer('test', 10)
-    read_queue = BinaryRingBuffer()
-    t = threading.Thread(target=decode_loop, args=(buf, read_queue))
-    t.start()
-    import time
-    while True:
-        read_queue.extend(b'123\x00')
-        print('Read queue extended!')
+    PolarBear = SensorStructure.make_sensor_type('PolarBear', [Parameter('duty_cycle', ctypes.c_double)])
+    print(PolarBear._fields_)
+    from runtime.buffer import SensorBuffer
+    print(SensorBuffer('tmp', PolarBear))
+    # import threading
+    # from runtime.buffer import SharedMemory, BinaryRingBuffer
+    # buf = SharedMemory('test', 10)
+    # read_queue = BinaryRingBuffer()
+    # t = threading.Thread(target=decode_loop, args=(buf, read_queue))
+    # t.start()
+    # import time
+    # while True:
+    #     read_queue.extend(b'123\x00')
+    #     print('Read queue extended!')

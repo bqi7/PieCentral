@@ -16,25 +16,6 @@ from runtime.studentcode import *
 LOGGER = runtime.journal.make_logger(__name__)
 
 
-Parameter = collections.namedtuple(
-    'Parameter',
-    ['name', 'type', 'lower', 'upper', 'read', 'write', 'choices', 'default'],
-    defaults=[float('-inf'), float('inf'), True, False, [], None],
-)
-
-Device = collections.namedtuple(
-    'Device',
-    ['name'],
-)
-
-CTYPES_SIGNED_INT = {ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long,
-                     ctypes.c_longlong, ctypes.c_ssize_t}
-CTYPES_UNSIGNED_INT = {ctypes.c_ubyte, ctypes.c_ushort, ctypes.c_uint,
-                       ctypes.c_ulong, ctypes.c_ulonglong, ctypes.c_size_t}
-CTYPES_REAL = {ctypes.c_float, ctypes.c_double, ctypes.c_longdouble}
-CTYPES_NUMERIC = CTYPES_SIGNED_INT | CTYPES_UNSIGNED_INT | CTYPES_REAL
-
-
 class Alliance(enum.Enum):
     BLUE = enum.auto()
     GOLD = enum.auto()
@@ -168,26 +149,26 @@ class StoreService(collections.UserDict):
             await self.write_device_names()
 
 
-def validate_param_value(param: Parameter, value):
-    ctype = getattr(ctypes, f'c_{param.type}')
-    ctype(value)  # Will raise a ``TypeError`` if the value is not correct.
-    if ctype in CTYPES_NUMERIC and not param.lower <= value <= param.upper:
-        raise RuntimeBaseException(
-            'Parameter value not in bounds.',
-            param_name=param.name,
-            param_value=value,
-            bounds=(param.lower, param.upper),
-        )
-    if value not in param.choices:
-        raise RuntimeBaseException(
-            'Parameter value is not a valid choice.',
-            param_name=param.name,
-            param_value=value,
-            choices=param.choices,
-        )
-
-
-def parse_data_sources_schema(schema):
-    for protocol, sources in schema.items():
-        for source, descriptor in sources:
-            pass
+# def validate_param_value(param: Parameter, value):
+#     ctype = getattr(ctypes, f'c_{param.type}')
+#     ctype(value)  # Will raise a ``TypeError`` if the value is not correct.
+#     if ctype in CTYPES_NUMERIC and not param.lower <= value <= param.upper:
+#         raise RuntimeBaseException(
+#             'Parameter value not in bounds.',
+#             param_name=param.name,
+#             param_value=value,
+#             bounds=(param.lower, param.upper),
+#         )
+#     if value not in param.choices:
+#         raise RuntimeBaseException(
+#             'Parameter value is not a valid choice.',
+#             param_name=param.name,
+#             param_value=value,
+#             choices=param.choices,
+#         )
+#
+#
+# def parse_data_sources_schema(schema):
+#     for protocol, sources in schema.items():
+#         for source, descriptor in sources:
+#             pass
