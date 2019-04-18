@@ -288,7 +288,7 @@ class Robot(StudentAPI):
         if device in self.nonexistent_sensors:
             return
         self.nonexistent_sensors += [device]
-        self.to_manager.put([SM_COMMANDS.SEND_CONSOLE, ['Warning: device not found: ' + str(name)]])
+        self.to_manager.put([SM_COMMANDS.SEND_CONSOLE, ['Warning: device not found: ' + str(name) + '\n']])
 
     def emergency_stop(self):
         """Stop the robot."""
