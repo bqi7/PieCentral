@@ -142,6 +142,8 @@ class Robot(StudentAPI):
         self._coroutines_running = set()
         self._stdout_buffer = io.StringIO()
         self._get_all_sensors()
+
+        self.nonexistent_sensors = []
         self.student_code_writes = {}
 
     def _get_all_sensors(self):
@@ -157,18 +159,24 @@ class Robot(StudentAPI):
     def set_value(self, device_name, param, value):
         """Set a parameter value for device."""
         uid = self._hibike_get_uid(device_name)
+        if uid == None:
+            return
         self._check_write_params(uid, param)
         self._check_value(param, value)
         self.hibike_write_value(uid, [(param, value)])
 
     def set_motor(self, device_name, value):
         uid = self._hibike_get_uid(device_name)
+        if uid == None:
+            return
         self._check_write_params(uid, "duty_cycle")
         self._check_value("duty_cycle", value)
         self.hibike_write_value(uid, [("duty_cycle", value)])
 
     def stop_motor(self, device_name):
         uid = self._hibike_get_uid(device_name)
+        if uid == None:
+            return
         self._check_write_params(uid, "duty_cycle")
         self._check_value("duty_cycle", 0)
         self.hibike_write_value(uid, [("duty_cycle", 0)])
@@ -269,10 +277,18 @@ class Robot(StudentAPI):
         return message
 
     def _hibike_get_uid(self, name):
+        # TODO: Implement sensor mappings, right now uid is the number (or string of number)
         try:
-            return int(name)
+            device = int(name)
         except ValueError as exc:
             self._print(f'Device UID must be an integer. Found: "{str(name)}".')
+            return
+        if device in self.peripherals:
+            return device
+        if device in self.nonexistent_sensors:
+            return
+        self.nonexistent_sensors += [device]
+        self.to_manager.put([SM_COMMANDS.SEND_CONSOLE, ['Warning: device not found: ' + str(name)]])
 
     def emergency_stop(self):
         """Stop the robot."""
