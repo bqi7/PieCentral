@@ -2,11 +2,11 @@
 #include <deque>
 #include <mutex>
 #include <condition_variable>
-#include "ringbuffer.h"
+#include "_buffer.h"
 
 #define DEFAULT_TIMEOUT 100000  // 10^5 us = 0.1s
 
-namespace ringbuffer {
+namespace buffer {
     RingBuffer::RingBuffer(size_t capacity) {
         this->data = (uint8_t *) malloc(capacity * sizeof(uint8_t));
         this->start = this->end = 0;

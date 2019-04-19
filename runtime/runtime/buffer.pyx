@@ -15,7 +15,7 @@ from posix.unistd cimport ftruncate
 cimport cython
 from cython.operator cimport dereference as deref
 from cpython cimport Py_buffer
-from cpython.buffer cimport PyBUF_ND
+from cpython.buffer cimport PyBUF_ND, PyObject_GetBuffer, PyBuffer_Release
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 
@@ -162,21 +162,38 @@ cdef class SharedLock:
         return self
 
 
+@cython.final
 cdef class SensorBuffer:
     def __cinit__(self, str name, sensor_struct):
         self.buf = SharedMemory(name, ctypes.sizeof(sensor_struct))
         self.access = SharedLock(name + '-lock')
         self.num_params = len(sensor_struct._params)
         for i, param in enumerate(sensor_struct._params_by_id):
-            self.offsets[i].value = getattr(sensor_struct, param.name).offset
-            self.offsets[i].modified = getattr(
+            self.offsets[i].value_offset = getattr(sensor_struct, param.name).offset
+            self.offsets[i].value_size = ctypes.sizeof(param.type)
+            self.offsets[i].timestamp_offset = getattr(
                 sensor_struct,
                 sensor_struct._get_timestamp_name(param.name),
             ).offset
-            self.offsets[i].status = getattr(
+            self.offsets[i].status_offset = getattr(
                 sensor_struct,
                 sensor_struct._get_status_name(param.name),
             ).offset
+
+    cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil:
+        cdef string buf
+        buf.insert(0, <const char *> (self.buf.buf + offset), count)
+        return buf
+
+    cpdef string get_value(self, Py_ssize_t index) nogil:
+        return self.get_bytes(self.offsets[index].value_offset,
+                              self.offsets[index].value_size)
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        PyObject_GetBuffer(self.buf, buffer, flags)
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        PyBuffer_Release(buffer)
 
 
 @cython.final

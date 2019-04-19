@@ -94,11 +94,11 @@ cdef extern from "<pthread.h>" nogil:
     int pthread_mutexattr_setprotocol(pthread_mutexattr_t *, int)
 
 
-cdef extern from "ringbuffer.cpp":
+cdef extern from "_buffer.cpp":
     pass
 
 
-cdef extern from "ringbuffer.cpp" namespace "ringbuffer":
+cdef extern from "_buffer.cpp" namespace "buffer":
     cdef cppclass RingBuffer:
         RingBuffer(size_t) nogil except +
         size_t size() nogil
@@ -136,17 +136,21 @@ cpdef enum ParameterStatus:
     WRITEABLE   = 0x4
 
 
-cdef struct ParameterOffsets:
-    size_t value
-    size_t modified
-    size_t status
+cdef struct ParameterDescriptor:
+    size_t value_offset
+    size_t value_size
+    size_t timestamp_offset
+    size_t status_offset
 
 
 cdef class SensorBuffer:
     cdef SharedMemory buf
     cdef SharedLock access
     cdef size_t num_params
-    cdef ParameterOffsets offsets[MAX_PARAMETERS]
+    cdef ParameterDescriptor offsets[MAX_PARAMETERS]
+
+    cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil
+    cpdef string get_value(self, Py_ssize_t index) nogil
 
 
 cdef class BinaryRingBuffer:

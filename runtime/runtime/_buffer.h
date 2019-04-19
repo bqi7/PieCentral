@@ -1,7 +1,7 @@
-#ifndef RINGBUFFER_H
-#define RINGBUFFER_H
+#ifndef BUFFER_H
+#define BUFFER_H
 
-namespace ringbuffer {
+namespace buffer {
     /**
      *  A fixed-length, synchronized, blocking ring buffer implementation.
      */

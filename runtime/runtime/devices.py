@@ -7,6 +7,7 @@ __all__ = ['SmartSensorObserver']
 
 import asyncio
 import collections
+from numbers import Real
 from typing import List, Callable, Generator, Sequence
 import ctypes
 import os
