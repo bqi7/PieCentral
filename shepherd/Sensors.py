@@ -7,10 +7,10 @@ from LCM import *
 from Utils import *
 
 
-# run ls /dev/tty* to obtain the two ACM ports.
+# run "ls /dev/tty*" to obtain the two ACM ports.
 
-buttons_gold_port = "/dev/ttyACM1" # change to correct port
-buttons_blue_port = "/dev/ttyACM0" # change to correct port
+buttons_gold_port = "/dev/ttyACM0" # change to correct port
+buttons_blue_port = "/dev/ttyACM1" # change to correct port
 
 alliance_mapping = {
     "gold": ALLIANCE_COLOR.GOLD,
@@ -98,14 +98,14 @@ def recv_from_btn(ser, alliance_enum):
 
 
 def main():
-    working_ports = get_working_serial_ports(set())
-    print("working ports: ", working_ports)
-    relevant_ports = identify_relevant_ports(working_ports)
-    print("relevant ports: ", relevant_ports)
+    # working_ports = get_working_serial_ports(set())
+    # print("working ports: ", working_ports)
+    # relevant_ports = identify_relevant_ports(working_ports)
+    # print("relevant ports: ", relevant_ports)
 
-    button_serial_blue = None
-    button_serial_gold = None
-    
+    # button_serial_blue = None
+    # button_serial_gold = None
+    # 
     button_serial_gold = serial.Serial(buttons_gold_port, baudrate=115200)
     button_serial_blue = serial.Serial(buttons_blue_port, baudrate=115200)
 

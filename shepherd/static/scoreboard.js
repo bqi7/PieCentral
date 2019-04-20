@@ -1,4 +1,4 @@
-var socket = io('http://127.0.0.1:5500') // io('http://192.168.128.64:5500');
+var socket = io('http://192.168.128.64:5500'); // io('http://127.0.0.1:5500')
 var overTimer = true;
 var stageTimer = true;
 var timerA = true;
@@ -256,7 +256,15 @@ function progress(timeleft, timetotal, $element) {
 
 function startOverdrive(time, block) {
     overTimer = true;
-    $('#overdriveText').html("OVERDRIVE - " + block + " size!!!");
+    if (block == "fun") {
+        $('#overdriveText').html("OVERDRIVE - Fun Size!!!");
+    }
+    if (block == "full") {
+        $('#overdriveText').html("OVERDRIVE - Full Size!!!");
+    }
+    if (block == "king") {
+        $('#overdriveText').html("OVERDRIVE - King Size!!!");
+    }
     $('#overdriveText').css('color', 'DarkGreen');
     progress(time, time, $('#progressBar'));
 }
