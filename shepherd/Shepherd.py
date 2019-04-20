@@ -92,6 +92,11 @@ def to_setup(args):
     g1_name, g1_num, g1_starting_spot = args["g1name"], args["g1num"], args["g1_starting_spot"]
     g2_name, g2_num, g2_starting_spot = args["g2name"], args["g2num"], args["g2_starting_spot"]
 
+    g1_custom_ip = None if args["g1_custom_ip"] == "" else args["g1_custom_ip"]
+    g2_custom_ip = None if args["g2_custom_ip"] == "" else args["g2_custom_ip"]
+    b1_custom_ip = None if args["b1_custom_ip"] == "" else args["b1_custom_ip"]
+    b2_custom_ip = None if args["b2_custom_ip"] == "" else args["b2_custom_ip"]
+
     starting_spots = [b1_starting_spot, b2_starting_spot, g1_starting_spot, g2_starting_spot]
 
     if game_state == STATE.END:
@@ -105,9 +110,9 @@ def to_setup(args):
     code_setup()
 
     alliances[ALLIANCE_COLOR.BLUE] = Alliance(ALLIANCE_COLOR.BLUE, b1_name,
-                                              b1_num, b2_name, b2_num)
+                                              b1_num, b2_name, b2_num, b1_custom_ip, b2_custom_ip)
     alliances[ALLIANCE_COLOR.GOLD] = Alliance(ALLIANCE_COLOR.GOLD, g1_name,
-                                              g1_num, g2_name, g2_num)
+                                              g1_num, g2_name, g2_num, g1_custom_ip, g2_custom_ip)
 
     msg = {"b1num":b1_num, "b2num":           b2_num, "g1num":g1_num, "g2num":g2_num}
     lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.TEAMS, msg)
@@ -133,7 +138,7 @@ def to_perk_selection(args):
     g1name = next_match_info["g1name"]
     g2name = next_match_info["g2name"]
     bot.team_names_on_deck(b1name, b2name, g1name, g2name)
-    
+
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME + 2)
     game_state = STATE.PERK_SELCTION
@@ -161,13 +166,18 @@ def to_auto(args):
     global clients
     game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
 
+    alternate_connections = (alliances[ALLIANCE_COLOR.BLUE].team_1_custom_ip,
+                             alliances[ALLIANCE_COLOR.BLUE].team_2_custom_ip,
+                             alliances[ALLIANCE_COLOR.GOLD].team_1_custom_ip,
+                             alliances[ALLIANCE_COLOR.GOLD].team_2_custom_ip)
+
     clients = RuntimeClientManager((
         int(alliances[ALLIANCE_COLOR.BLUE].team_1_number),
         int(alliances[ALLIANCE_COLOR.BLUE].team_2_number),
     ), (
         int(alliances[ALLIANCE_COLOR.GOLD].team_1_number),
         int(alliances[ALLIANCE_COLOR.GOLD].team_2_number),
-    ))
+    ),*alternate_connections)
     clients.set_master_robots(master_robots[ALLIANCE_COLOR.BLUE],
                               master_robots[ALLIANCE_COLOR.GOLD])
     clients.set_starting_zones(starting_spots)
