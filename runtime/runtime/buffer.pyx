@@ -9,9 +9,9 @@ import os
 from libc.errno cimport errno, ENOENT, EPERM
 from libc.string cimport strcpy, memcpy
 from libc.stdint cimport uint8_t
-# from libc.time cimport clock_gettime, CLOCK_REALTIME, timespec
 from libcpp.string cimport string
 from posix.unistd cimport ftruncate
+from libcpp cimport bool
 
 cimport cython
 from cython.operator cimport dereference as deref
@@ -190,21 +190,49 @@ cdef class SensorBuffer:
         memcpy(<void *> (self.buf.buf + base), <void *> data, count)
 
     cpdef string get_value(self, Py_ssize_t index) nogil:
-        return self.get_bytes(self.offsets[index].value_offset,
-                              self.offsets[index].value_size)
+        cdef string empty
+        if self.is_readable(index):
+            return self.get_bytes(self.offsets[index].value_offset,
+                                  self.offsets[index].value_size)
+        else:
+            return empty
 
     cpdef void set_value(self, Py_ssize_t index, string bytes) nogil:
-        self.set_bytes(self.offsets[index].value_offset,
-                       self.offsets[index].value_size, <uint8_t *> bytes.c_str())
-
-        # TODO: verify this timestamp agrees with `time.time`
         cdef timespec now
-        cdef int status = clock_gettime(<clockid_t> CLOCK_REALTIME, <timespec *> &now)
-        if status != 0:
-            return
-        cdef double timestamp = (<double> now.tv_sec) + (<double> now.tv_nsec)/10e8
-        self.set_bytes(self.offsets[index].timestamp_offset,
-                       sizeof(double), <uint8_t *> &timestamp)
+        cdef int status
+        cdef double timestamp
+        if self.is_writeable(index):
+            self.set_bytes(self.offsets[index].value_offset,
+                           self.offsets[index].value_size, <uint8_t *> bytes.c_str())
+            self.set_dirty(index)
+
+            # TODO: verify this timestamp agrees with `time.time`
+            status = clock_gettime(<clockid_t> CLOCK_REALTIME, <timespec *> &now)
+            if status != 0:
+                return
+            timestamp = (<double> now.tv_sec) + (<double> now.tv_nsec)/10e8
+            self.set_bytes(self.offsets[index].timestamp_offset,
+                           sizeof(double), <uint8_t *> &timestamp)
+
+    cpdef void set_dirty(self, Py_ssize_t index) nogil:
+        cdef size_t offset = self.offsets[index].status_offset
+        self.buf.buf[offset] = self.buf.buf[offset] | ParameterStatus.DIRTY
+
+    cpdef void clear_dirty(self, Py_ssize_t index) nogil:
+        cdef size_t offset = self.offsets[index].status_offset
+        self.buf.buf[offset] = self.buf.buf[offset] & ~(<uint8_t> ParameterStatus.DIRTY)
+
+    cpdef bool is_set(self, Py_ssize_t index, int flag) nogil:
+        return (self.buf.buf[self.offsets[index].status_offset] & flag) > 0
+
+    cpdef bool is_dirty(self, Py_ssize_t index) nogil:
+        return self.is_set(index, ParameterStatus.DIRTY)
+
+    cpdef bool is_readable(self, Py_ssize_t index) nogil:
+        return self.is_set(index, ParameterStatus.READABLE)
+
+    cpdef bool is_writeable(self, Py_ssize_t index) nogil:
+        return self.is_set(index, ParameterStatus.WRITEABLE)
 
     def __getbuffer__(self, Py_buffer *buffer, int flags):
         PyObject_GetBuffer(self.buf, buffer, flags)

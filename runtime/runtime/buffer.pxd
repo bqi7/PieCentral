@@ -1,5 +1,6 @@
 from libc.stdint cimport uint8_t
 from libc.time cimport time_t
+from libcpp cimport bool
 from libcpp.string cimport string
 from posix.stat cimport mode_t
 from posix.types cimport off_t
@@ -165,6 +166,12 @@ cdef class SensorBuffer:
     cpdef void set_bytes(self, size_t base, size_t count, uint8_t *bytes) nogil
     cpdef string get_value(self, Py_ssize_t index) nogil
     cpdef void set_value(self, Py_ssize_t, string bytes) nogil
+    cpdef void set_dirty(self, Py_ssize_t index) nogil
+    cpdef void clear_dirty(self, Py_ssize_t index) nogil
+    cpdef bool is_set(self, Py_ssize_t index, int flag) nogil
+    cpdef bool is_dirty(self, Py_ssize_t index) nogil
+    cpdef bool is_readable(self, Py_ssize_t index) nogil
+    cpdef bool is_writeable(self, Py_ssize_t index) nogil
 
 
 cdef class BinaryRingBuffer:

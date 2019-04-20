@@ -84,9 +84,12 @@ class TestSensorBuffer(unittest.TestCase):
         self.assertEqual(self.raw_buf.get_value(0), one)
 
         self.buf.duty_cycle = 0.0
+        self.raw_buf.clear_dirty(0)
+        self.assertFalse(self.raw_buf.is_dirty(0))
         before = time.time()
         self.raw_buf.set_value(0, one)
         after = time.time()
+        self.assertTrue(self.raw_buf.is_dirty(0))
         self.assertAlmostEqual(self.buf.duty_cycle, 1.0)
         timestamp = self.buf.last_modified('duty_cycle')
         self.assertLess(before, timestamp)
