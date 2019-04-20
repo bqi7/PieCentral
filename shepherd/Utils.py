@@ -6,6 +6,7 @@ class SHEPHERD_HEADER():
 
     GET_MATCH_INFO = "get_match_info"
     SETUP_MATCH = "setup_match"
+    # also has {g1_custom_ip, g2_custom_ip, b1_custom_ip, b2_custom_ip}
     GET_CONNECTION_STATUS = "get_connection_status"
         #{}
 

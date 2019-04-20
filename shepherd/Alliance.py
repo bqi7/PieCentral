@@ -16,7 +16,7 @@ class Alliance:
 
     def __init__(self, name, team_1_name, team_1_number, team_2_name,
                  team_2_number, perk_1=PERKS.EMPTY, perk_2=PERKS.EMPTY,
-                 perk_3=PERKS.EMPTY):
+                 perk_3=PERKS.EMPTY, team_1_custom_ip = None, team_2_custom_ip = None):
         self.name = name
         self.team_1_name = team_1_name
         self.team_2_name = team_2_name
@@ -29,6 +29,8 @@ class Alliance:
         self.can_twist = True
         self.team_1_connection = False
         self.team_2_connection = False
+        self.team_1_custom_ip = team_1_custom_ip
+        self.team_2_custom_ip = team_2_custom_ip
 
     def change_score(self, amount):
         """ changes score of this alliance by Amount,
