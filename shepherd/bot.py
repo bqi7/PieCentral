@@ -2,7 +2,7 @@ import json
 import requests
 
 # Set the webhook_url to the one provided by Slack when you create the webhook at https://my.slack.com/services/new/incoming-webhook/
-webhook_url = 'https://hooks.slack.com/services/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'
+webhook_url = 'https://hooks.slack.com/services/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'
 
 def notify_queueing(match_num):
     send_plain_message("Match number "+str(match_num)+" is ending.")
