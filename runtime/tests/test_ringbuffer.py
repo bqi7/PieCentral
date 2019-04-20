@@ -22,8 +22,8 @@ class TestRingBuffer(unittest.TestCase):
         self.assertEqual(self.buf[3], ord('\x00'))
         with self.assertRaises(IndexError):
             self.buf[4]
-        # with self.assertRaises(IndexError):
-        #     self.buf.extend(b'5678')
+        with self.assertRaises(IndexError):
+            self.buf.extend(b'5678')
 
     def test_simple_read(self):
         self.buf.extend(b'\x0012\x0034\x00')

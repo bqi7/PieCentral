@@ -70,28 +70,37 @@ cdef string make_heartbeat_res(uint8_t id) nogil:
 
 
 cdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
+    packet = cobs_encode(packet)
     packet.append(1, 0)
-    write_queue.extend(cobs_encode(packet))
+    write_queue.extend(packet)
 
 
-cdef void _encode_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t period_ms) nogil:
+cdef void _write_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t period_ms) nogil:
+    cdef uint16_t present
+    cdef string payload
     while True:
-        # decoded_packet = build_packet()
-        # write_queue.extend()
+        present = 0
+        payload.clear()
         buf.acquire()
-        # decoded_packet = build_packet()
+        for i in range(buf.num_params):
+            if buf.is_dirty(i):
+                present |= (1 << <uint8_t> i)
+                payload.append(buf.get_value(i))
         buf.release()
+        if present:
+            payload.insert(0, <const char *> &present, 2)
+            append_packet(write_queue, build_packet(DEV_WRITE, payload))
         usleep(period_ms)
 
 
 
 cdef void parse_data(SensorBuffer buf, string payload) nogil:
     # TODO: verify the endianness is correct
-    cdef uint16_t presence = ((<uint16_t> payload[1]) << 8) | payload[0]
+    cdef uint16_t present = ((<uint16_t> payload[1]) << 8) | payload[0]
     cdef size_t param_size
     payload = payload.substr(2)
     for i in range(MAX_PARAMETERS):
-        if (presence >> <uint16_t> i) & 1:
+        if (present >> <uint16_t> i) & 1:
             param_size = buf.get_size(<Py_ssize_t> i)
             buf.set_value(<Py_ssize_t> i, payload.substr(0, param_size))
             payload = payload.substr(param_size)
@@ -123,9 +132,9 @@ cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue, BinaryRing
             pass
 
 
-def encode_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_ms):
+def write_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_ms):
     with nogil:
-        _encode_loop(buf, write_queue, period_ms)
+        _write_loop(buf, write_queue, period_ms)
 
 
 def decode_loop(SensorBuffer buf not None,

@@ -21,7 +21,7 @@ import yaml
 
 from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus
 import runtime.journal
-from runtime.messaging import encode_loop, decode_loop
+from runtime.messaging import write_loop, decode_loop
 from runtime.networking import ClientCircuitbreaker
 from runtime.util import RuntimeBaseException
 
