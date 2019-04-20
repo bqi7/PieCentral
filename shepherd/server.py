@@ -30,6 +30,7 @@ def staff_gui():
 @socketio.on('join')
 def handle_join(client_name):
     print('confirmed join: ' + client_name)
+    lcm_send(LCM_TARGETS.SHEPHERD, SHEPHERD_HEADER.REQUEST_CONNECTIONS)
 
 #Score Adjustment
 @socketio.on('ui-to-server-scores')
@@ -71,6 +72,8 @@ def receiver():
                 socketio.emit('server-to-ui-teamsinfo', json.dumps(event[1], ensure_ascii=False))
             elif event[0] == UI_HEADER.SCORES:
                 socketio.emit('server-to-ui-scores', json.dumps(event[1], ensure_ascii=False))
+            elif event[0] == UI_HEADER.CONNECTIONS:
+                socketio.emit('server-to-ui-connections', json.dumps(event[1], ensure_ascii=False))
         socketio.sleep(0.1)
 
 socketio.start_background_task(receiver)
