@@ -180,6 +180,10 @@ cdef class SensorBuffer:
                 sensor_struct,
                 sensor_struct._get_status_name(param.name),
             ).offset
+            if param.readable:
+                self.set_flag(i, ParameterStatus.READABLE)
+            if param.writeable:
+                self.set_flag(i, ParameterStatus.WRITEABLE)
 
     cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil:
         cdef string buf
@@ -214,16 +218,23 @@ cdef class SensorBuffer:
             self.set_bytes(self.offsets[index].timestamp_offset,
                            sizeof(double), <uint8_t *> &timestamp)
 
-    cpdef void set_dirty(self, Py_ssize_t index) nogil:
+    cpdef void set_flag(self, Py_ssize_t index, uint8_t flag) nogil:
         cdef size_t offset = self.offsets[index].status_offset
-        self.buf.buf[offset] = self.buf.buf[offset] | ParameterStatus.DIRTY
+        self.buf.buf[offset] = self.buf.buf[offset] | flag
+
+    cpdef void clear_flag(self, Py_ssize_t index, uint8_t flag) nogil:
+        cdef size_t offset = self.offsets[index].status_offset
+        self.buf.buf[offset] = self.buf.buf[offset] & ~flag
+
+    cpdef bool is_set(self, Py_ssize_t index, uint8_t flag) nogil:
+        return (self.buf.buf[self.offsets[index].status_offset] & flag) > 0
+
+    cpdef void set_dirty(self, Py_ssize_t index) nogil:
+        if self.is_writeable(index):
+            self.set_flag(index, ParameterStatus.DIRTY)
 
     cpdef void clear_dirty(self, Py_ssize_t index) nogil:
-        cdef size_t offset = self.offsets[index].status_offset
-        self.buf.buf[offset] = self.buf.buf[offset] & ~(<uint8_t> ParameterStatus.DIRTY)
-
-    cpdef bool is_set(self, Py_ssize_t index, int flag) nogil:
-        return (self.buf.buf[self.offsets[index].status_offset] & flag) > 0
+        self.clear_flag(index, ParameterStatus.DIRTY)
 
     cpdef bool is_dirty(self, Py_ssize_t index) nogil:
         return self.is_set(index, ParameterStatus.DIRTY)

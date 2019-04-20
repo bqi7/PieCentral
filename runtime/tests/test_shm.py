@@ -70,24 +70,22 @@ class TestSharedLock(unittest.TestCase):
 class TestSensorBuffer(unittest.TestCase):
     def setUp(self):
         self.PolarBear = SensorStructure.make_sensor_type('PolarBear', [
-            Parameter('duty_cycle', ctypes.c_double, -1, 1),
+            Parameter('duty_cycle', ctypes.c_double, -1, 1, True, True),
         ])
         self.raw_buf = SensorBuffer('test-sensor', self.PolarBear)
         self.buf = self.PolarBear.from_buffer(self.raw_buf)
+        self.one = b'\x00'*6 + b'\xf0?'
 
-    def test_write(self):
+    def test_init(self):
         self.assertAlmostEqual(self.buf.duty_cycle, 0.0)
         self.assertEqual(self.raw_buf.get_value(0), b'\x00'*8)
-
-        one = b'\x00'*6 + b'\xf0?'
-        self.buf.duty_cycle = 1.0
-        self.assertEqual(self.raw_buf.get_value(0), one)
-
-        self.buf.duty_cycle = 0.0
-        self.raw_buf.clear_dirty(0)
+        self.assertTrue(self.raw_buf.is_readable(0))
+        self.assertTrue(self.raw_buf.is_writeable(0))
         self.assertFalse(self.raw_buf.is_dirty(0))
+
+    def test_sensor_buf_write(self):
         before = time.time()
-        self.raw_buf.set_value(0, one)
+        self.raw_buf.set_value(0, self.one)
         after = time.time()
         self.assertTrue(self.raw_buf.is_dirty(0))
         self.assertAlmostEqual(self.buf.duty_cycle, 1.0)
@@ -95,6 +93,11 @@ class TestSensorBuffer(unittest.TestCase):
         self.assertLess(before, timestamp)
         self.assertLess(timestamp, after)
         self.assertLess(after - before, 0.01)
+
+    def test_struct_write(self):
+        self.buf.duty_cycle = 1.0
+        self.assertEqual(self.raw_buf.get_value(0), self.one)
+        self.assertTrue(self.raw_buf.is_dirty(0))
 
 
 if __name__ == '__main__':

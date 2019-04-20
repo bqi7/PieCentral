@@ -19,7 +19,7 @@ import time
 from serial.tools.list_ports import comports
 import yaml
 
-from runtime.buffer import SharedMemory, MAX_PARAMETERS
+from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus
 import runtime.journal
 from runtime.messaging import encode_loop, decode_loop
 from runtime.networking import ClientCircuitbreaker
@@ -37,7 +37,7 @@ except ImportError:
 
 Parameter = collections.namedtuple(
     'Parameter',
-    ['name', 'type', 'lower', 'upper', 'read', 'write', 'choices', 'default'],
+    ['name', 'type', 'lower', 'upper', 'readable', 'writeable', 'choices', 'default'],
     defaults=[float('-inf'), float('inf'), True, False, [], None],
 )
 
@@ -199,7 +199,8 @@ class SensorStructure(ctypes.LittleEndianStructure):
                 raise ValueError(f'Assigned invalid value {value} to '
                                  f'"{cls_name}.{param_name}" (not in bounds).')
         super().__setattr__(self._get_timestamp_name(param_name), time.time())
-        super().__setattr__(self._get_status_name(param_name), True)
+        status_name = self._get_status_name(param_name)
+        super().__setattr__(status_name, getattr(self, status_name) | ParameterStatus.DIRTY)
         super().__setattr__(param_name, value)
 
     def __getitem__(self, param_id):
