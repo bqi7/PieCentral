@@ -9,8 +9,13 @@ def notify_queueing(match_num):
 
 def team_numbers_on_deck(b1,b2,g1,g2):
     send_plain_message("The following teams are now on deck: \n On the blue side\
-, we have team #%i, and team #%i \n On the gold side, we\
- have team #%i, and team #%i" % (b1,b2,g1,g2))
+, we have team #%i and team #%i \n On the gold side, we\
+ have team #%i and team #%i" % (b1,b2,g1,g2))
+
+def team_names_on_deck(b1,b2,g1,g2):
+    send_plain_message("The following teams are now on deck: \n On the blue side\
+, we have %s and %s \n On the gold side, we\
+ have %s and %s" % (b1,b2,g1,g2))
 
 def send_plain_message(message):
     slack_data = {'text': message}

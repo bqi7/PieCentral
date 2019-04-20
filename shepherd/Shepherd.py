@@ -10,6 +10,7 @@ from Code import *
 from audio import *
 from runtimeclient import RuntimeClientManager
 import Sheet
+import bot
 
 clients = RuntimeClientManager((), ())
 
@@ -126,12 +127,12 @@ def to_setup(args):
 
 
 def to_perk_selection(args):
-    next_match_info = Sheet.get_match(match_number + 1)
+    next_match_info = Sheet.get_match(int(match_number) + 1)
     b1name = next_match_info["b1name"]
     b2name = next_match_info["b2name"]
     g1name = next_match_info["g1name"]
     g2name = next_match_info["g2name"]
-    bot.team_numbers_on_deck(b1name, b2name, g1name, g2name)
+    bot.team_names_on_deck(b1name, b2name, g1name, g2name)
     
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME + 2)
