@@ -66,6 +66,11 @@
       var gold_1_starting_spot = ""
       var gold_2_starting_spot = ""
 
+      var blue_1_custom_ip = ""
+      var blue_2_custom_ip = ""
+      var gold_1_custom_ip = ""
+      var gold_2_custom_ip = ""
+
       function getCookie(cname) {
           var name = cname + "=";
           var ca = document.cookie.split(';');
@@ -103,10 +108,17 @@
       $("#create-match").click(function() {
         setTeamsInfoVars()
         data = {"match_num" : match_num,
-                "b1num" : blue_1_num, "b1name" : blue_1_name, "b1_starting_spot" : blue_1_starting_spot,
-                "b2num" : blue_2_num, "b2name" : blue_2_name, "b2_starting_spot" : blue_2_starting_spot,
-                "g1num" : gold_1_num, "g1name" : gold_1_name, "g1_starting_spot" : gold_1_starting_spot,
-                "g2num" : gold_2_num, "g2name" : gold_2_name, "g2_starting_spot" : gold_2_starting_spot}
+                "b1num" : blue_1_num, "b1name" : blue_1_name, 
+                "b1_starting_spot" : blue_1_starting_spot, "b1_custom_ip" : blue_1_custom_ip,
+
+                "b2num" : blue_2_num, "b2name" : blue_2_name, 
+                "b2_starting_spot" : blue_2_starting_spot, "b2_custom_ip" : blue_2_custom_ip,
+
+                "g1num" : gold_1_num, "g1name" : gold_1_name, 
+                "g1_starting_spot" : gold_1_starting_spot, "g1_custom_ip" : gold_1_custom_ip,
+
+                "g2num" : gold_2_num, "g2name" : gold_2_name, 
+                "g2_starting_spot" : gold_2_starting_spot, "g2_custom_ip" : gold_2_custom_ip}
         socket.emit('ui-to-server-setup-match', JSON.stringify(data))
         document.cookie = "match_num=" + match_num
         document.cookie = "blue_1_num=" + blue_1_num
@@ -160,6 +172,11 @@
         blue_2_starting_spot = $("#blue-2-starting-spot").val();
         gold_1_starting_spot = $("#gold-1-starting-spot").val();
         gold_2_starting_spot = $("#gold-2-starting-spot").val();
+
+        blue_1_custom_ip = $("#blue-1-custom-ip").val();
+        blue_2_custom_ip = $("#blue-2-custom-ip").val();
+        gold_1_custom_ip = $("#gold-1-custom-ip").val();
+        gold_2_custom_ip = $("#gold-2-custom-ip").val();
       }
 
       $("#match-start").click(function() {
@@ -233,7 +250,7 @@
   </div>
 </nav>
 
-  <div class="container">
+  <div class="container" style="max-width:1405px">
     <h2>Match Creator</h2>
     <div class="btn-group bottom-padding" role="group" aria-label="...">
       <button type="button" class="btn btn-success" id="match-start"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start</button>
@@ -246,7 +263,7 @@
 
     </div>
 
-    <div class="input-group col-xs-4 bottom-padding">
+    <div class="input-group col-xs-6 bottom-padding">
       <input type="number" class="form-control" id="new-match-num" placeholder="Match number" aria-describedby="basicaddon2">
       <span class="input-group-btn">
         <button class="btn btn-default" id="populate-match" type="button">Populate</button>
@@ -266,6 +283,9 @@
       <div class="form-group heartbeat-light blue-1-hb"></div>
       <button class="btn btn-danger" type="button" id="stop-blue-1">Stop Blue 1</button>
       <div class="form-group">
+        <input type="number" class="form-control" id="blue-1-custom-ip" placeholder="Blue 1 Custom Hostname">
+      </div>
+      <div class="form-group">
         <input type="number" class="form-control" id="blue-1-number" style="width: 81px;" placeholder="Blue 1 #">
       </div>
       <div class="form-group">
@@ -276,6 +296,9 @@
       </div>
       <div class="form-group">
         <input type="number" class="form-control" id="gold-1-number" style="width: 81px;" placeholder="Gold 1 #">
+      </div>
+      <div class="form-group">
+        <input type="number" class="form-control" id="gold-1-custom-ip" placeholder="Gold 1 Custom Hostname">
       </div>
       <button class="btn btn-danger" type="button" id="stop-gold-1">Stop Gold 1</button>
       <div class="form-group heartbeat-light gold-1-hb"></div>
@@ -301,6 +324,9 @@
       <div class="form-group heartbeat-light blue-2-hb"></div>
       <button class="btn btn-danger" type="button" id="stop-blue-2">Stop Blue 2</button>
       <div class="form-group">
+        <input type="number" class="form-control" id="blue-2-custom-ip" placeholder="Blue 2 Custom Hostname">
+      </div>
+      <div class="form-group">
         <input type="number" class="form-control" id="blue-2-number" style="width: 81px;" placeholder="Blue 2 #">
       </div>
       <div class="form-group">
@@ -311,6 +337,9 @@
       </div>
       <div class="form-group">
         <input type="number" class="form-control" id="gold-2-number" style="width: 81px;" placeholder="Gold 2 #">
+      </div>
+      <div class="form-group">
+        <input type="number" class="form-control" id="gold-2-custom-ip" placeholder="Gold 2 Custom Hostname">
       </div>
       <button class="btn btn-danger" type="button" id="stop-gold-2">Stop Gold 2</button>
       <div class="form-group heartbeat-light gold-2-hb"></div>
