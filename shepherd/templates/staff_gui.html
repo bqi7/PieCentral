@@ -30,6 +30,10 @@
       margin-bottom: 15px;
     }
 
+    .form-inline {
+      flex-flow: row;
+    }
+
     .led-green,
     .heartbeat-light {
       width: 24px;
@@ -92,6 +96,12 @@
         gold_2_name = decodeURIComponent(getCookie("gold_2_name"))
         gold_1_num = parseInt(decodeURIComponent(getCookie("gold_1_num")))
         gold_1_name = decodeURIComponent(getCookie("gold_1_name"))
+
+        blue_1_num = parseInt(decodeURIComponent(getCookie("blue_1_custom_ip")))
+        blue_2_num = parseInt(decodeURIComponent(getCookie("blue_2_custom_ip")))
+        gold_1_num = parseInt(decodeURIComponent(getCookie("gold_1_custom_ip")))
+        gold_2_num = parseInt(decodeURIComponent(getCookie("gold_2_custom_ip")))
+
         setDefaultTeamsInfo()
       }
 
@@ -129,6 +139,11 @@
         document.cookie = "gold_2_name=" + gold_2_name
         document.cookie = "gold_1_num=" + gold_1_num
         document.cookie = "gold_1_name=" + gold_1_name
+
+        document.cookie = "blue_1_custom_ip" + blue_1_custom_ip
+        document.cookie = "blue_2_custom_ip" + blue_2_custom_ip
+        document.cookie = "gold_1_custom_ip" + gold_1_custom_ip
+        document.cookie = "gold_2_custom_ip" + gold_2_custom_ip
       });
 
       socket.on('server-to-ui-teamsinfo', function(data) {
