@@ -121,6 +121,7 @@ cdef class SharedMemory:
         self.ref_count -= 1
 
 
+@cython.final
 cdef class SharedLock:
     """
     FIXME:
@@ -144,12 +145,12 @@ cdef class SharedLock:
             pthread_mutex_destroy(<pthread_mutex_t *> &self.lock.lock)
             pthread_mutexattr_destroy(<pthread_mutexattr_t *> &self.lock.settings)
 
-    cpdef void acquire(self):
+    cpdef void acquire(self) nogil:
         cdef int status = pthread_mutex_lock(<pthread_mutex_t *> &self.lock.lock)
         if status != 0:
             raise OSError(f'Unable to acquire lock (status: {status}).')
 
-    cpdef void release(self):
+    cpdef void release(self) nogil:
         cdef int status = pthread_mutex_unlock(<pthread_mutex_t *> &self.lock.lock)
         if status != 0 and status != EPERM:
             raise OSError(f'Unable to release lock (status: {status}).')
@@ -187,24 +188,30 @@ cdef class SensorBuffer:
 
     cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil:
         cdef string buf
+        self.access.acquire()
         buf.insert(0, <const char *> (self.buf.buf + offset), count)
+        self.access.release()
         return buf
 
     cpdef void set_bytes(self, size_t base, size_t count, uint8_t *data) nogil:
+        self.access.acquire()
         memcpy(<void *> (self.buf.buf + base), <void *> data, count)
+        self.access.release()
 
     cpdef string get_value(self, Py_ssize_t index) nogil:
-        cdef string empty
+        self.access.acquire()
+        cdef string value
         if self.is_readable(index):
-            return self.get_bytes(self.offsets[index].value_offset,
-                                  self.offsets[index].value_size)
-        else:
-            return empty
+            value = self.get_bytes(self.offsets[index].value_offset,
+                                   self.offsets[index].value_size)
+        self.access.release()
+        return value
 
     cpdef void set_value(self, Py_ssize_t index, string bytes) nogil:
         cdef timespec now
         cdef int status
         cdef double timestamp
+        self.access.acquire()
         if self.is_writeable(index):
             self.set_bytes(self.offsets[index].value_offset,
                            self.offsets[index].value_size, <uint8_t *> bytes.c_str())
@@ -217,17 +224,25 @@ cdef class SensorBuffer:
             timestamp = (<double> now.tv_sec) + (<double> now.tv_nsec)/10e8
             self.set_bytes(self.offsets[index].timestamp_offset,
                            sizeof(double), <uint8_t *> &timestamp)
+        self.access.release()
 
     cpdef void set_flag(self, Py_ssize_t index, uint8_t flag) nogil:
+        self.access.acquire()
         cdef size_t offset = self.offsets[index].status_offset
         self.buf.buf[offset] = self.buf.buf[offset] | flag
+        self.access.release()
 
     cpdef void clear_flag(self, Py_ssize_t index, uint8_t flag) nogil:
+        self.access.acquire()
         cdef size_t offset = self.offsets[index].status_offset
         self.buf.buf[offset] = self.buf.buf[offset] & ~flag
+        self.access.release()
 
     cpdef bool is_set(self, Py_ssize_t index, uint8_t flag) nogil:
-        return (self.buf.buf[self.offsets[index].status_offset] & flag) > 0
+        self.access.acquire()
+        cdef bool flag_set = (self.buf.buf[self.offsets[index].status_offset] & flag) > 0
+        self.access.release()
+        return flag_set
 
     cpdef void set_dirty(self, Py_ssize_t index) nogil:
         if self.is_writeable(index):

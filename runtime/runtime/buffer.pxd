@@ -139,8 +139,8 @@ cdef class SharedLock:
     cdef SharedMemory mem
     cdef Lock *lock
 
-    cpdef void acquire(self)
-    cpdef void release(self)
+    cpdef void acquire(self) nogil
+    cpdef void release(self) nogil
 
 
 cpdef enum ParameterStatus:
