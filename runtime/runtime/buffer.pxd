@@ -1,4 +1,5 @@
 from libc.stdint cimport uint8_t
+from libc.time cimport time_t
 from libcpp.string cimport string
 from posix.stat cimport mode_t
 from posix.types cimport off_t
@@ -94,6 +95,17 @@ cdef extern from "<pthread.h>" nogil:
     int pthread_mutexattr_setprotocol(pthread_mutexattr_t *, int)
 
 
+cdef extern from "<time.h>" nogil:
+    ctypedef struct timespec:
+        time_t tv_sec
+        long tv_nsec
+    ctypedef struct clockid_t:
+        pass
+    cpdef enum:
+        CLOCK_REALTIME
+    int clock_gettime(clockid_t, timespec *)
+
+
 cdef extern from "_buffer.cpp":
     pass
 
@@ -150,7 +162,9 @@ cdef class SensorBuffer:
     cdef ParameterDescriptor offsets[MAX_PARAMETERS]
 
     cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil
+    cpdef void set_bytes(self, size_t base, size_t count, uint8_t *bytes) nogil
     cpdef string get_value(self, Py_ssize_t index) nogil
+    cpdef void set_value(self, Py_ssize_t, string bytes) nogil
 
 
 cdef class BinaryRingBuffer:

@@ -1,6 +1,9 @@
+import ctypes
 import unittest
 import multiprocessing
-from runtime.buffer import SharedMemory, SharedLock
+import time
+from runtime.buffer import SharedMemory, SharedLock, SensorBuffer, ParameterStatus
+from runtime.devices import SensorStructure, Parameter
 
 
 class TestSharedMemory(unittest.TestCase):
@@ -63,6 +66,32 @@ class TestSharedLock(unittest.TestCase):
         self.assertEqual(sync_ctr.value, child_count*n)
         self.assertLess(unsync_ctr.value, child_count*n)
 
+
+class TestSensorBuffer(unittest.TestCase):
+    def setUp(self):
+        self.PolarBear = SensorStructure.make_sensor_type('PolarBear', [
+            Parameter('duty_cycle', ctypes.c_double, -1, 1),
+        ])
+        self.raw_buf = SensorBuffer('test-sensor', self.PolarBear)
+        self.buf = self.PolarBear.from_buffer(self.raw_buf)
+
+    def test_write(self):
+        self.assertAlmostEqual(self.buf.duty_cycle, 0.0)
+        self.assertEqual(self.raw_buf.get_value(0), b'\x00'*8)
+
+        one = b'\x00'*6 + b'\xf0?'
+        self.buf.duty_cycle = 1.0
+        self.assertEqual(self.raw_buf.get_value(0), one)
+
+        self.buf.duty_cycle = 0.0
+        before = time.time()
+        self.raw_buf.set_value(0, one)
+        after = time.time()
+        self.assertAlmostEqual(self.buf.duty_cycle, 1.0)
+        timestamp = self.buf.last_modified('duty_cycle')
+        self.assertLess(before, timestamp)
+        self.assertLess(timestamp, after)
+        self.assertLess(after - before, 0.01)
 
 
 if __name__ == '__main__':
