@@ -18,9 +18,39 @@ class Actions:
         await asyncio.sleep(seconds)
 
 
+class Field:
+    def __init__(self, client):
+        self.client = client
+
+    @property
+    def alliance(self):
+        pass
+
+    @property
+    def starting_zone(self):
+        pass
+
+
 class Gamepad:
-    pass
+    def __init__(self):
+        pass
+
+    def get_value(self, name: str):
+        pass
 
 
 class Robot:
-    pass
+    def __init__(self):
+        pass
+
+    def get_value(self, dev_id: str, param: str):
+        pass
+
+    def set_value(self, dev_id: str, param: str, value):
+        pass
+
+    def run(self, async_fn, *args):
+        pass
+
+    def is_running(self, async_fn):
+        pass

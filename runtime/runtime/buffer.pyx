@@ -226,6 +226,9 @@ cdef class SensorBuffer:
                            sizeof(double), <uint8_t *> &timestamp)
         self.access.release()
 
+    cpdef size_t get_size(self, Py_ssize_t index) nogil:
+        return self.offsets[index].value_size
+
     cpdef void set_flag(self, Py_ssize_t index, uint8_t flag) nogil:
         self.access.acquire()
         cdef size_t offset = self.offsets[index].status_offset
@@ -260,11 +263,25 @@ cdef class SensorBuffer:
     cpdef bool is_writeable(self, Py_ssize_t index) nogil:
         return self.is_set(index, ParameterStatus.WRITEABLE)
 
+    cpdef void acquire(self) nogil:
+        self.access.acquire()
+
+    cpdef void release(self) nogil:
+        self.access.release()
+
     def __getbuffer__(self, Py_buffer *buffer, int flags):
         PyObject_GetBuffer(self.buf, buffer, flags)
 
     def __releasebuffer__(self, Py_buffer *buffer):
         PyBuffer_Release(buffer)
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, _exc_type, _exc, _traceback):
+        self.release()
+        return self
 
 
 @cython.final

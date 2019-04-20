@@ -48,7 +48,7 @@ class StudentCodeExecutor:
                      for challenge in self.coding_challenge]
         return reduce(lambda f, g: (lambda x: g(f(x))), functions, lambda x: x)
 
-    async def run_challenge(self, seed):
+    async def run_challenge(self, seed: int):
         challenge = self.compose_challenge()
         return challenge(seed)
 

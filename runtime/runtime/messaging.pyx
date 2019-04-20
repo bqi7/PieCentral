@@ -5,8 +5,9 @@ Runtime module for encoding and decoding Smart Sensor messages.
 """
 
 from libc.stdint cimport uint8_t, uint16_t, uint64_t
+from posix.unistd cimport usleep, useconds_t
 from libcpp.string cimport string
-from runtime.buffer cimport SensorBuffer, BinaryRingBuffer
+from runtime.buffer cimport SensorBuffer, BinaryRingBuffer, MAX_PARAMETERS
 
 
 cpdef enum MessageType:
@@ -41,15 +42,15 @@ cpdef string build_packet(MessageType type_id, string payload) nogil:
     return message
 
 
-# cpdef string make_ping() nogil:
-#     cdef string empty
-#     return build_packet(MessageType.PING, empty)
-#
-#
-# cdef string make_sub_req() nogil:
-#     pass
-#
-#
+cpdef string make_ping() nogil:
+    cdef string empty
+    return build_packet(PING, empty)
+
+
+# cdef string make_sub_req(uint16_t params, uint16_t delays) nogil:
+
+
+
 # cdef string make_read() nogil:
 #     pass
 #
@@ -62,32 +63,73 @@ cpdef string build_packet(MessageType type_id, string payload) nogil:
 #     pass
 
 
-# cpdef string parse_packet()
+cdef string make_heartbeat_res(uint8_t id) nogil:
+    cdef string payload
+    payload.append(1, <char> id)
+    return build_packet(HEARTBEAT_RES, payload)
 
 
-cdef void _encode_loop(SensorBuffer buf, BinaryRingBuffer write_queue) nogil:
+cdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
+    packet.append(1, 0)
+    write_queue.extend(cobs_encode(packet))
+
+
+cdef void _encode_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t period_ms) nogil:
     while True:
         # decoded_packet = build_packet()
         # write_queue.extend()
-        pass
+        buf.acquire()
+        # decoded_packet = build_packet()
+        buf.release()
+        usleep(period_ms)
 
 
-cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue) nogil:
+
+cdef void parse_data(SensorBuffer buf, string payload) nogil:
+    # TODO: verify the endianness is correct
+    cdef uint16_t presence = ((<uint16_t> payload[1]) << 8) | payload[0]
+    cdef size_t param_size
+    payload = payload.substr(2)
+    for i in range(MAX_PARAMETERS):
+        if (presence >> <uint16_t> i) & 1:
+            param_size = buf.get_size(<Py_ssize_t> i)
+            buf.set_value(<Py_ssize_t> i, payload.substr(0, param_size))
+            payload = payload.substr(param_size)
+
+
+cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue, BinaryRingBuffer write_queue) nogil:
+    cdef uint8_t msg_id, payload_len
+    cdef string payload
     while True:
-        packet = read_queue.read()
-        packet = cobs_decode(packet)
+        packet = cobs_decode(read_queue.read())
         if packet.size() < 3:
             continue
         checksum = compute_checksum(packet.substr(0, packet.size() - 1))
         if checksum != packet.at(packet.size() - 1):
             continue
 
+        msg_id = <uint8_t> packet.at(0)
+        payload_len = <uint8_t> packet.at(1)
+        payload = packet.substr(2, 2 + payload_len)
+        if msg_id == HEARTBEAT_REQ:
+            append_packet(write_queue, make_heartbeat_res(payload[0]))
+        elif msg_id == HEARTBEAT_RES:
+            pass
+        elif msg_id == DEV_DATA:
+            parse_data(buf,payload)
+        elif msg_id == SUB_RES:
+            pass
+        elif msg_id == ERROR:
+            pass
 
-def encode_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None):
+
+def encode_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_ms):
     with nogil:
-        _encode_loop(buf, write_queue)
+        _encode_loop(buf, write_queue, period_ms)
 
 
-def decode_loop(SensorBuffer buf not None, BinaryRingBuffer read_queue not None):
-    # with nogil:
-        _decode_loop(buf, read_queue)
+def decode_loop(SensorBuffer buf not None,
+                BinaryRingBuffer read_queue not None,
+                BinaryRingBuffer write_queue not None):
+    with nogil:
+        _decode_loop(buf, read_queue, write_queue)

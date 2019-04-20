@@ -166,6 +166,7 @@ cdef class SensorBuffer:
     cpdef void set_bytes(self, size_t base, size_t count, uint8_t *bytes) nogil
     cpdef string get_value(self, Py_ssize_t index) nogil
     cpdef void set_value(self, Py_ssize_t, string bytes) nogil
+    cpdef size_t get_size(self, Py_ssize_t index) nogil
 
     cpdef void set_flag(self, Py_ssize_t, uint8_t flag) nogil
     cpdef void clear_flag(self, Py_ssize_t, uint8_t flag) nogil
@@ -177,6 +178,9 @@ cdef class SensorBuffer:
 
     cpdef bool is_readable(self, Py_ssize_t index) nogil
     cpdef bool is_writeable(self, Py_ssize_t index) nogil
+
+    cpdef void acquire(self) nogil
+    cpdef void release(self) nogil
 
 
 cdef class BinaryRingBuffer:
