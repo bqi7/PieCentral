@@ -36,13 +36,17 @@ class RuntimeClient:
 
 
 class RuntimeClientManager:
-    def __init__(self, blue_alliance, gold_alliance, b1_custom_ip, b2_custom_ip, g1_custom_ip, g2_custom_ip):
+    def __init__(self, blue_alliance, gold_alliance, b1_custom_ip=None, b2_custom_ip=None, g1_custom_ip=None, g2_custom_ip=None):
         custom_ips = (b1_custom_ip, b2_custom_ip, g1_custom_ip, g2_custom_ip)
         self.blue_alliance, self.gold_alliance = blue_alliance, gold_alliance
-        self.clients = {
-            team: (RuntimeClient(f'{custom_ips[i]}', 6020) if custom_ips[i] else RuntimeClient(f'192.168.128.{200 + (self.blue_alliance + self.gold_alliance)[i]}', 6020) if (self.blue_alliance + self.gold_alliance)[i] >= -100 else None)
-            for team in range(4)
-        }
+        self.clients = {}
+        for i in range(len(self.blue_alliance+self.gold_alliance)):
+            if custom_ips[i]:
+                self.clients[(self.blue_alliance+self.gold_alliance)[i]] = (RuntimeClient(f'{custom_ips[i]}', 6020))
+            elif (self.blue_alliance + self.gold_alliance)[i] >= -100:
+                self.clients[(self.blue_alliance+self.gold_alliance)[i]] = (RuntimeClient(f'192.168.128.{200 + (self.blue_alliance + self.gold_alliance)[i]}', 6020))
+            else:
+                self.clients[(self.blue_alliance+self.gold_alliance)[i]] = None
         for client in self.clients.values():
             if client is not None:
                  print(client.host)
