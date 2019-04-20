@@ -166,13 +166,18 @@ def to_auto(args):
     global clients
     game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
 
+    alternate_connections = (alliances[ALLIANCE_COLOR.BLUE].team_1_custom_ip,
+                             alliances[ALLIANCE_COLOR.BLUE].team_2_custom_ip,
+                             alliances[ALLIANCE_COLOR.GOLD].team_1_custom_ip,
+                             alliances[ALLIANCE_COLOR.GOLD].team_2_custom_ip)
+
     clients = RuntimeClientManager((
         int(alliances[ALLIANCE_COLOR.BLUE].team_1_number),
         int(alliances[ALLIANCE_COLOR.BLUE].team_2_number),
     ), (
         int(alliances[ALLIANCE_COLOR.GOLD].team_1_number),
         int(alliances[ALLIANCE_COLOR.GOLD].team_2_number),
-    ))
+    ),*alternate_connections)
     clients.set_master_robots(master_robots[ALLIANCE_COLOR.BLUE],
                               master_robots[ALLIANCE_COLOR.GOLD])
     clients.set_starting_zones(starting_spots)
