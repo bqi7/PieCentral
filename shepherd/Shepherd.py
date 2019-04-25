@@ -92,10 +92,10 @@ def to_setup(args):
     g1_name, g1_num, g1_starting_spot = args["g1name"], args["g1num"], args["g1_starting_spot"]
     g2_name, g2_num, g2_starting_spot = args["g2name"], args["g2num"], args["g2_starting_spot"]
 
-    g1_custom_ip = None if args["g1_custom_ip"] == "" else args["g1_custom_ip"]
-    g2_custom_ip = None if args["g2_custom_ip"] == "" else args["g2_custom_ip"]
-    b1_custom_ip = None if args["b1_custom_ip"] == "" else args["b1_custom_ip"]
-    b2_custom_ip = None if args["b2_custom_ip"] == "" else args["b2_custom_ip"]
+    g1_custom_ip = args["g1_custom_ip"] or None
+    g2_custom_ip = args["g2_custom_ip"] or None
+    b1_custom_ip = args["b1_custom_ip"] or None
+    b2_custom_ip = args["b2_custom_ip"] or None
 
     starting_spots = [b1_starting_spot, b2_starting_spot, g1_starting_spot, g2_starting_spot]
 
