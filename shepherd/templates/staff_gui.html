@@ -27,7 +27,7 @@
     }
 
     .bottom-padding {
-      margin-bottom: 15px;
+      margin-bottom: 25px;
     }
 
     .form-inline {
@@ -278,13 +278,17 @@
 
     </div>
 
-    <div class="input-group col-xs-6 bottom-padding">
-      <input type="number" class="form-control" id="new-match-num" placeholder="Match number" aria-describedby="basicaddon2">
-      <span class="input-group-btn">
-        <button class="btn btn-default" id="populate-match" type="button">Populate</button>
-        <button class="btn btn-info" id="create-match" type="button">Create Match</button>
-      </span>
-    </div>
+      <div class="row">
+        <div class="col-3">
+          <div class="btn-group px-2 mb-3" role="group" style="min-width: 30%">
+            <div class="input-group px-3">
+             <input type="number" class="form-control" id="new-match-num" placeholder="Match number" aria-describedby="basicaddon2">
+            </div>
+            <button class="btn btn-success" id="populate-match" type="button">Populate</button>
+            <button class="btn btn-info" id="create-match" type="button" style="white-space: nowrap;">Create Match</button>
+          </div>
+        </div>
+      </div>
 
     <form class="form-inline bottom-padding">
       <div class="form-group">
