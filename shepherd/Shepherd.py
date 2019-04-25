@@ -165,23 +165,25 @@ def to_auto(args):
     global game_state
     global clients
     game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
-
-    alternate_connections = (alliances[ALLIANCE_COLOR.BLUE].team_1_custom_ip,
+    try:
+        alternate_connections = (alliances[ALLIANCE_COLOR.BLUE].team_1_custom_ip,
                              alliances[ALLIANCE_COLOR.BLUE].team_2_custom_ip,
                              alliances[ALLIANCE_COLOR.GOLD].team_1_custom_ip,
                              alliances[ALLIANCE_COLOR.GOLD].team_2_custom_ip)
 
-    clients = RuntimeClientManager((
-        int(alliances[ALLIANCE_COLOR.BLUE].team_1_number),
-        int(alliances[ALLIANCE_COLOR.BLUE].team_2_number),
-    ), (
-        int(alliances[ALLIANCE_COLOR.GOLD].team_1_number),
-        int(alliances[ALLIANCE_COLOR.GOLD].team_2_number),
-    ),*alternate_connections)
-    clients.set_master_robots(master_robots[ALLIANCE_COLOR.BLUE],
-                              master_robots[ALLIANCE_COLOR.GOLD])
-    clients.set_starting_zones(starting_spots)
-
+        clients = RuntimeClientManager((
+            int(alliances[ALLIANCE_COLOR.BLUE].team_1_number),
+            int(alliances[ALLIANCE_COLOR.BLUE].team_2_number),
+        ), (
+            int(alliances[ALLIANCE_COLOR.GOLD].team_1_number),
+            int(alliances[ALLIANCE_COLOR.GOLD].team_2_number),
+        ),*alternate_connections)
+        clients.set_master_robots(master_robots[ALLIANCE_COLOR.BLUE],
+                                master_robots[ALLIANCE_COLOR.GOLD])
+        clients.set_starting_zones(starting_spots)
+    except Exception as exc:
+        Log.log(exc)
+        raise exc
     game_state = STATE.AUTO
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     enable_robots(True)
@@ -318,8 +320,12 @@ def enable_robots(autonomous):
     try:
         clients.set_mode("auto" if autonomous else "teleop")
     except Exception as exc:
-        print(exc)
-
+        for client in clients.clients:
+            try:
+                client.set_mode("auto" if autonomous else "teleop")
+            except Exception as exc:
+                print("A robot failed to be enabled! Big sad :(")
+                Log.log(exc)
 
 def disable_robots():
     '''
@@ -338,10 +344,13 @@ def disable_robot(args):
     '''
     Send message to Dawn to disable the robots of team
     '''
-    team_number = args["team_number"]
-    client = clients.clients[int(team_number)]
-    if client:
-        client.set_mode("idle")
+    try: 
+        team_number = args["team_number"]
+        client = clients.clients[int(team_number)]
+        if client:
+            client.set_mode("idle")
+    except Exception as exc:
+        Log.log(exc)
 
 
 def set_master_robot(args):
@@ -372,21 +381,24 @@ def code_setup():
     code_effect = assign_code_effect()
 
 def bounce_code(args):
-    student_solutions = clients.get_challenge_solutions()
-    print(student_solutions)
-    for ss in student_solutions.keys():
-        if student_solutions[ss] != None:
-            alliance = None
-            if int(alliances[ALLIANCE_COLOR.BLUE].team_1_number) == int(ss):
-                alliance = ALLIANCE_COLOR.BLUE
-            if int(alliances[ALLIANCE_COLOR.GOLD].team_1_number) == int(ss):
-                alliance = ALLIANCE_COLOR.GOLD
-            if int(alliances[ALLIANCE_COLOR.BLUE].team_2_number) == int(ss):
-                alliance = ALLIANCE_COLOR.BLUE
-            if int(alliances[ALLIANCE_COLOR.GOLD].team_2_number) == int(ss):
-                alliance = ALLIANCE_COLOR.GOLD
-            msg = {"alliance": alliance, "result": student_solutions[ss]}
-            lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
+    try:
+        student_solutions = clients.get_challenge_solutions()
+        print(student_solutions)
+        for ss in student_solutions.keys():
+            if student_solutions[ss] != None:
+                alliance = None
+                if int(alliances[ALLIANCE_COLOR.BLUE].team_1_number) == int(ss):
+                    alliance = ALLIANCE_COLOR.BLUE
+                if int(alliances[ALLIANCE_COLOR.GOLD].team_1_number) == int(ss):
+                    alliance = ALLIANCE_COLOR.GOLD
+                if int(alliances[ALLIANCE_COLOR.BLUE].team_2_number) == int(ss):
+                    alliance = ALLIANCE_COLOR.BLUE
+                if int(alliances[ALLIANCE_COLOR.GOLD].team_2_number) == int(ss):
+                    alliance = ALLIANCE_COLOR.GOLD
+                msg = {"alliance": alliance, "result": student_solutions[ss]}
+                lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE, msg)
+    except Exception as exc:
+        Log.log(exc)
 
 def auto_apply_code(args):
     '''
@@ -459,36 +471,42 @@ def launch_button_triggered(args):
     check if allowed once every 30 seconds, give one of the codes to the correct alliance through Dawn,
     update scoreboard
     '''
-    alliance = alliances[args['alliance']]
-    button = args["button"]
-    lb = alliance.name + "_" + str(button)
-    if not timer_dictionary[lb].is_running():
-        msg = {"alliance": alliance.name, "button": button}
-        code = next_code()
-        client = clients.clients[int(master_robots[alliance.name])]
-        if client:
-            client.run_challenge(code)
-        student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
-        timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
-        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
+    try:
+        alliance = alliances[args['alliance']]
+        button = args["button"]
+        lb = alliance.name + "_" + str(button)
+        if not timer_dictionary[lb].is_running():
+            msg = {"alliance": alliance.name, "button": button}
+            code = next_code()
+            client = clients.clients[int(master_robots[alliance.name])]
+            if client:
+                client.run_challenge(code)
+            student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
+            timer_dictionary[lb].start_timer(CONSTANTS.COOLDOWN)
+            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
+    except Exception as exc:
+        Log.log(exc)
 
 def auto_launch_button_triggered(args):
     ##  mark button as dirty, sent to sc (both things)
     ## Isn't this already done in auto_apply_code?
-    alliance = alliances[args['alliance']]
-    button = args["button"]
-    temp_str = alliance.name + "_" + str(button)
-    if not buttons[temp_str]:
-        msg = {"alliance": alliance.name, "button": button}
-        code = next_code()
-        client = clients.clients[int(master_robots[alliance.name])]
-        if client:
-            client.run_challenge(code, timeout=1)
+    try: 
+        alliance = alliances[args['alliance']]
+        button = args["button"]
+        temp_str = alliance.name + "_" + str(button)
+        if not buttons[temp_str]:
+            msg = {"alliance": alliance.name, "button": button}
+            code = next_code()
+            client = clients.clients[int(master_robots[alliance.name])]
+            if client:
+                client.run_challenge(code, timeout=1)
 
-        student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
-        buttons[temp_str] = True
-        msg = {"alliance": alliance.name, "button": button}
-        lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
+            student_decode_timer.start_timer(CONSTANTS.STUDENT_DECODE_TIME)
+            buttons[temp_str] = True
+            msg = {"alliance": alliance.name, "button": button}
+            lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.LAUNCH_BUTTON_TIMER_START, msg)
+    except Exception as exc:
+        Log.log(exc)
 
 
 def final_score(args):
