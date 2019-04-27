@@ -27,6 +27,10 @@ def score_adjustment():
 def staff_gui():
     return render_template('staff_gui.html')
 
+@app.route('/stage_control.html/')
+def staff_gui():
+    return render_template('stage_control.html')
+
 @socketio.on('join')
 def handle_join(client_name):
     print('confirmed join: ' + client_name)
