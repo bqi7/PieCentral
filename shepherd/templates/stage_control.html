@@ -27,11 +27,11 @@
     }
 
     .bottom-padding {
-      margin-bottom: 25px;
+      margin-bottom: 15px;
     }
 
     .form-inline {
-      flex-flow: row;
+      flex-flow: row wrap;
     }
 
     .led-green,
@@ -255,14 +255,14 @@
   </button>
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" href="../staff_gui.html">Staff GUI<span class="sr-only">(current)</span></a>
+      <li class="nav-item">
+        <a class="nav-link" href="../staff_gui.html">Staff GUI</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="../score_adjustment.html">Score Adjustment</a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="../stage_control.html">Stage Control</a>
+      <li class="nav-item active">
+        <a class="nav-link" href="../staff_gui.html">Stage Control<span class="sr-only">(current)</span></a>
       </li>
     </ul>
   </div>
@@ -281,17 +281,13 @@
 
     </div>
 
-      <div class="row">
-        <div class="col-3">
-          <div class="btn-group px-2 mb-3" role="group" style="min-width: 30%">
-            <div class="input-group px-3">
-             <input type="number" class="form-control" id="new-match-num" placeholder="Match number" aria-describedby="basicaddon2">
-            </div>
-            <button class="btn btn-success" id="populate-match" type="button">Populate</button>
-            <button class="btn btn-info" id="create-match" type="button" style="white-space: nowrap;">Create Match</button>
-          </div>
-        </div>
-      </div>
+    <div class="input-group col-xs-6 bottom-padding">
+      <input type="number" class="form-control" id="new-match-num" placeholder="Match number" aria-describedby="basicaddon2">
+      <span class="input-group-btn">
+        <button class="btn btn-default" id="populate-match" type="button">Populate</button>
+        <button class="btn btn-info" id="create-match" type="button">Create Match</button>
+      </span>
+    </div>
 
     <form class="form-inline bottom-padding">
       <div class="form-group">
@@ -305,9 +301,6 @@
       <div class="form-group heartbeat-light blue-1-hb"></div>
       <button class="btn btn-danger" type="button" id="stop-blue-1">Stop Blue 1</button>
       <div class="form-group">
-        <input type="number" class="form-control" id="blue-1-custom-ip" placeholder="Blue 1 Custom IP">
-      </div>
-      <div class="form-group">
         <input type="number" class="form-control" id="blue-1-number" style="width: 81px;" placeholder="Blue 1 #">
       </div>
       <div class="form-group">
@@ -318,9 +311,6 @@
       </div>
       <div class="form-group">
         <input type="number" class="form-control" id="gold-1-number" style="width: 81px;" placeholder="Gold 1 #">
-      </div>
-      <div class="form-group">
-        <input type="number" class="form-control" id="gold-1-custom-ip" placeholder="Gold 1 Custom IP">
       </div>
       <button class="btn btn-danger" type="button" id="stop-gold-1">Stop Gold 1</button>
       <div class="form-group heartbeat-light gold-1-hb"></div>
@@ -333,7 +323,14 @@
         </select>
       </div>
     </form>
-
+    <form class="form-inline bottom-padding">
+      <div class="form-group">
+        <input type="number" class="form-control" id="blue-1-custom-ip" placeholder="Blue 1 Custom IP">
+      </div>
+      <div class="form-group">
+        <input type="number" class="form-control" id="gold-1-custom-ip" placeholder="Gold 1 Custom IP">
+      </div>
+    </form>
     <form class="form-inline bottom-padding">
       <div class="form-group">
         <select id="blue-2-starting-spot">
@@ -346,9 +343,6 @@
       <div class="form-group heartbeat-light blue-2-hb"></div>
       <button class="btn btn-danger" type="button" id="stop-blue-2">Stop Blue 2</button>
       <div class="form-group">
-        <input type="number" class="form-control" id="blue-2-custom-ip" placeholder="Blue 2 Custom IP">
-      </div>
-      <div class="form-group">
         <input type="number" class="form-control" id="blue-2-number" style="width: 81px;" placeholder="Blue 2 #">
       </div>
       <div class="form-group">
@@ -359,9 +353,6 @@
       </div>
       <div class="form-group">
         <input type="number" class="form-control" id="gold-2-number" style="width: 81px;" placeholder="Gold 2 #">
-      </div>
-      <div class="form-group">
-        <input type="number" class="form-control" id="gold-2-custom-ip" placeholder="Gold 2 Custom IP">
       </div>
       <button class="btn btn-danger" type="button" id="stop-gold-2">Stop Gold 2</button>
       <div class="form-group heartbeat-light gold-2-hb"></div>
@@ -374,7 +365,14 @@
         </select>
       </div>
     </form>
-
+    <form class="form-inline bottom-padding">
+      <div class="form-group">
+        <input type="number" class="form-control" id="blue-2-custom-ip" placeholder="Blue 2 Custom IP">
+      </div>
+      <div class="form-group">
+        <input type="number" class="form-control" id="gold-2-custom-ip" placeholder="Gold 2 Custom IP">
+      </div>
+    </form>
   </div>
 </body>
 
