@@ -67,27 +67,15 @@
         $("#gold-score").html(goldScore);
       }
 
-      $("#blue-add").click(
+      $("#blue-change").click(
         function() {
-          blueScore += parseInt($("#blue-adjustment").val());
+          blueScore = parseInt($("#blue-adjustment").val());
           updateScores();
         });
 
-      $("#blue-sub").click(
+      $("#gold-change").click(
         function() {
-          blueScore -= parseInt($("#blue-adjustment").val());
-          updateScores();
-        });
-
-      $("#gold-add").click(
-        function() {
-          goldScore += parseInt($("#gold-adjustment").val());
-          updateScores();
-        });
-
-      $("#gold-sub").click(
-        function() {
-          goldScore -= parseInt($("#gold-adjustment").val());
+          goldScore = parseInt($("#gold-adjustment").val());
           updateScores();
         });
 
@@ -120,6 +108,9 @@
       <li class="nav-item active">
         <a class="nav-link" href="../score_adjustment.html">Score Adjustment</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="../stage_control.html">Stage Control</a>
+      </li>
     </ul>
   </div>
   </nav>
@@ -139,13 +130,12 @@
       <h1 id="gold-score">0</h1>
     </div>
     </div>
-    
+
     <div class="row bottom-padding">
       <div class="col">
         <div class="input-group">
           <span class="input-group-btn">
-            <button class="btn btn-success" type="button" id="blue-add">+</button>
-            <button class="btn btn-danger" type="button" id="blue-sub">-</button>
+            <button class="btn btn-success" type="button" id="blue-change">Change</button>
           </span>
           <input type="number" class="form-control" value="0" id="blue-adjustment">
         </div>
@@ -153,8 +143,7 @@
       <div class="col">
         <div class="input-group">
           <span class="input-group-btn">
-            <button class="btn btn-success" type="button" id="gold-add">+</button>
-            <button class="btn btn-danger" type="button" id="gold-sub">-</button>
+            <button class="btn btn-success" type="button" id="gold-change">Change</button>
           </span>
           <input type="number" class="form-control" value="0" id="gold-adjustment">
         </div>
