@@ -53,3 +53,9 @@ class Alliance:
         #TODO: Send info to sensors about reset
         #TODO: Send info to UI about reset
         #TODO: Move score sends to shepherd.py
+
+    def __str__(self):
+        return ("<alliance: " + self.name + "> <teams: " + self.team_1_name + " " + self.team_1_number + ", " +
+               self.team_2_name + " " + self.team_2_number + "> <score: " + self.score + "> <perks: " +
+               self.perk_1 + ", " + self.perk_2 + ", " + self.perk_3 + "> <can twist: " +
+               self.can_twist + ">")

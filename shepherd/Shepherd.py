@@ -11,6 +11,7 @@ from audio import *
 from runtimeclient import RuntimeClientManager
 import Sheet
 import bot
+import Log
 
 clients = RuntimeClientManager((), ())
 
@@ -33,6 +34,7 @@ def start():
         print("GAME STATE OUTSIDE: ", game_state)
         time.sleep(0.1)
         payload = events.get(True)
+        Log.last_header = payload
         print(payload)
         if game_state == STATE.SETUP:
             func = setup_functions.get(payload[0])
@@ -328,6 +330,12 @@ def disable_robots():
     try:
         clients.set_mode("idle")
     except Exception as exc:
+        for client in clients.clients:
+            try:
+                client.set_mode("idle")
+            except:
+                print("a client has disconnected")
+        Log.log(exc)
         print(exc)
 
 
@@ -541,6 +549,7 @@ def send_connections(args):
 
 setup_functions = {
     SHEPHERD_HEADER.SETUP_MATCH: to_setup,
+    SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
     SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection,
     SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
