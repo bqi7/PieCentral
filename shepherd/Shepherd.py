@@ -166,7 +166,6 @@ def to_auto(args):
     '''
     global game_state
     global clients
-    game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
     try:
         alternate_connections = (alliances[ALLIANCE_COLOR.BLUE].team_1_custom_ip,
                              alliances[ALLIANCE_COLOR.BLUE].team_2_custom_ip,
@@ -185,7 +184,8 @@ def to_auto(args):
         clients.set_starting_zones(starting_spots)
     except Exception as exc:
         Log.log(exc)
-        raise exc
+        return
+    game_timer.start_timer(CONSTANTS.AUTO_TIME + 2)
     game_state = STATE.AUTO
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE, {"stage": game_state})
     enable_robots(True)
@@ -352,7 +352,7 @@ def disable_robot(args):
     '''
     Send message to Dawn to disable the robots of team
     '''
-    try: 
+    try:
         team_number = args["team_number"]
         client = clients.clients[int(team_number)]
         if client:
@@ -498,7 +498,7 @@ def launch_button_triggered(args):
 def auto_launch_button_triggered(args):
     ##  mark button as dirty, sent to sc (both things)
     ## Isn't this already done in auto_apply_code?
-    try: 
+    try:
         alliance = alliances[args['alliance']]
         button = args["button"]
         temp_str = alliance.name + "_" + str(button)
