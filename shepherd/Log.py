@@ -10,6 +10,8 @@ def log(Exception):
         return
     now = datetime.datetime.now()
     filename = now.month + "-" + now.day + "-" + now.year + "-match-"+Shepherd.match_number+".txt"
+    print("a normaly fatal exception occured, but Shepherd will continue to run")
+    print("all known details are logged to logs/"+filename)
     file = open("logs/"+filename, "a+")
     file.write("========================================")
     file.write("a normaly fatal exception occured.")
