@@ -28,7 +28,7 @@ def staff_gui():
     return render_template('staff_gui.html')
 
 @app.route('/stage_control.html/')
-def staff_gui():
+def stage_control():
     return render_template('stage_control.html')
 
 @socketio.on('join')
