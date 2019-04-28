@@ -4,8 +4,9 @@ runtime.executor
 
 import asyncio
 import runtime.journal
-from runtime.networking import ClientCircuitbreaker
 from runtime.api import Actions, Gamepad, Robot
+from runtime.devices import SensorService
+from runtime.messaging import Circuitbreaker, make_rpc_server
 
 LOGGER = runtime.journal.make_logger(__name__)
 
@@ -93,6 +94,11 @@ class StudentCodeExecutor:
         LOGGER.debug('Imported and patched student code module.')
 
 
-async def start():
-    while True:
-        pass
+class ExecutorService(SensorService):
+    pass
+
+
+async def start(options):
+    server = await make_rpc_server(ExecutorService(), path=options['exec_srv'])
+    async with server:
+        await server.serve_forever()

@@ -8,7 +8,7 @@ package:
 
 clean:
 	rm -f runtime/*.cpython-*.so runtime/*.c
-	rm -f runtime/messaging.cpp runtime/statemanager.cpp
+	rm -f runtime/packet.cpp runtime/buffer.cpp
 
 install:
 	cd build-deps && wget https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip

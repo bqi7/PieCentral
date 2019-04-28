@@ -47,8 +47,6 @@ def override_options(options: dict):
               help='Path to device schema.', type=click.Path(exists=True, dir_okay=False))
 @click.option('--dev-names', default=get_module_path('conf/device-names.yaml'),
               help='Path to device names map.', type=click.Path(dir_okay=False))
-@click.option('--decoders', default=2, help='Number of decoder threads.')
-@click.option('--encoders', default=2, help='Number of encoder threads.')
 @click.option('-s', '--student-code', default=get_module_path('studentcode.py'),
               type=click.Path(exists=True, dir_okay=False),
               help='Path to student code module.')
@@ -56,6 +54,11 @@ def override_options(options: dict):
 @click.option('-c', '--config', default=get_module_path('conf/config.yaml'),
               type=click.Path(dir_okay=False),
               help='Path to configuration file. Overrides any command line options.')
+@click.option('--exec-srv', default='/tmp/executor-srv.sock',
+              help='Path to the internal executor server.')
+@click.option('--net-srv', default='/tmp/networking-srv.sock',
+              help='Path to the internal networking server.')
+@click.option('--ipc-timeout', default=5, help='Timeout for IPC.')
 @click.option('-v', '--version', is_flag=True, help='Show the runtime version and exit.')
 def cli(version, **options):
     """

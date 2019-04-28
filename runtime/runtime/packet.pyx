@@ -59,7 +59,7 @@ cpdef string make_ping() nogil:
 #     pass
 #
 #
-# cdef string make_heartbeat() nogil:
+# cdef string make_heartbeat_req() nogil:
 #     pass
 
 
@@ -75,7 +75,7 @@ cdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
     write_queue.extend(packet)
 
 
-cdef void _write_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t period_ms) nogil:
+cdef void _write_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t period_us) nogil:
     cdef uint16_t present
     cdef string payload
     while True:
@@ -83,14 +83,15 @@ cdef void _write_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t
         payload.clear()
         buf.acquire()
         for i in range(buf.num_params):
-            if buf.is_dirty(i):
+            if buf.is_dirty(i) and buf.is_writeable(i):
                 present |= (1 << <uint8_t> i)
                 payload.append(buf.get_value(i))
+                buf.clear_dirty(i)
         buf.release()
         if present:
             payload.insert(0, <const char *> &present, 2)
             append_packet(write_queue, build_packet(DEV_WRITE, payload))
-        usleep(period_ms)
+        usleep(period_us)
 
 
 
@@ -132,9 +133,9 @@ cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue, BinaryRing
             pass
 
 
-def write_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_ms):
+def write_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_us):
     with nogil:
-        _write_loop(buf, write_queue, period_ms)
+        _write_loop(buf, write_queue, period_us)
 
 
 def decode_loop(SensorBuffer buf not None,

@@ -21,8 +21,8 @@ import yaml
 
 from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus
 import runtime.journal
-from runtime.messaging import write_loop, decode_loop
-from runtime.networking import ClientCircuitbreaker
+from runtime.messaging import Circuitbreaker
+from runtime.packet import write_loop, decode_loop
 from runtime.util import RuntimeBaseException
 
 LOGGER = runtime.journal.make_logger(__name__)
@@ -49,21 +49,21 @@ CTYPES_REAL = {ctypes.c_float, ctypes.c_double, ctypes.c_longdouble}
 CTYPES_NUMERIC = CTYPES_SIGNED_INT | CTYPES_UNSIGNED_INT | CTYPES_REAL
 
 
-class SensorService:
-    def __init__(self):
+class SensorService(collections.UserDict):
+    def __init__(self, dependents: set = None):
+        dependents  = dependents or {}
+        self.dependents = {Circuitbreaker(path=path) for path in dependents}
         self.access = asyncio.Lock()
-        self.read_buffers, self.write_buffers, self.locks = {}, {}, {}
         super().__init__()
 
     async def register_device(self, uid: str):
         async with self.access:
-            self.read_buffers[uid] = None
-            self.write_buffers[uid] = None
+            LOGGER.debug('Registered device.')
+            for dependent in self.dependents:
+                await dependent.register_device(uid)
 
     async def unregister_device(self, uid: str):
-        async with self.access:
-            del self.read_buffers[uid]
-            del self.write_buffers[uid]
+        pass
 
     async def write(self, uid: str, params):
         pass
@@ -118,7 +118,8 @@ class SensorObserver(MonitorObserver):
     def open_serial_conn(self, com_port: str):
         """ Create a serial connection and add it to the running event loop. """
         LOGGER.debug('Creating serial connection.', com_port=com_port, baud_rate=self.baud_rate)
-        conn = serial_asyncio.create_serial_connection(self.loop, SensorProtocol,
+        make_protocol = lambda: SensorProtocol(self.service)
+        conn = serial_asyncio.create_serial_connection(self.loop, make_protocol,
                                                        com_port, baudrate=self.baud_rate)
         asyncio.ensure_future(conn, loop=self.loop)
 
@@ -143,6 +144,9 @@ class SensorProtocol(asyncio.Protocol):
     """
     An implementation of the Smart Sensor protocol.
     """
+    def __init__(self, service):
+        self.service = service
+
     def connection_made(self, transport):
         self.transport = transport
         transport.serial.rts = False
@@ -242,28 +246,12 @@ def initialize_hotplugging(service, options):
 
 
 async def start(options):
-    service = SensorService()
+    service = SensorService({options['exec_srv'], options['net_srv']})
+    await service.register_device('1234')
     initialize_hotplugging(service, options)
-    client = ClientCircuitbreaker(host=options['host'], port=options['tcp'])
+    client = Circuitbreaker(host=options['host'], port=options['tcp'])
     try:
         while True:
             await asyncio.sleep(1)
     except asyncio.CancelledError:
         observer.stop()
-
-
-if __name__ == '__main__':
-    PolarBear = SensorStructure.make_sensor_type('PolarBear', [Parameter('duty_cycle', ctypes.c_double)])
-    print(PolarBear._fields_)
-    from runtime.buffer import SensorBuffer
-    print(SensorBuffer('tmp', PolarBear))
-    # import threading
-    # from runtime.buffer import SharedMemory, BinaryRingBuffer
-    # buf = SharedMemory('test', 10)
-    # read_queue = BinaryRingBuffer()
-    # t = threading.Thread(target=decode_loop, args=(buf, read_queue))
-    # t.start()
-    # import time
-    # while True:
-    #     read_queue.extend(b'123\x00')
-    #     print('Read queue extended!')
