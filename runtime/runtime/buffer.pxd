@@ -144,17 +144,10 @@ cdef class SharedLock:
     cpdef void release(self) nogil
 
 
-cpdef enum ParameterStatus:
-    DIRTY       = 0x1
-    READABLE    = 0x2
-    WRITEABLE   = 0x4
-
-
 cdef struct ParameterDescriptor:
     size_t value_offset
     size_t value_size
     size_t timestamp_offset
-    size_t status_offset
 
 
 cdef class SensorBuffer:
@@ -163,25 +156,26 @@ cdef class SensorBuffer:
     cdef size_t num_params
     cdef ParameterDescriptor offsets[MAX_PARAMETERS]
 
-    cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil
-    cpdef void set_bytes(self, size_t base, size_t count, uint8_t *bytes) nogil
-    cpdef string get_value(self, Py_ssize_t index) nogil
-    cpdef void set_value(self, Py_ssize_t, string bytes) nogil
-    cpdef size_t get_size(self, Py_ssize_t index) nogil
+    cdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil
+    cdef void set_bytes(self, size_t base, size_t count, uint8_t *bytes) nogil
+    cdef string get_value(self, Py_ssize_t index) nogil
+    cdef void set_value(self, Py_ssize_t, string bytes) nogil
+    cdef size_t get_size(self, Py_ssize_t index) nogil
 
-    cpdef void set_flag(self, Py_ssize_t, uint8_t flag) nogil
-    cpdef void clear_flag(self, Py_ssize_t, uint8_t flag) nogil
-    cpdef bool is_set(self, Py_ssize_t, uint8_t flag) nogil
+    cdef void acquire(self) nogil
+    cdef void release(self) nogil
+
+
+cdef class SensorReadBuffer(SensorBuffer):
+    pass
+
+
+cdef class SensorWriteBuffer(SensorBuffer):
+    cdef size_t dirty_offset
 
     cpdef void set_dirty(self, Py_ssize_t index) nogil
     cpdef void clear_dirty(self, Py_ssize_t index) nogil
     cpdef bool is_dirty(self, Py_ssize_t index) nogil
-
-    cpdef bool is_readable(self, Py_ssize_t index) nogil
-    cpdef bool is_writeable(self, Py_ssize_t index) nogil
-
-    cpdef void acquire(self) nogil
-    cpdef void release(self) nogil
 
 
 cdef class BinaryRingBuffer:

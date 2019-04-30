@@ -164,7 +164,6 @@ cdef class SharedLock:
         return self
 
 
-@cython.final
 cdef class SensorBuffer:
     def __cinit__(self, str name, sensor_struct):
         self.buf = SharedMemory(name, ctypes.sizeof(sensor_struct))
@@ -173,100 +172,52 @@ cdef class SensorBuffer:
         for i, param in enumerate(sensor_struct._params_by_id):
             self.offsets[i].value_offset = getattr(sensor_struct, param.name).offset
             self.offsets[i].value_size = ctypes.sizeof(param.type)
-            self.offsets[i].timestamp_offset = getattr(
-                sensor_struct,
-                sensor_struct._get_timestamp_name(param.name),
-            ).offset
-            self.offsets[i].status_offset = getattr(
-                sensor_struct,
-                sensor_struct._get_status_name(param.name),
-            ).offset
-            if param.readable:
-                self.set_flag(i, ParameterStatus.READABLE)
-            if param.writeable:
-                self.set_flag(i, ParameterStatus.WRITEABLE)
+            timestamp_name = sensor_struct._get_timestamp_name(param.name)
+            self.offsets[i].timestamp_offset = getattr(sensor_struct, timestamp_name).offset
 
-    cpdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil:
+    cdef string get_bytes(self, Py_ssize_t offset, Py_ssize_t count) nogil:
         cdef string buf
         self.access.acquire()
         buf.insert(0, <const char *> (self.buf.buf + offset), count)
         self.access.release()
         return buf
 
-    cpdef void set_bytes(self, size_t base, size_t count, uint8_t *data) nogil:
+    cdef void set_bytes(self, size_t base, size_t count, uint8_t *data) nogil:
         self.access.acquire()
         memcpy(<void *> (self.buf.buf + base), <void *> data, count)
         self.access.release()
 
-    cpdef string get_value(self, Py_ssize_t index) nogil:
+    cdef string get_value(self, Py_ssize_t index) nogil:
         self.access.acquire()
         cdef string value
-        if self.is_readable(index):
-            value = self.get_bytes(self.offsets[index].value_offset,
-                                   self.offsets[index].value_size)
+        value = self.get_bytes(self.offsets[index].value_offset,
+                               self.offsets[index].value_size)
         self.access.release()
         return value
 
-    cpdef void set_value(self, Py_ssize_t index, string bytes) nogil:
+    cdef void set_value(self, Py_ssize_t index, string bytes) nogil:
         cdef timespec now
         cdef int status
         cdef double timestamp
         self.access.acquire()
-        if self.is_writeable(index):
-            self.set_bytes(self.offsets[index].value_offset,
-                           self.offsets[index].value_size, <uint8_t *> bytes.c_str())
-            self.set_dirty(index)
+        self.set_bytes(self.offsets[index].value_offset,
+                       self.offsets[index].value_size, <uint8_t *> bytes.c_str())
 
-            # TODO: verify this timestamp agrees with `time.time`
-            status = clock_gettime(<clockid_t> CLOCK_REALTIME, <timespec *> &now)
-            if status != 0:
-                return
+        # TODO: verify this timestamp agrees with `time.time`
+        status = clock_gettime(<clockid_t> CLOCK_REALTIME, <timespec *> &now)
+        if status == 0:
             timestamp = (<double> now.tv_sec) + (<double> now.tv_nsec)/10e8
             self.set_bytes(self.offsets[index].timestamp_offset,
                            sizeof(double), <uint8_t *> &timestamp)
         self.access.release()
 
-    cpdef size_t get_size(self, Py_ssize_t index) nogil:
+    cdef size_t get_size(self, Py_ssize_t index) nogil:
         return self.offsets[index].value_size
 
-    cpdef void set_flag(self, Py_ssize_t index, uint8_t flag) nogil:
-        self.access.acquire()
-        cdef size_t offset = self.offsets[index].status_offset
-        self.buf.buf[offset] = self.buf.buf[offset] | flag
-        self.access.release()
-
-    cpdef void clear_flag(self, Py_ssize_t index, uint8_t flag) nogil:
-        self.access.acquire()
-        cdef size_t offset = self.offsets[index].status_offset
-        self.buf.buf[offset] = self.buf.buf[offset] & ~flag
-        self.access.release()
-
-    cpdef bool is_set(self, Py_ssize_t index, uint8_t flag) nogil:
-        self.access.acquire()
-        cdef bool flag_set = (self.buf.buf[self.offsets[index].status_offset] & flag) > 0
-        self.access.release()
-        return flag_set
-
-    cpdef void set_dirty(self, Py_ssize_t index) nogil:
-        if self.is_writeable(index):
-            self.set_flag(index, ParameterStatus.DIRTY)
-
-    cpdef void clear_dirty(self, Py_ssize_t index) nogil:
-        self.clear_flag(index, ParameterStatus.DIRTY)
-
-    cpdef bool is_dirty(self, Py_ssize_t index) nogil:
-        return self.is_set(index, ParameterStatus.DIRTY)
-
-    cpdef bool is_readable(self, Py_ssize_t index) nogil:
-        return self.is_set(index, ParameterStatus.READABLE)
-
-    cpdef bool is_writeable(self, Py_ssize_t index) nogil:
-        return self.is_set(index, ParameterStatus.WRITEABLE)
-
-    cpdef void acquire(self) nogil:
+    cdef void acquire(self) nogil:
         self.access.acquire()
 
-    cpdef void release(self) nogil:
+    cdef void release(self) nogil:
         self.access.release()
 
     def __getbuffer__(self, Py_buffer *buffer, int flags):
@@ -282,6 +233,39 @@ cdef class SensorBuffer:
     def __exit__(self, _exc_type, _exc, _traceback):
         self.release()
         return self
+
+
+@cython.final
+cdef class SensorReadBuffer(SensorBuffer):
+    pass
+
+
+@cython.final
+cdef class SensorWriteBuffer(SensorBuffer):
+    def __cinit__(self, str name, sensor_struct):
+        self.dirty_offset = sensor_struct.dirty.offset
+
+    # cpdef void set_value(self, Py_ssize_t index, string bytes) nogil:
+    #     self.access.acquire()
+    #     super().set_value(index, bytes)
+    #     self.set_dirty(index)
+    #     self.access.release()
+
+    cpdef void set_dirty(self, Py_ssize_t index) nogil:
+        self.access.acquire()
+        self.buf.buf[self.dirty_offset] = self.buf.buf[self.dirty_offset] | (1 << index)
+        self.access.release()
+
+    cpdef void clear_dirty(self, Py_ssize_t index) nogil:
+        self.access.acquire()
+        self.buf.buf[self.dirty_offset] = self.buf.buf[self.dirty_offset] & ~(1 << index)
+        self.access.release()
+
+    cpdef bool is_dirty(self, Py_ssize_t index) nogil:
+        self.access.acquire()
+        cdef bool dirty = (self.buf.buf[self.dirty_offset] >> index) & 1
+        self.access.release()
+        return dirty
 
 
 @cython.final

@@ -7,7 +7,12 @@ Runtime module for encoding and decoding Smart Sensor messages.
 from libc.stdint cimport uint8_t, uint16_t, uint64_t
 from posix.unistd cimport usleep, useconds_t
 from libcpp.string cimport string
-from runtime.buffer cimport SensorBuffer, BinaryRingBuffer, MAX_PARAMETERS
+from runtime.buffer cimport (
+    SensorReadBuffer,
+    SensorWriteBuffer,
+    BinaryRingBuffer,
+    MAX_PARAMETERS,
+)
 
 
 cpdef enum MessageType:
@@ -81,7 +86,7 @@ cdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
     write_queue.extend(packet)
 
 
-cdef void _encode_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_t period_us) nogil:
+cdef void _encode_loop(SensorWriteBuffer buf, BinaryRingBuffer write_queue, useconds_t period_us) nogil:
     cdef uint16_t present
     cdef string payload
     while True:
@@ -89,7 +94,7 @@ cdef void _encode_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_
         payload.clear()
         buf.acquire()
         for i in range(buf.num_params):
-            if buf.is_dirty(i) and buf.is_writeable(i):
+            if buf.is_dirty(i):
                 present |= (1 << <uint8_t> i)
                 payload.append(buf.get_value(i))
                 buf.clear_dirty(i)
@@ -100,7 +105,7 @@ cdef void _encode_loop(SensorBuffer buf, BinaryRingBuffer write_queue, useconds_
         usleep(period_us)
 
 
-cdef void parse_data(SensorBuffer buf, string payload) nogil:
+cdef void parse_data(SensorReadBuffer buf, string payload) nogil:
     # TODO: verify the endianness is correct
     cdef uint16_t present = ((<uint16_t> payload[1]) << 8) | payload[0]
     cdef size_t param_size
@@ -112,7 +117,7 @@ cdef void parse_data(SensorBuffer buf, string payload) nogil:
             payload = payload.substr(param_size)
 
 
-cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue, BinaryRingBuffer write_queue) nogil:
+cdef void _decode_loop(SensorReadBuffer buf, BinaryRingBuffer read_queue, BinaryRingBuffer write_queue) nogil:
     cdef uint8_t msg_id, payload_len
     cdef string payload
     while True:
@@ -138,12 +143,12 @@ cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue, BinaryRing
             pass
 
 
-def encode_loop(SensorBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_us):
+def encode_loop(SensorWriteBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_us):
     with nogil:
         _encode_loop(buf, write_queue, period_us)
 
 
-def decode_loop(SensorBuffer buf not None,
+def decode_loop(SensorReadBuffer buf not None,
                 BinaryRingBuffer read_queue not None,
                 BinaryRingBuffer write_queue not None):
     with nogil:
