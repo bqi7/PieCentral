@@ -1,6 +1,6 @@
-#include "_messaging.h"
+#include "_packet.h"
 
-namespace messaging {
+namespace packet {
     std::string cobs_encode(std::string decoded) {
         std::string encoded;
         uint8_t byte;

@@ -116,6 +116,7 @@ cdef extern from "_buffer.cpp" namespace "buffer":
         RingBuffer(size_t) nogil except +
         size_t size() nogil
         uint8_t operator[](size_t) nogil except +
+        void clear() nogil except +
         void extend(string) nogil except +
         string read() nogil except +
 

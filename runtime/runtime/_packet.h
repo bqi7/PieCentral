@@ -1,7 +1,7 @@
-#ifndef MESSAGING_H
-#define MESSAGING_H
+#ifndef PACKET_H
+#define PACKET_H
 
-namespace messaging {
+namespace packet {
     std::string cobs_encode(std::string data);
     std::string cobs_decode(std::string data);
 }

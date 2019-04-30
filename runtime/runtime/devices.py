@@ -16,6 +16,7 @@ import socket
 import serial
 import serial_asyncio
 import time
+import threading
 
 from serial.tools.list_ports import comports
 import yaml
@@ -23,7 +24,7 @@ import yaml
 from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus, BinaryRingBuffer
 import runtime.journal
 from runtime.messaging import Circuitbreaker
-from runtime.packet import write_loop, decode_loop
+from runtime.packet import encode_loop, decode_loop
 from runtime.util import RuntimeBaseException
 
 LOGGER = runtime.journal.make_logger(__name__)
@@ -57,13 +58,13 @@ class SensorService(collections.UserDict):
         self.access = asyncio.Lock()
         super().__init__()
 
-    async def register_device(self, uid: str):
+    async def register(self, uid: str):
         async with self.access:
             LOGGER.debug('Registered device.')
             for dependent in self.dependents:
                 await dependent.register_device(uid)
 
-    async def unregister_device(self, uid: str):
+    async def unregister(self, uid: str):
         async with self.access:
             LOGGER.debug('Unregistered device.')
             for dependent in self.dependents:
@@ -147,35 +148,43 @@ class SensorObserver(MonitorObserver):
 class SensorProtocol(asyncio.Protocol):
     """
     An implementation of the Smart Sensor protocol.
+
+    Attributes:
+        read_buf (BinaryRingBuffer): Holds COBS-encoded packets just read.
+        write_buf (BinaryRingBuffer): Holds COBS-encoded packets ready to be written.
     """
-    def __init__(self, service):
-        self.service = service
-        self.buffer = BinaryRingBuffer()
+    def __init__(self, sensor_service):
+        self.sensor_service = sensor_service
+        # self.read_shm, self.write_shm =
+        self.read_buf, self.write_buf = BinaryRingBuffer(), BinaryRingBuffer()
+        self.encoder = threading.Thread(
+            target=encode_loop,
+            args=(),
+        )
+        self.decoder = threading.Thread(target=decode_loop)
         self.ready = asyncio.Event()
 
     def connection_made(self, transport):
         self.transport = transport
         transport.serial.rts = False
-        LOGGER.debug('Connection made to serial transport.', com_port=transport.serial.port)
-        self.write_queue = BinaryRingBuffer()
-        LOGGER.debug('Initialized read and write queues.', com_port=transport.serial.port)
+        LOGGER.debug('Connection made to serial.', com_port=transport.serial.port)
         self.handshake()
-
-    def handshake(self):
         self.ready.set()
 
+    def handshake(self):
+        pass
+
     def connection_lost(self, exc):
-        LOGGER.debug('Connection to serial transport lost.')
+        LOGGER.debug('Connection to serial lost.', com_port=self.transport.serial.port)
         self.ready.clear()
+        self.read_buf.clear()
+        self.write_buf.clear()
 
     def data_received(self, data: bytes):
-        pass
-
-    def eof_received(self):
-        pass
+        self.read_buf.extend(data)
 
     async def send_messages(self):
-        while True:
+        while self.ready.is_set() and not self.transport.is_closing():
             packet = self.write_queue.read()
             self.transport.write(packet)
 
@@ -202,10 +211,6 @@ class SensorStructure(ctypes.LittleEndianStructure):
     def _get_timestamp_name(param_name: str) -> str:
         return param_name + '_ts'
 
-    @staticmethod
-    def _get_status_name(param_name: str) -> str:
-        return param_name + '_status'
-
     def last_modified(self, param_name: str) -> float:
         return getattr(self, self._get_timestamp_name(param_name))
 
@@ -218,42 +223,54 @@ class SensorStructure(ctypes.LittleEndianStructure):
                 raise ValueError(f'Assigned invalid value {value} to '
                                  f'"{cls_name}.{param_name}" (not in bounds).')
         super().__setattr__(self._get_timestamp_name(param_name), time.time())
-        status_name = self._get_status_name(param_name)
-        super().__setattr__(status_name, getattr(self, status_name) | ParameterStatus.DIRTY)
         super().__setattr__(param_name, value)
 
     def __getitem__(self, param_id):
         return self.__class__._params_by_id[param_id]
 
     @classmethod
-    def make_sensor_type(cls, dev_name: str, params: List[Parameter]) -> type:
+    def make_type(cls, dev_name: str, params: List[Parameter], *extra_fields) -> type:
         if len(params) > MAX_PARAMETERS:
             raise RuntimeBaseException('Device has too many parameters.',
                                        max_params=MAX_PARAMETERS)
-        fields = []
+
+        fields = list(extra_fields) or []
         for param in params:
             fields.extend([
                 (param.name, param.type),
                 (cls._get_timestamp_name(param.name), ctypes.c_double),
-                (cls._get_status_name(param.name), ctypes.c_uint8),
             ])
-        return type(dev_name, (SensorStructure,), {
+
+        return type(dev_name, (cls,), {
             '_fields_': fields,
             '_params': {param.name: param for param in params},
-            '_params_by_id': params
+            '_params_by_id': params,
         })
 
-    def __getstate__(self):
-        device_type = type(self)
-        return device_type.__name__, device_type._params_by_id, self._buf
+    @classmethod
+    def make_read_type(cls, dev_name: str, params: List[Parameter]) -> type:
+        return cls.make_type(
+            dev_name + 'ReadStructure',
+            [param for param in params if param.readable],
+            ('dev_type', ctypes.c_uint16),
+            ('year', ctypes.c_uint8),
+            ('id', ctypes.c_uint64),
+            ('delay', ctypes.c_uint16),
+            ('subscription', ctypes.c_uint16),
+        )
 
-    def __setstate__(self, state):
-        pass
+    @classmethod
+    def make_write_type(cls, dev_name: str, params: List[Parameter]) -> type:
+        return cls.make_type(
+            dev_name + 'WriteStructure',
+            [param for param in params if param.writeable],
+            ('dirty', ctypes.c_uint16),
+        )
 
 
 def initialize_hotplugging(service, options):
     if options['poll'] or not udev_enabled:
-        pass
+        raise NotImplementedError('Polling-based hotplugging has not yet been implemented.')
     else:
         observer = SensorObserver(service, options['baud_rate'])
         observer.start()

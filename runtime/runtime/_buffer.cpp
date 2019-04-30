@@ -39,6 +39,15 @@ namespace buffer {
         throw std::out_of_range("RingBuffer: Accessing out-of-bounds index.");
     }
 
+    void RingBuffer::clear() {
+        {
+            std::lock_guard<std::recursive_mutex> guard(this->lock);
+            this->start = this->end = 0;
+            memset(this->data, 0, this->capacity);
+            this->delimeters.clear();
+        }
+    }
+
     void RingBuffer::extend(std::string str) {
         {
             std::lock_guard<std::recursive_mutex> guard(this->lock);
