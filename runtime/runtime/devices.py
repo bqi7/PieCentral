@@ -7,6 +7,7 @@ __all__ = ['SmartSensorObserver']
 
 import asyncio
 import collections
+import functools
 from numbers import Real
 from typing import List, Callable, Generator, Sequence
 import ctypes
@@ -19,7 +20,7 @@ import time
 from serial.tools.list_ports import comports
 import yaml
 
-from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus
+from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus, BinaryRingBuffer
 import runtime.journal
 from runtime.messaging import Circuitbreaker
 from runtime.packet import write_loop, decode_loop
@@ -63,7 +64,10 @@ class SensorService(collections.UserDict):
                 await dependent.register_device(uid)
 
     async def unregister_device(self, uid: str):
-        pass
+        async with self.access:
+            LOGGER.debug('Unregistered device.')
+            for dependent in self.dependents:
+                await dependent.unregister_device(uid)
 
     async def write(self, uid: str, params):
         pass
@@ -75,9 +79,9 @@ class SensorService(collections.UserDict):
 class SensorObserver(MonitorObserver):
     subsystem, device_type = 'usb', 'usb_interface'
 
-    def __init__(self, service: SensorService, baud_rate: int, thread_name: str = 'device-observer'):
+    def __init__(self, sensor_service: SensorService, baud_rate: int, thread_name: str = 'device-observer'):
         self.loop = asyncio.get_event_loop()
-        self.service, self.baud_rate = service, baud_rate
+        self.sensor_service, self.baud_rate = sensor_service, baud_rate
         self.thread_name, self.context = thread_name, Context()
         self.monitor = Monitor.from_netlink(self.context)
         self.monitor.filter_by(self.subsystem, self.device_type)
@@ -118,7 +122,7 @@ class SensorObserver(MonitorObserver):
     def open_serial_conn(self, com_port: str):
         """ Create a serial connection and add it to the running event loop. """
         LOGGER.debug('Creating serial connection.', com_port=com_port, baud_rate=self.baud_rate)
-        make_protocol = lambda: SensorProtocol(self.service)
+        make_protocol = lambda: SensorProtocol(self.sensor_service)
         conn = serial_asyncio.create_serial_connection(self.loop, make_protocol,
                                                        com_port, baudrate=self.baud_rate)
         asyncio.ensure_future(conn, loop=self.loop)
@@ -146,14 +150,23 @@ class SensorProtocol(asyncio.Protocol):
     """
     def __init__(self, service):
         self.service = service
+        self.buffer = BinaryRingBuffer()
+        self.ready = asyncio.Event()
 
     def connection_made(self, transport):
         self.transport = transport
         transport.serial.rts = False
-        LOGGER.debug('Connection made to serial transport.')
+        LOGGER.debug('Connection made to serial transport.', com_port=transport.serial.port)
+        self.write_queue = BinaryRingBuffer()
+        LOGGER.debug('Initialized read and write queues.', com_port=transport.serial.port)
+        self.handshake()
+
+    def handshake(self):
+        self.ready.set()
 
     def connection_lost(self, exc):
         LOGGER.debug('Connection to serial transport lost.')
+        self.ready.clear()
 
     def data_received(self, data: bytes):
         pass
@@ -161,8 +174,10 @@ class SensorProtocol(asyncio.Protocol):
     def eof_received(self):
         pass
 
-    async def register(self):
-        pass
+    async def send_messages(self):
+        while True:
+            packet = self.write_queue.read()
+            self.transport.write(packet)
 
 
 class SensorStructure(ctypes.LittleEndianStructure):
@@ -245,13 +260,17 @@ def initialize_hotplugging(service, options):
         observer.load_initial_sensors()
 
 
+async def log_statistics(period):
+    while True:
+        LOGGER.debug('Device statistics.')
+        await asyncio.sleep(period)
+
+
 async def start(options):
     service = SensorService({options['exec_srv'], options['net_srv']})
-    await service.register_device('1234')
     initialize_hotplugging(service, options)
     client = Circuitbreaker(host=options['host'], port=options['tcp'])
     try:
-        while True:
-            await asyncio.sleep(1)
+        await log_statistics(options['stat_period'])
     except asyncio.CancelledError:
         observer.stop()

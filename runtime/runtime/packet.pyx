@@ -23,6 +23,12 @@ cpdef enum MessageType:
     ERROR         = 0xFF
 
 
+cpdef enum ErrorCode:
+    UNEXPECTED_DELIM  = 0xFD
+    BAD_CHECKSUM      = 0xFE
+    GENERIC           = 0xFF
+
+
 cpdef uint8_t compute_checksum(string message) nogil:
     cdef uint8_t checksum = 0
     for i in range(message.size()):
@@ -126,7 +132,7 @@ cdef void _decode_loop(SensorBuffer buf, BinaryRingBuffer read_queue, BinaryRing
         elif msg_id == HEARTBEAT_RES:
             pass
         elif msg_id == DEV_DATA:
-            parse_data(buf,payload)
+            parse_data(buf, payload)
         elif msg_id == SUB_RES:
             pass
         elif msg_id == ERROR:
