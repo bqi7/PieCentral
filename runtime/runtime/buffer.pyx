@@ -245,11 +245,11 @@ cdef class SensorWriteBuffer(SensorBuffer):
     def __cinit__(self, str name, sensor_struct):
         self.dirty_offset = sensor_struct.dirty.offset
 
-    # cpdef void set_value(self, Py_ssize_t index, string bytes) nogil:
-    #     self.access.acquire()
-    #     super().set_value(index, bytes)
-    #     self.set_dirty(index)
-    #     self.access.release()
+    cpdef void set_value(self, Py_ssize_t index, string bytes) nogil:
+        self.access.acquire()
+        SensorBuffer.set_value(self, index, bytes)
+        self.set_dirty(index)
+        self.access.release()
 
     cpdef void set_dirty(self, Py_ssize_t index) nogil:
         self.access.acquire()

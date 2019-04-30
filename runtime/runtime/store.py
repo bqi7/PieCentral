@@ -166,9 +166,3 @@ class StoreService(collections.UserDict):
 #             param_value=value,
 #             choices=param.choices,
 #         )
-#
-#
-# def parse_data_sources_schema(schema):
-#     for protocol, sources in schema.items():
-#         for source, descriptor in sources:
-#             pass

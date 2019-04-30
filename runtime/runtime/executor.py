@@ -99,6 +99,6 @@ class ExecutorService(SensorService):
 
 
 async def start(options):
-    server = await make_rpc_server(ExecutorService(), path=options['exec_srv'])
+    server = await make_rpc_server(ExecutorService(options['dev_schema']), path=options['exec_srv'])
     async with server:
         await server.serve_forever()

@@ -79,7 +79,7 @@ async def start(options):
     try:
         host, rpc_port, stream_recv_port = options['host'], options['tcp'], options['udp_recv']
         rpc_server = await make_rpc_server(StoreService(options), host=host, port=rpc_port)
-        sensor_server = await make_rpc_server(SensorService(), path=options['net_srv'])
+        sensor_server = await make_rpc_server(SensorService(options['dev_schema']), path=options['net_srv'])
         async with rpc_server, sensor_server:
             LOGGER.info('Starting RPC server.', host=host, port=rpc_port)
             await asyncio.gather(

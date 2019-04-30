@@ -57,36 +57,36 @@ smartsensor:
     params:
       - name: mode
         type: bool
-        write: true
+        writeable: true
       - name: blue
         type: bool
-        write: true
+        writeable: true
       - name: yellow
         type: bool
-        write: true
+        writeable: true
       - name: led1
         type: bool
-        write: true
+        writeable: true
       - name: led2
         type: bool
-        write: true
+        writeable: true
       - name: led3
         type: bool
-        write: true
+        writeable: true
       - name: led4
         type: bool
-        write: true
+        writeable: true
   ServoControl:
     id: 7
     params:
       - name: servo0
         type: float
-        write: true
+        writeable: true
         lower: -1.0
         upper: 1.0
       - name: servo1
         type: float
-        write: true
+        writeable: true
         lower: -1.0
         upper: 1.0
   YogiBear:
@@ -94,60 +94,60 @@ smartsensor:
     params:
       - name: duty_cycle
         type: float
-        write: true
+        writeable: true
         lower: -1.0
         upper: 1.0
       - name: pid_pos_setpoint
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
       - name: pid_pos_kp
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
         lower: 0.0
       - name: pid_pos_ki
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
         lower: 0.0
       - name: pid_pos_kd
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
         lower: 0.0
       - name: pid_vel_setpoint
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
       - name: pid_vel_kp
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
       - name: pid_vel_ki
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
       - name: pid_vel_kd
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
       - name: current_thresh
         type: float
-        read: false
-        write: true
+        readable: false
+        writeable: true
         lower: 2.0
         upper: 10.0
       - name: enc_pos
         type: float
-        write: true
+        writeable: true
       - name: enc_vel
         type: float
       - name: motor_current
         type: float
       - name: deadband
         type: float
-        write: true
+        writeable: true
   RFID:
     id: 11
     params:
@@ -202,11 +202,11 @@ dawn:
         type: float
         lower: -1.0
         upper: 1.0
-      - type: joytick_right_x
+      - name: joytick_right_x
         type: float
         lower: -1.0
         upper: 1.0
-      - type: joytick_right_y
+      - name: joytick_right_y
         type: float
         lower: -1.0
         upper: 1.0

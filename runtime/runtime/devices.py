@@ -21,11 +21,11 @@ import threading
 from serial.tools.list_ports import comports
 import yaml
 
-from runtime.buffer import SharedMemory, MAX_PARAMETERS, ParameterStatus, BinaryRingBuffer
+from runtime.buffer import SharedMemory, MAX_PARAMETERS, BinaryRingBuffer
 import runtime.journal
 from runtime.messaging import Circuitbreaker
 from runtime.packet import encode_loop, decode_loop
-from runtime.util import RuntimeBaseException
+from runtime.util import RuntimeBaseException, read_conf_file
 
 LOGGER = runtime.journal.make_logger(__name__)
 
@@ -39,24 +39,40 @@ except ImportError:
 
 Parameter = collections.namedtuple(
     'Parameter',
-    ['name', 'type', 'lower', 'upper', 'readable', 'writeable', 'choices', 'default'],
-    defaults=[float('-inf'), float('inf'), True, False, [], None],
+    ['name', 'type', 'lower', 'upper', 'readable', 'writeable'],
+    defaults=[float('-inf'), float('inf'), True, False],
 )
-
-CTYPES_SIGNED_INT = {ctypes.c_byte, ctypes.c_short, ctypes.c_int, ctypes.c_long,
-                     ctypes.c_longlong, ctypes.c_ssize_t}
-CTYPES_UNSIGNED_INT = {ctypes.c_ubyte, ctypes.c_ushort, ctypes.c_uint,
-                       ctypes.c_ulong, ctypes.c_ulonglong, ctypes.c_size_t}
-CTYPES_REAL = {ctypes.c_float, ctypes.c_double, ctypes.c_longdouble}
-CTYPES_NUMERIC = CTYPES_SIGNED_INT | CTYPES_UNSIGNED_INT | CTYPES_REAL
 
 
 class SensorService(collections.UserDict):
-    def __init__(self, dependents: set = None):
-        dependents  = dependents or {}
-        self.dependents = {Circuitbreaker(path=path) for path in dependents}
-        self.access = asyncio.Lock()
+    def __init__(self, schema_filename, dependents: set = None):
+        self.dependents = {Circuitbreaker(path=path) for path in (dependents or {})}
+        self.access, self.sensor_types = asyncio.Lock(), {}
+        schema = read_conf_file(schema_filename)
+        for dev_name, read_type, write_type in self.parse_schema(schema):
+            self.sensor_types[dev_name] = read_type, write_type
         super().__init__()
+
+    @staticmethod
+    def parse_schema(schema):
+        for _, devices in schema.items():
+            for dev_name, device in devices.items():
+                params = []
+                for descriptor in device.get('params', ()):
+                    attrs = {
+                        'name': descriptor['name'],
+                        'type': getattr(ctypes, f'c_{descriptor["type"]}'),
+                    }
+                    for attr in Parameter._fields[2:]:
+                        if attr in descriptor:
+                            attrs[attr] = descriptor[attr]
+                    params.append(Parameter(**attrs))
+
+                yield (
+                    dev_name,
+                    SensorStructure.make_read_type(dev_name, device['id'], params),
+                    SensorStructure.make_write_type(dev_name, device['id'], params),
+                )
 
     async def register(self, uid: str):
         async with self.access:
@@ -75,6 +91,14 @@ class SensorService(collections.UserDict):
 
     async def read(self, uid: str):
         pass
+
+    def get_sensor_read_type(self, sensor_name):
+        read_type, _ = self.sensor_types[sensor_name]
+        return read_type
+
+    def get_sensor_write_type(self, sensor_name):
+        _, write_type = self.sensor_types[sensor_name]
+        return write_type
 
 
 class SensorObserver(MonitorObserver):
@@ -229,10 +253,13 @@ class SensorStructure(ctypes.LittleEndianStructure):
         return self.__class__._params_by_id[param_id]
 
     @classmethod
-    def make_type(cls, dev_name: str, params: List[Parameter], *extra_fields) -> type:
+    def make_type(cls, dev_name: str, dev_id: int, params: List[Parameter], *extra_fields) -> type:
         if len(params) > MAX_PARAMETERS:
-            raise RuntimeBaseException('Device has too many parameters.',
-                                       max_params=MAX_PARAMETERS)
+            LOGGER.warning(
+                'Device has too many parameters.',
+                max_params=MAX_PARAMETERS,
+                device=dev_name,
+            )
 
         fields = list(extra_fields) or []
         for param in params:
@@ -242,15 +269,17 @@ class SensorStructure(ctypes.LittleEndianStructure):
             ])
 
         return type(dev_name, (cls,), {
+            '_dev_id': dev_id,
             '_fields_': fields,
             '_params': {param.name: param for param in params},
             '_params_by_id': params,
         })
 
     @classmethod
-    def make_read_type(cls, dev_name: str, params: List[Parameter]) -> type:
+    def make_read_type(cls, dev_name: str, dev_id: int, params: List[Parameter]) -> type:
         return cls.make_type(
-            dev_name + 'ReadStructure',
+            dev_name.capitalize() + 'ReadStructure',
+            dev_id,
             [param for param in params if param.readable],
             ('dev_type', ctypes.c_uint16),
             ('year', ctypes.c_uint8),
@@ -260,11 +289,12 @@ class SensorStructure(ctypes.LittleEndianStructure):
         )
 
     @classmethod
-    def make_write_type(cls, dev_name: str, params: List[Parameter]) -> type:
+    def make_write_type(cls, dev_name: str, dev_id: int, params: List[Parameter]) -> type:
         return cls.make_type(
-            dev_name + 'WriteStructure',
+            dev_name.capitalize() + 'WriteStructure',
+            dev_id,
             [param for param in params if param.writeable],
-            ('dirty', ctypes.c_uint16),
+            ('dirty', ctypes.c_uint64),
         )
 
 
@@ -284,7 +314,7 @@ async def log_statistics(period):
 
 
 async def start(options):
-    service = SensorService({options['exec_srv'], options['net_srv']})
+    service = SensorService(options['dev_schema'], {options['exec_srv'], options['net_srv']})
     initialize_hotplugging(service, options)
     client = Circuitbreaker(host=options['host'], port=options['tcp'])
     try:
