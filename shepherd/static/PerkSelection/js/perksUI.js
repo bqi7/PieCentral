@@ -118,6 +118,21 @@ socket.on('code', function(data) {
   }
 })
 
+socket.on('code_feedback', function(data) {
+  alliance = JSON.parse(data).alliance
+  feedback = JSON.parse(data).feedback
+  if (getCookie('alliance') == alliance) {
+    if (feedback) {
+      $('#feedback').text("You solved the coding challenge! :)")
+    } else {
+      $('#feedback').text("You got the coding challenge wrong :(")
+    }
+  }
+  setTimeout(function() {
+    $('#feedback').text("")
+  }, 10000)
+})
+
 function submitCode() {
   if (cur_code != null) {
     msg = {"alliance": getCookie('alliance'), "answer": cur_code}

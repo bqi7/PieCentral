@@ -30,6 +30,11 @@ html {
 	cursor: pointer;
 }
 
+#feedback {
+	color: black;
+	font-size: 48pt;
+}
+
 #text-area {
 	position: absolute;
 	top: 150px;
