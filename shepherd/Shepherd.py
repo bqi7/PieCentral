@@ -134,12 +134,7 @@ def to_setup(args):
 
 
 def to_perk_selection(args):
-    next_match_info = Sheet.get_match(int(match_number) + 1)
-    b1name = next_match_info["b1name"]
-    b2name = next_match_info["b2name"]
-    g1name = next_match_info["g1name"]
-    g2name = next_match_info["g2name"]
-    bot.team_names_on_deck(b1name, b2name, g1name, g2name)
+    bot.announce_next_match(int(match_number))
 
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME + 2)
