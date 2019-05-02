@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, int64_t
 from libc.time cimport time_t
 from libcpp cimport bool
 from libcpp.string cimport string
@@ -118,7 +118,7 @@ cdef extern from "_buffer.cpp" namespace "buffer":
         uint8_t operator[](size_t) nogil except +
         void clear() nogil except +
         void extend(string) nogil except +
-        string read() nogil except +
+        string read(int64_t) nogil except +
 
 
 cdef class SharedMemory:
@@ -181,5 +181,11 @@ cdef class SensorWriteBuffer(SensorBuffer):
 cdef class BinaryRingBuffer:
     cdef RingBuffer *buf
 
-    cpdef void extend(self, string buf) nogil
-    cpdef string read(self) nogil
+    cpdef void extend(self, string buf)
+    cpdef string read_with_timeout(self, int64_t timeout)
+    cpdef string read(self)
+    cpdef void clear(self)
+    cdef void _extend(self, string buf) nogil
+    cdef string _read_with_timeout(self, int64_t timeout) nogil
+    cdef string _read(self) nogil
+    cdef void _clear(self) nogil

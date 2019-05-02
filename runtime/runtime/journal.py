@@ -93,7 +93,7 @@ class RuntimeFormatter(logging.Formatter):
         return ''  # TODO
 
     def format(self, record):
-        record.msg = str(record.msg).replace('"', r'\"').replace('\n', '')
+        record.msg = str(record.msg).replace('"', r'\"').replace('\n', '').replace(r'\x', r'\\x')
         if not hasattr(record, 'context'):
             record.context = {}
         return super().format(record)
@@ -234,7 +234,7 @@ def cli(**options):
             record = json.loads(line)
             print(format_record(record, options, colorize))
         except (json.JSONDecodeError, KeyError):
-            print(f'Fatal: "{line}" is not a valid log record.')
+            print(f'Fatal: "{line}" is not a valid log record.', file=sys.stderr)
             sys.exit(1)
 
 

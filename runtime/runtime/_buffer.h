@@ -21,7 +21,7 @@ namespace buffer {
         uint8_t operator[](size_t);
         void clear(void);
         void extend(std::string);
-        std::string read(void);
+        std::string read(int64_t);
     };
 }
 

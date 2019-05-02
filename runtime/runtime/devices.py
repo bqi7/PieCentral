@@ -24,7 +24,7 @@ import yaml
 from runtime.buffer import SharedMemory, MAX_PARAMETERS, BinaryRingBuffer
 import runtime.journal
 from runtime.messaging import Circuitbreaker
-from runtime.packet import encode_loop, decode_loop
+from runtime import packet
 from runtime.util import RuntimeBaseException, read_conf_file
 
 LOGGER = runtime.journal.make_logger(__name__)
@@ -95,11 +95,11 @@ class SensorService(collections.UserDict):
     async def collect(self, uid: str):
         pass
 
-    def get_sensor_read_type(self, sensor_name):
+    def get_read_type(self, sensor_name):
         read_type, _ = self.sensor_types[sensor_name]
         return read_type
 
-    def get_sensor_write_type(self, sensor_name):
+    def get_write_type(self, sensor_name):
         _, write_type = self.sensor_types[sensor_name]
         return write_type
 
@@ -182,23 +182,29 @@ class SensorProtocol(asyncio.Protocol):
     """
     def __init__(self, sensor_service):
         self.sensor_service = sensor_service
+        # read_type = self.sensor_service.get_read_type()
         # self.read_shm, self.write_shm =
-        self.read_buf, self.write_buf = BinaryRingBuffer(), BinaryRingBuffer()
-        self.encoder = threading.Thread(
-            target=encode_loop,
-            args=(),
-        )
-        self.decoder = threading.Thread(target=decode_loop)
-        self.ready = asyncio.Event()
+        self.read_queue, self.write_queue = BinaryRingBuffer(), BinaryRingBuffer()
+        # self.encoder = threading.Thread(
+        #     target=packet.encode_loop,
+        #     args=(),
+        # )
+        self.decoder = threading.Thread(target=packet.decode_loop, daemon=True)
+        self.send_count, self.recv_count = 0, 0
 
     def connection_made(self, transport):
         self.transport = transport
         transport.serial.rts = False
         LOGGER.debug('Connection made to serial.', com_port=transport.serial.port)
         self.handshake()
-        self.ready.set()
 
     def handshake(self):
+        asyncio.ensure_future(asyncio.get_event_loop().run_in_executor(None, self.send_messages))
+        # packet.append_packet(self.write_queue, packet.make_ping())
+        # while True:
+        #     self.write_queue.extend(b'\x01\x02\x00')
+        #     import time
+        #     time.sleep(0.1)
         pass
 
     def connection_lost(self, exc):
@@ -208,12 +214,18 @@ class SensorProtocol(asyncio.Protocol):
         self.write_buf.clear()
 
     def data_received(self, data: bytes):
-        self.read_buf.extend(data)
+        self.recv_count += 1
+        self.read_queue.extend(data)
+        LOGGER.info(repr(data), recv_count=self.recv_count, queue_len=len(self.read_queue))
+        # self.read_queue.extend(data)
 
-    async def send_messages(self):
-        while self.ready.is_set() and not self.transport.is_closing():
-            packet = self.write_queue.read()
-            self.transport.write(packet)
+    def send_messages(self, timeout=2):
+        while not self.transport.is_closing():
+            import time
+            time.sleep(2)
+            LOGGER.debug('Starting packet read')
+            outgoing_packet = self.write_queue.read_with_timeout(int(1e6*timeout))
+            LOGGER.debug(repr(outgoing_packet))
 
 
 class SensorStructure(ctypes.LittleEndianStructure):
@@ -292,8 +304,8 @@ class SensorReadStructure(SensorStructure):
     def year(self):
         return self.base_year + self.year_offset
 
-    @staticmethod
-    def make_type(dev_name: str, dev_id: int, params: List[Parameter]) -> type:
+    @classmethod
+    def make_type(cls, dev_name: str, dev_id: int, params: List[Parameter]) -> type:
         return SensorStructure.make_type(
             dev_name.capitalize() + 'ReadStructure',
             dev_id,
@@ -301,8 +313,8 @@ class SensorReadStructure(SensorStructure):
             ('dev_type', ctypes.c_uint16),
             ('year_offset', ctypes.c_uint8),
             ('id', ctypes.c_uint64),
-            ('delay', self.register_type),
-            ('sub_params', self.register_type),
+            ('delay', cls.register_type),
+            ('sub_params', cls.register_type),
             ('heartbeat_id', ctypes.c_uint8),
             ('error_code', ctypes.c_uint8),
             ('sub_res_present', ctypes.c_bool),
@@ -312,14 +324,14 @@ class SensorReadStructure(SensorStructure):
 
 
 class SensorWriteStructure(SensorStructure):
-    @staticmethod
-    def make_type(dev_name: str, dev_id: int, params: List[Parameter]) -> type:
+    @classmethod
+    def make_type(cls, dev_name: str, dev_id: int, params: List[Parameter]) -> type:
         return SensorStructure.make_type(
             dev_name.capitalize() + 'WriteStructure',
             dev_id,
             [param for param in params if param.writeable],
-            ('write_flags', self.register_type),
-            ('read_flags', self.register_type),
+            ('write_flags', cls.register_type),
+            ('read_flags', cls.register_type),
         )
 
 
@@ -330,6 +342,7 @@ def initialize_hotplugging(service, options):
         observer = SensorObserver(service, options['baud_rate'])
         observer.start()
         observer.load_initial_sensors()
+        return observer
 
 
 async def log_statistics(period):
@@ -340,7 +353,7 @@ async def log_statistics(period):
 
 async def start(options):
     service = SensorService(options['dev_schema'], {options['exec_srv'], options['net_srv']})
-    initialize_hotplugging(service, options)
+    observer = initialize_hotplugging(service, options)
     client = Circuitbreaker(host=options['host'], port=options['tcp'])
     try:
         await log_statistics(options['stat_period'])

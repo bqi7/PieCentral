@@ -8,7 +8,7 @@ import ctypes
 import os
 from libc.errno cimport errno, ENOENT, EPERM
 from libc.string cimport strcpy, memcpy
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, int64_t
 from libcpp.string cimport string
 from posix.unistd cimport ftruncate
 from libcpp cimport bool
@@ -284,9 +284,30 @@ cdef class BinaryRingBuffer:
     def __getitem__(self, index):
         return deref(self.buf)[index]
 
-    cpdef void extend(self, string buf) nogil:
+    cpdef void extend(self, string buf):
+        with nogil:
+            self._extend(buf)
+
+    cpdef string read_with_timeout(self, int64_t timeout):
+        with nogil:
+            return self._read_with_timeout(timeout)
+
+    cpdef string read(self):
+        with nogil:
+            return self._read()
+
+    cpdef void clear(self):
+        with nogil:
+            self._clear()
+
+    cdef void _extend(self, string buf) nogil:
         self.buf.extend(buf)
 
-    cpdef string read(self) nogil:
-        """ Reads the next zero-delimited sequence, blocking if necessary. """
-        return self.buf.read()
+    cdef string _read_with_timeout(self, int64_t timeout) nogil:
+        return self.buf.read(timeout)
+
+    cdef string _read(self) nogil:
+        return self.buf.read(-1)
+
+    cdef void _clear(self) nogil:
+        self.buf.clear()

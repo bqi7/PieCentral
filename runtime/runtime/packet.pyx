@@ -81,10 +81,10 @@ cdef string make_heartbeat_res(uint8_t id) nogil:
     return build_packet(HEARTBEAT_RES, payload)
 
 
-cdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
+cpdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
     packet = cobs_encode(packet)
     packet.append(1, 0)
-    write_queue.extend(packet)
+    write_queue._extend(packet)
 
 
 cdef void _encode_loop(SensorWriteBuffer buf, BinaryRingBuffer write_queue, useconds_t period_us) nogil:
@@ -122,7 +122,7 @@ cdef void _decode_loop(SensorReadBuffer buf, BinaryRingBuffer read_queue, Binary
     cdef uint8_t msg_id, payload_len
     cdef string payload
     while True:
-        packet = cobs_decode(read_queue.read())
+        packet = cobs_decode(read_queue._read())
         if packet.size() < 3:
             continue
         checksum = compute_checksum(packet.substr(0, packet.size() - 1))

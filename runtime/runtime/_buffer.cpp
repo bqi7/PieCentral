@@ -4,8 +4,6 @@
 #include <condition_variable>
 #include "_buffer.h"
 
-#define DEFAULT_TIMEOUT 100000  // 10^5 us = 0.1s
-
 namespace buffer {
     RingBuffer::RingBuffer(size_t capacity) {
         this->data = (uint8_t *) malloc(capacity * sizeof(uint8_t));
@@ -67,14 +65,19 @@ namespace buffer {
             data_ready.notify_one();
     }
 
-    std::string RingBuffer::read(void) {
+    std::string RingBuffer::read(int64_t timeout_duration) {
         std::unique_lock<std::recursive_mutex> locked(this->lock);
-        std::chrono::microseconds timeout(DEFAULT_TIMEOUT);
-        bool ready = this->data_ready.wait_for(locked, timeout, [this] {
+        auto ready_predicate = [this]() {
             return !this->delimeters.empty();
-        });
-        if (!ready) {
-            throw std::runtime_error("RingBuffer: Read timed out.");
+        };
+        if (timeout_duration >= 0) {
+            std::chrono::microseconds timeout(timeout_duration);
+            bool ready = this->data_ready.wait_for(locked, timeout, ready_predicate);
+            if (!ready) {
+                return "";
+            }
+        } else {
+            this->data_ready.wait(locked, ready_predicate);
         }
 
         size_t next_delimeter = this->delimeters.front();
