@@ -1,5 +1,7 @@
 import json
 import requests
+import Sheet
+import threading
 
 # Set the webhook_url to the one provided by Slack when you create the webhook at https://my.slack.com/services/new/incoming-webhook/
 webhook_url = 'https://hooks.slack.com/services/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'
@@ -28,3 +30,14 @@ def send_plain_message(message):
             'Request to slack returned an error %s, the response is:\n%s'
             % (response.status_code, response.text)
         )
+
+def announce_next_match(match_number):
+    thread = threading.Thread(next_match_thread, args=(match_number,), daemon=True)
+    thread.start()
+def next_match_thread(match_number):
+    next_match_info = Sheet.get_match(int(match_number) + 1)
+    b1name = next_match_info["b1name"]
+    b2name = next_match_info["b2name"]
+    g1name = next_match_info["g1name"]
+    g2name = next_match_info["g2name"]
+    bot.team_names_on_deck(b1name, b2name, g1name, g2name)

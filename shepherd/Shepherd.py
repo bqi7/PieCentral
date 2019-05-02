@@ -134,12 +134,7 @@ def to_setup(args):
 
 
 def to_perk_selection(args):
-    next_match_info = Sheet.get_match(int(match_number) + 1)
-    b1name = next_match_info["b1name"]
-    b2name = next_match_info["b2name"]
-    g1name = next_match_info["g1name"]
-    g2name = next_match_info["g2name"]
-    bot.team_names_on_deck(b1name, b2name, g1name, g2name)
+    bot.announce_next_match(int(match_number))
 
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME + 2)
@@ -421,7 +416,8 @@ def auto_apply_code(args):
     else:
         msg = {"alliance": alliance.name}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
-
+        msg2 = {"alliance": alliance.name, "feedback": False}
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE_FEEDBACK, msg2)
 def apply_code(args):
     '''
     Send Scoreboard the new score if the answer is correct #TODO
@@ -440,7 +436,9 @@ def apply_code(args):
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
     else:
         msg = {"alliance": alliance.name}
+        msg2 = {"alliance": alliance.name, "feedback": False}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE_FEEDBACK, msg2)
 
 
 def end_teleop(args):
@@ -569,8 +567,7 @@ setup_functions = {
     SHEPHERD_HEADER.SETUP_MATCH: to_setup,
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
-    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection,
-    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection
 }
 
 perk_selection_functions = {
