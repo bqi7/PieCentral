@@ -70,26 +70,29 @@ class SensorService(collections.UserDict):
 
                 yield (
                     dev_name,
-                    SensorStructure.make_read_type(dev_name, device['id'], params),
-                    SensorStructure.make_write_type(dev_name, device['id'], params),
+                    SensorReadStructure.make_type(dev_name, device['id'], params),
+                    SensorWriteStructure.make_type(dev_name, device['id'], params),
                 )
 
     async def register(self, uid: str):
         async with self.access:
-            LOGGER.debug('Registered device.')
+            LOGGER.debug('Registered device.', uid=uid)
             for dependent in self.dependents:
                 await dependent.register_device(uid)
 
     async def unregister(self, uid: str):
         async with self.access:
-            LOGGER.debug('Unregistered device.')
+            LOGGER.debug('Unregistered device.', uid=uid)
             for dependent in self.dependents:
                 await dependent.unregister_device(uid)
 
     async def write(self, uid: str, params):
-        pass
+        """ Issues a write command. """
 
-    async def read(self, uid: str):
+    async def read(self, uid: str, params):
+        """ Issues a read command. """
+
+    async def collect(self, uid: str):
         pass
 
     def get_sensor_read_type(self, sensor_name):
@@ -231,6 +234,8 @@ class SensorStructure(ctypes.LittleEndianStructure):
           ...
         ValueError: Assigned invalid value -1.1 to "YogiBear.duty_cycle" (not in bounds).
     """
+    register_type = ctypes.c_uint64
+
     @staticmethod
     def _get_timestamp_name(param_name: str) -> str:
         return param_name + '_ts'
@@ -275,26 +280,46 @@ class SensorStructure(ctypes.LittleEndianStructure):
             '_params_by_id': params,
         })
 
-    @classmethod
-    def make_read_type(cls, dev_name: str, dev_id: int, params: List[Parameter]) -> type:
-        return cls.make_type(
+
+class SensorReadStructure(SensorStructure):
+    base_year = 2016  # Spring
+
+    @property
+    def uid(self):
+        return self.dev_type << 72 | self.year_offset << 64 | self.id
+
+    @property
+    def year(self):
+        return self.base_year + self.year_offset
+
+    @staticmethod
+    def make_type(dev_name: str, dev_id: int, params: List[Parameter]) -> type:
+        return SensorStructure.make_type(
             dev_name.capitalize() + 'ReadStructure',
             dev_id,
             [param for param in params if param.readable],
             ('dev_type', ctypes.c_uint16),
-            ('year', ctypes.c_uint8),
+            ('year_offset', ctypes.c_uint8),
             ('id', ctypes.c_uint64),
-            ('delay', ctypes.c_uint16),
-            ('subscription', ctypes.c_uint16),
+            ('delay', self.register_type),
+            ('sub_params', self.register_type),
+            ('heartbeat_id', ctypes.c_uint8),
+            ('error_code', ctypes.c_uint8),
+            ('sub_res_present', ctypes.c_bool),
+            ('heartbeat_res_present', ctypes.c_bool),
+            ('error_present', ctypes.c_bool),
         )
 
-    @classmethod
-    def make_write_type(cls, dev_name: str, dev_id: int, params: List[Parameter]) -> type:
-        return cls.make_type(
+
+class SensorWriteStructure(SensorStructure):
+    @staticmethod
+    def make_type(dev_name: str, dev_id: int, params: List[Parameter]) -> type:
+        return SensorStructure.make_type(
             dev_name.capitalize() + 'WriteStructure',
             dev_id,
             [param for param in params if param.writeable],
-            ('dirty', ctypes.c_uint64),
+            ('write_flags', self.register_type),
+            ('read_flags', self.register_type),
         )
 
 

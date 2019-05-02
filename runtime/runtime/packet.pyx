@@ -29,6 +29,7 @@ cpdef enum MessageType:
 
 
 cpdef enum ErrorCode:
+    OK                = 0x00
     UNEXPECTED_DELIM  = 0xFD
     BAD_CHECKSUM      = 0xFE
     GENERIC           = 0xFF
