@@ -416,7 +416,8 @@ def auto_apply_code(args):
     else:
         msg = {"alliance": alliance.name}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
-
+        msg2 = {"alliance": alliance.name, "feedback": False}
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE_FEEDBACK, msg2)
 def apply_code(args):
     '''
     Send Scoreboard the new score if the answer is correct #TODO
@@ -435,7 +436,9 @@ def apply_code(args):
         lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.APPLIED_EFFECT, msg)
     else:
         msg = {"alliance": alliance.name}
+        msg2 = {"alliance": alliance.name, "feedback": False}
         lcm_send(LCM_TARGETS.SENSORS, SENSORS_HEADER.FAILED_POWERUP, msg)
+        lcm_send(LCM_TARGETS.TABLET, TABLET_HEADER.CODE_FEEDBACK, msg2)
 
 
 def end_teleop(args):
