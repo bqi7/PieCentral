@@ -6,15 +6,15 @@ last_header = None
 
 def log(Exception):
     global last_header
-    if Shepherd.match_number <= 0:
-        return
+    # if Shepherd.match_number <= 0:
+    #     return
     now = datetime.datetime.now()
-    filename = now.month + "-" + now.day + "-" + now.year + "-match-"+Shepherd.match_number+".txt"
-    print("a normaly fatal exception occured, but Shepherd will continue to run")
+    filename = str(now.month) + "-" + str(now.day) + "-" + str(now.year) + "-match-"+ str(Shepherd.match_number) +".txt"
+    print("a normally fatal exception occured, but Shepherd will continue to run")
     print("all known details are logged to logs/"+filename)
     file = open("logs/"+filename, "a+")
     file.write("========================================")
-    file.write("a normaly fatal exception occured.")
+    file.write("a normally fatal exception occured.")
     file.write("all relevant data may be found below.")
     file.write("match: " + Shepherd.match_number)
     file.write("game state: " + Shepherd.game_state)
