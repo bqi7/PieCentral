@@ -32,7 +32,7 @@ def send_plain_message(message):
         )
 
 def announce_next_match(match_number):
-    thread = threading.Thread(next_match_thread, args=(match_number,), daemon=True)
+    thread = threading.Thread(target=next_match_thread, args=(match_number,), daemon=True)
     thread.start()
 def next_match_thread(match_number):
     next_match_info = Sheet.get_match(int(match_number) + 1)
@@ -40,4 +40,4 @@ def next_match_thread(match_number):
     b2name = next_match_info["b2name"]
     g1name = next_match_info["g1name"]
     g2name = next_match_info["g2name"]
-    bot.team_names_on_deck(b1name, b2name, g1name, g2name)
+    team_names_on_deck(b1name, b2name, g1name, g2name)

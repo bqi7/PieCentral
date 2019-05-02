@@ -18,8 +18,8 @@ def log(Exception):
     file.write("all relevant data may be found below.")
     file.write("match: " + str(Shepherd.match_number))
     file.write("game state: " + str(Shepherd.game_state))
-    file.write("gold alliance: " + str(Shepherd.alliances[CONSTANTS.GOLD]))
-    file.write("blue alliance: " + str(Shepherd.alliances[CONSTANTS.BLUE]))
+    file.write("gold alliance: " + str(Shepherd.alliances[ALLIANCE_COLOR.GOLD]))
+    file.write("blue alliance: " + str(Shepherd.alliances[ALLIANCE_COLOR.BLUE]))
     file.write("game timer running?: " + str(Shepherd.game_timer.is_running()))
     file.write("extended teleop timer running?: " + str(Shepherd.extended_teleop_timer.is_running()))
     file.write("launch button timers running(g1 g2 b1 b2)?: " +
