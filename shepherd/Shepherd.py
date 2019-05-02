@@ -564,8 +564,7 @@ setup_functions = {
     SHEPHERD_HEADER.SETUP_MATCH: to_setup,
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
-    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection,
-    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections
+    SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection
 }
 
 perk_selection_functions = {
