@@ -7,7 +7,7 @@ from LCM import *
 from Timer import *
 from Utils import *
 from Code import *
-from audio import *
+# from audio import *
 from runtimeclient import RuntimeClientManager
 import Sheet
 import bot
@@ -144,7 +144,7 @@ def to_perk_selection(args):
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.STAGE_TIMER_START,
              {"time" : CONSTANTS.PERK_SELECTION_TIME})
     print("ENTERING PERK SELECTION STATE")
-    play_perk_music()
+    # play_perk_music()
 
 def to_auto_wait(args):
     global game_state
@@ -531,7 +531,7 @@ def overdrive_triggered(args):
     msg = {"size": size}
     lcm_send(LCM_TARGETS.SCOREBOARD, SCOREBOARD_HEADER.OVERDRIVE_START,msg)
     print("overdrive is active for the next 30 seconds for "+size+" size crates.")
-    play_horn()
+    # play_horn()
 
 def set_connections(args):
     team = args["team_number"]
@@ -565,8 +565,7 @@ setup_functions = {
     SHEPHERD_HEADER.SCORE_ADJUST : score_adjust,
     SHEPHERD_HEADER.GET_MATCH_INFO : get_match,
     SHEPHERD_HEADER.START_NEXT_STAGE: to_perk_selection,
-    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections,
-    SHEPHERD_HEADER.REQUEST_CONNECTIONS: send_connections
+    SHEPHERD_HEADER.ROBOT_CONNECTION_STATUS: set_connections
 }
 
 perk_selection_functions = {

@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <title>Staff UI</title>
+  <title>Stage Control</title>
   <script type="text/javascript" src={{url_for( 'static', filename='jquery-1.12.3.min.js' )}}></script>
   <script type="text/javascript" src={{url_for( 'static', filename='tabletop.js' )}}></script>
   <script type="text/javascript" src={{url_for( 'static', filename='lcm_ws_bridge.js' )}}></script>
@@ -106,7 +106,7 @@
       }
 
       socket.on('connect', function(data) {
-        socket.emit('join', 'staff_gui');
+        socket.emit('join', 'stage_control');
       });
 
       $("#populate-match").click(function() {
@@ -262,19 +262,16 @@
         <a class="nav-link" href="../score_adjustment.html">Score Adjustment</a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="../staff_gui.html">Stage Control<span class="sr-only">(current)</span></a>
+        <a class="nav-link" href="../stage_control.html">Stage Control<span class="sr-only">(current)</span></a>
       </li>
     </ul>
   </div>
 </nav>
 
   <div class="container" style="max-width:1405px">
-    <h2>Match Creator</h2>
+    <h2>Stage Control</h2>
     <div class="btn-group bottom-padding" role="group" aria-label="...">
-      <button type="button" class="btn btn-success" id="match-start"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start</button>
-      <!--<button type="button" class="btn btn-default" id="match-next-stage"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> Start Next Stage</button>-->
-      <!--<button type="button" class="btn btn-warning" id="match-reset-stage"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span> Reset Stage</button>-->
-      <button type="button" class="btn btn-danger" id="match-reset"><span class="glyphicon glyphicon-fast-backward" aria-hidden="true"></span> Reset Match</button>
+      <button type="button" class="btn btn-success" id="match-start"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Set Stage</button>
 
       <button type="button" class="btn" id="toggle-all"> Toggle All</button>
 
