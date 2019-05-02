@@ -134,7 +134,7 @@ def to_setup(args):
 
 
 def to_perk_selection(args):
-    bot.announce_next_match(int(match_number))
+    # bot.announce_next_match(int(match_number))
 
     global game_state
     game_timer.start_timer(CONSTANTS.PERK_SELECTION_TIME + 2)
