@@ -28,5 +28,5 @@ def log(Exception):
     file.write("overdrive timer active?: " + str(Shepherd.overdrive_timer.is_running()))
     file.write("the last received header was:" + str(last_header))
     file.write("a stacktrace of the error may be found below.")
-    file.write(Exception)
+    file.write(str(Exception))
     file.close()
