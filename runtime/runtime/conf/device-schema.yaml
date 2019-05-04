@@ -155,6 +155,65 @@ smartsensor:
         type: uint32
       - name: tag_detect
         type: uint8
+  PolarBear:
+    id: 10
+    params:
+      - name: duty_cycle
+        type: float
+        writeable: true
+        lower: -1.0
+        upper: 1.0
+      - name: pid_pos_setpoint
+        type: float
+        readable: false
+        writeable: true
+      - name: pid_pos_kp
+        type: float
+        readable: false
+        writeable: true
+        lower: 0.0
+      - name: pid_pos_ki
+        type: float
+        readable: false
+        writeable: true
+        lower: 0.0
+      - name: pid_pos_kd
+        type: float
+        readable: false
+        writeable: true
+        lower: 0.0
+      - name: pid_vel_setpoint
+        type: float
+        readable: false
+        writeable: true
+      - name: pid_vel_kp
+        type: float
+        readable: false
+        writeable: true
+      - name: pid_vel_ki
+        type: float
+        readable: false
+        writeable: true
+      - name: pid_vel_kd
+        type: float
+        readable: false
+        writeable: true
+      - name: current_thresh
+        type: float
+        readable: false
+        writeable: true
+        lower: 2.0
+        upper: 10.0
+      - name: enc_pos
+        type: float
+        writeable: true
+      - name: enc_vel
+        type: float
+      - name: motor_current
+        type: float
+      - name: deadband
+        type: float
+        writeable: true
 
 dawn:
   gamepad:

@@ -288,7 +288,7 @@ cdef class BinaryRingBuffer:
         with nogil:
             self._extend(buf)
 
-    cpdef string read_with_timeout(self, int64_t timeout):
+    cpdef string read_with_timeout(self, double timeout):
         with nogil:
             return self._read_with_timeout(timeout)
 
@@ -303,8 +303,8 @@ cdef class BinaryRingBuffer:
     cdef void _extend(self, string buf) nogil:
         self.buf.extend(buf)
 
-    cdef string _read_with_timeout(self, int64_t timeout) nogil:
-        return self.buf.read(timeout)
+    cdef string _read_with_timeout(self, double timeout) nogil:
+        return self.buf.read(<int64_t>(1e6*timeout))
 
     cdef string _read(self) nogil:
         return self.buf.read(-1)

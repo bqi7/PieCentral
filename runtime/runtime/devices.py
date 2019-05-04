@@ -21,10 +21,10 @@ import threading
 from serial.tools.list_ports import comports
 import yaml
 
-from runtime.buffer import SharedMemory, MAX_PARAMETERS, BinaryRingBuffer
+from runtime.buffer import MAX_PARAMETERS, BinaryRingBuffer, SensorReadBuffer, SensorWriteBuffer
 import runtime.journal
 from runtime.messaging import Circuitbreaker
-from runtime import packet
+from runtime import packet as packet_lib
 from runtime.util import RuntimeBaseException, read_conf_file
 
 LOGGER = runtime.journal.make_logger(__name__)
@@ -189,43 +189,96 @@ class SensorProtocol(asyncio.Protocol):
         #     target=packet.encode_loop,
         #     args=(),
         # )
-        self.decoder = threading.Thread(target=packet.decode_loop, daemon=True)
+
         self.send_count, self.recv_count = 0, 0
+        self.ready = asyncio.Event()
+        self.read_timeout, self.write_timeout = 1, 10
 
     def connection_made(self, transport):
         self.transport = transport
         transport.serial.rts = False
         LOGGER.debug('Connection made to serial.', com_port=transport.serial.port)
-        self.handshake()
 
+        loop = asyncio.get_event_loop()
+        self.log_task = asyncio.create_task(self.log_statistics())
+        self.send_task = asyncio.ensure_future(loop.run_in_executor(None, self.send_messages))
+        self.ping_task = asyncio.create_task(self.ping())
+
+    async def ping(self, delay=1):
+        try:
+            while True:
+                await asyncio.sleep(delay)
+                packet_lib.append_packet(self.write_queue, packet_lib.make_ping())
+                LOGGER.debug('Sending ping.')
+        except asyncio.CancelledError:
+            LOGGER.debug('Stopping ping.')
+
+    # async def handshake(self, delay=1):
+    #     while True:
+    #         packet = self.read_queue.read_with_timeout(delay)
+    #         # LOGGER.debug(packet)
+    #         LOGGER.debug(repr(packet))
+
+    """
     def handshake(self):
-        asyncio.ensure_future(asyncio.get_event_loop().run_in_executor(None, self.send_messages))
-        # packet.append_packet(self.write_queue, packet.make_ping())
-        # while True:
-        #     self.write_queue.extend(b'\x01\x02\x00')
-        #     import time
-        #     time.sleep(0.1)
-        pass
+        packet_lib.append_packet(self.write_queue, packet_lib.make_ping())
+        LOGGER.debug('Starting handshake with device.')
+
+        while True:
+            packet = self.read_queue.read()
+            LOGGER.debug(packet)
+            # LOGGER.debug(packet_lib.decode_packet(packet))
+
+
+        # read_type = self.sensor_service.get_read_type('PolarBear')
+        # read_buf = SensorReadBuffer('tmp', read_type)
+        # struct = read_type.from_buffer(read_buf)
+        # self.decoder = threading.Thread(target=packet.decode_loop, args=(read_buf, self.read_queue, self.write_queue), daemon=True)
+        # self.decoder.start()
+    """
 
     def connection_lost(self, exc):
         LOGGER.debug('Connection to serial lost.', com_port=self.transport.serial.port)
+        self.send_task.cancel()
+        self.log_task.cancel()
         self.ready.clear()
-        self.read_buf.clear()
-        self.write_buf.clear()
+        self.read_queue.clear()
+        self.write_queue.clear()
 
     def data_received(self, data: bytes):
         self.recv_count += 1
         self.read_queue.extend(data)
-        LOGGER.info(repr(data), recv_count=self.recv_count, queue_len=len(self.read_queue))
-        # self.read_queue.extend(data)
+        if not self.ready.is_set():
+            packet = raw_packet = self.read_queue.read_with_timeout(self.read_timeout)
+            if not packet:
+                return
+            packet = packet_lib.extract_from_frame(packet)
+            if not packet:
+                LOGGER.error('Unable to extract packet from COBS frame.')
+                LOGGER.error(repr(raw_packet))
+                return
+            dev_id = packet[0]
+            LOGGER.error(repr(packet))
+            # self.read_buf = SensorReadBuffer()
 
-    def send_messages(self, timeout=2):
+    async def log_statistics(self):
+        try:
+            while True:
+                await asyncio.sleep(5)
+                LOGGER.debug('Device statistics.', recv_count=self.recv_count)
+        except asyncio.CancelledError:
+            LOGGER.debug('Stopping log task.')
+
+    def send_messages(self):
+        LOGGER.debug('Sending messages to device.')
         while not self.transport.is_closing():
-            import time
-            time.sleep(2)
-            LOGGER.debug('Starting packet read')
-            outgoing_packet = self.write_queue.read_with_timeout(int(1e6*timeout))
-            LOGGER.debug(repr(outgoing_packet))
+            packet = self.write_queue.read_with_timeout(self.write_timeout)
+            if not packet:
+                LOGGER.warn('Write queue read timed out.',
+                            write_timeout=self.write_timeout,
+                            com_port=self.transport.serial.port)
+            LOGGER.critical(repr(packet))
+            self.transport.write(b'\x00' + packet)
 
 
 class SensorStructure(ctypes.LittleEndianStructure):
@@ -353,6 +406,7 @@ async def log_statistics(period):
 
 async def start(options):
     service = SensorService(options['dev_schema'], {options['exec_srv'], options['net_srv']})
+    LOGGER.debug('Loaded sensor schemas.', sensor_types=list(service.sensor_types.keys()))
     observer = initialize_hotplugging(service, options)
     client = Circuitbreaker(host=options['host'], port=options['tcp'])
     try:

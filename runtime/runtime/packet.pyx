@@ -50,7 +50,6 @@ cpdef string build_packet(MessageType type_id, string payload) nogil:
     message += (<uint8_t> type_id)
     message += (<uint8_t> payload_len)
     message += payload
-    message += compute_checksum(message)
     return message
 
 
@@ -81,10 +80,13 @@ cdef string make_heartbeat_res(uint8_t id) nogil:
     return build_packet(HEARTBEAT_RES, payload)
 
 
-cpdef void append_packet(BinaryRingBuffer write_queue, string packet) nogil:
+cpdef string append_packet(BinaryRingBuffer write_queue, string packet) nogil:
+    packet.append(1, compute_checksum(packet))
     packet = cobs_encode(packet)
-    packet.append(1, 0)
+    packet.insert(0, 1, <char> packet.size())
+    packet.append(1, <char> 0)
     write_queue._extend(packet)
+    return packet
 
 
 cdef void _encode_loop(SensorWriteBuffer buf, BinaryRingBuffer write_queue, useconds_t period_us) nogil:
@@ -118,30 +120,51 @@ cdef void parse_data(SensorReadBuffer buf, string payload) nogil:
             payload = payload.substr(param_size)
 
 
+from libc.stdio cimport fprintf, stderr
+
 cdef void _decode_loop(SensorReadBuffer buf, BinaryRingBuffer read_queue, BinaryRingBuffer write_queue) nogil:
-    cdef uint8_t msg_id, payload_len
+    cdef uint8_t frame_len, msg_id, payload_len
     cdef string payload
     while True:
-        packet = cobs_decode(read_queue._read())
-        if packet.size() < 3:
-            continue
-        checksum = compute_checksum(packet.substr(0, packet.size() - 1))
-        if checksum != packet.at(packet.size() - 1):
-            continue
+        packet = read_queue._read()
+        fprintf(stderr, "%s\n", packet)
+        continue
 
-        msg_id = <uint8_t> packet.at(0)
-        payload_len = <uint8_t> packet.at(1)
-        payload = packet.substr(2, 2 + payload_len)
-        if msg_id == HEARTBEAT_REQ:
-            append_packet(write_queue, make_heartbeat_res(payload[0]))
-        elif msg_id == HEARTBEAT_RES:
-            pass
-        elif msg_id == DEV_DATA:
-            parse_data(buf, payload)
-        elif msg_id == SUB_RES:
-            pass
-        elif msg_id == ERROR:
-            pass
+        # checksum = compute_checksum(packet.substr(0, packet.size() - 1))
+        # if checksum != packet.at(packet.size() - 1):
+        #     continue
+        #
+        # msg_id = <uint8_t> packet.at(0)
+        # payload_len = <uint8_t> packet.at(1)
+        # payload = cobs_decode(packet.substr(2, 2 + payload_len))
+        # if msg_id == HEARTBEAT_REQ:
+        #     append_packet(write_queue, make_heartbeat_res(payload[0]))
+        # elif msg_id == HEARTBEAT_RES:
+        #     pass
+        # elif msg_id == DEV_DATA:
+        #     parse_data(buf, payload)
+        # elif msg_id == SUB_RES:
+        #     pass
+        # elif msg_id == ERROR:
+        #     pass
+
+
+cpdef string extract_from_frame(string raw_packet) nogil:
+    """ Given a raw COBS-encoded packet, remove the COBS frame and verify the checksum. """
+    cdef uint8_t frame_size, expected_checksum
+    cdef string packet
+    frame_size = raw_packet.at(0)
+    if frame_size + 1 != raw_packet.size():
+        return packet
+    raw_packet = cobs_decode(raw_packet.substr(1, 1 + frame_size))
+    if raw_packet.size() < 2:
+        return packet
+    expected_checksum = raw_packet.at(raw_packet.size() - 1)
+    packet = raw_packet.substr(0, raw_packet.size() - 1)
+    if expected_checksum != compute_checksum(packet):
+        packet.clear()
+        return packet
+    return packet
 
 
 def encode_loop(SensorWriteBuffer buf not None, BinaryRingBuffer write_queue not None, useconds_t period_us):

@@ -182,10 +182,10 @@ cdef class BinaryRingBuffer:
     cdef RingBuffer *buf
 
     cpdef void extend(self, string buf)
-    cpdef string read_with_timeout(self, int64_t timeout)
+    cpdef string read_with_timeout(self, double timeout)
     cpdef string read(self)
     cpdef void clear(self)
     cdef void _extend(self, string buf) nogil
-    cdef string _read_with_timeout(self, int64_t timeout) nogil
+    cdef string _read_with_timeout(self, double timeout) nogil
     cdef string _read(self) nogil
     cdef void _clear(self) nogil
