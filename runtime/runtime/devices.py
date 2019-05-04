@@ -69,10 +69,11 @@ class SensorService(collections.UserDict):
                             attrs[attr] = descriptor[attr]
                     params.append(Parameter(**attrs))
 
+                dev_id = device['id']
                 yield (
-                    device['id'],
-                    SensorReadStructure.make_type(dev_name, device['id'], params),
-                    SensorWriteStructure.make_type(dev_name, device['id'], params),
+                    dev_id,
+                    SensorReadStructure.make_type(dev_name, dev_id, params),
+                    SensorWriteStructure.make_type(dev_name, dev_id, params),
                 )
 
     async def register(self, uid: str):
@@ -215,7 +216,7 @@ class SensorProtocol(asyncio.Protocol):
     def port(self):
         return self.transport.serial.port
 
-    async def ping(self, delay=0.1):
+    async def ping(self, delay=0.5):
         try:
             while not self.ready.is_set():
                 packet_lib.append_packet(self.write_queue, packet_lib.make_ping())
@@ -243,6 +244,7 @@ class SensorProtocol(asyncio.Protocol):
             name = self.sensor_service.get_write_buf_name(uid)
             struct_type = self.sensor_service.get_write_type(dev_id)
             sensor_buf = SensorWriteBuffer(name, struct_type)
+            LOGGER.debug(repr(sensor_buf))
         LOGGER.debug('Building sensor structure.',
                      read=read,
                      name=name,
@@ -253,7 +255,7 @@ class SensorProtocol(asyncio.Protocol):
         self.recv_count += 1
         self.read_queue.extend(data)
         if not self.ready.is_set():
-            packet = raw_packet = self.read_queue.read_with_timeout(self.read_timeout)
+            packet = self.read_queue.read_with_timeout(self.read_timeout)
             if not packet:
                 return
             packet = packet_lib.extract_from_frame(packet)
@@ -271,7 +273,7 @@ class SensorProtocol(asyncio.Protocol):
                 uid = dev_id << 72 | year << 64 | rand_id
 
                 self.read_struct, self.read_buf = self.make_sensor(dev_id, uid)
-                self.write_struct, self.write_buf = self.make_sensor(dev_id, uid)
+                self.write_struct, self.write_buf = self.make_sensor(dev_id, uid, read=False)
                 LOGGER.info('Sensor registered.', uid=uid, dev_id=dev_id)
                 self.ready.set()
 
@@ -291,6 +293,7 @@ class SensorProtocol(asyncio.Protocol):
                 LOGGER.warn('Write queue read timed out.',
                             write_timeout=self.write_timeout,
                             com_port=self.port)
+            LOGGER.critical(repr(packet))
             self.transport.write(b'\x00' + packet)
 
 
@@ -419,7 +422,7 @@ async def log_statistics(period):
 
 async def start(options):
     service = SensorService(options['dev_schema'], {options['exec_srv'], options['net_srv']})
-    LOGGER.debug('Loaded sensor schemas.', sensor_types=list(service.sensor_types.keys()))
+    LOGGER.debug('Loaded sensor schemas.')
     observer = initialize_hotplugging(service, options)
     client = Circuitbreaker(host=options['host'], port=options['tcp'])
     try:

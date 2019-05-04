@@ -220,6 +220,9 @@ cdef class SensorBuffer:
     cdef void release(self) nogil:
         self.access.release()
 
+    def __len__(self):
+        return len(self.buf)
+
     def __getbuffer__(self, Py_buffer *buffer, int flags):
         PyObject_GetBuffer(self.buf, buffer, flags)
 

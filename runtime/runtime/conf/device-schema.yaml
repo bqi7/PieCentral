@@ -156,7 +156,7 @@ smartsensor:
       - name: tag_detect
         type: uint8
   PolarBear:
-    id: 10
+    id: 12
     params:
       - name: duty_cycle
         type: float
@@ -217,7 +217,7 @@ smartsensor:
 
 dawn:
   gamepad:
-    id: 12
+    id: 13
     params:
       - name: button_a
         type: bool
