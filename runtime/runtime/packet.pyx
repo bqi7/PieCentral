@@ -53,6 +53,10 @@ cpdef string build_packet(MessageType type_id, string payload) nogil:
     return message
 
 
+def parse_sub_res():
+    pass
+
+
 cpdef string make_ping() nogil:
     cdef string empty
     return build_packet(PING, empty)

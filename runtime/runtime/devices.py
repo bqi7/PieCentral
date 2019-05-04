@@ -15,6 +15,7 @@ import os
 import socket
 import serial
 import serial_asyncio
+import struct
 import time
 import threading
 
@@ -49,8 +50,8 @@ class SensorService(collections.UserDict):
         self.dependents = {Circuitbreaker(path=path) for path in (dependents or {})}
         self.access, self.sensor_types = asyncio.Lock(), {}
         schema = read_conf_file(schema_filename)
-        for dev_name, read_type, write_type in self.parse_schema(schema):
-            self.sensor_types[dev_name] = read_type, write_type
+        for dev_id, read_type, write_type in self.parse_schema(schema):
+            self.sensor_types[dev_id] = read_type, write_type
         super().__init__()
 
     @staticmethod
@@ -69,7 +70,7 @@ class SensorService(collections.UserDict):
                     params.append(Parameter(**attrs))
 
                 yield (
-                    dev_name,
+                    device['id'],
                     SensorReadStructure.make_type(dev_name, device['id'], params),
                     SensorWriteStructure.make_type(dev_name, device['id'], params),
                 )
@@ -95,13 +96,21 @@ class SensorService(collections.UserDict):
     async def collect(self, uid: str):
         pass
 
-    def get_read_type(self, sensor_name):
-        read_type, _ = self.sensor_types[sensor_name]
+    def get_read_type(self, dev_id: int) -> type:
+        read_type, _ = self.sensor_types[dev_id]
         return read_type
 
-    def get_write_type(self, sensor_name):
-        _, write_type = self.sensor_types[sensor_name]
+    def get_write_type(self, dev_id: int) -> type:
+        _, write_type = self.sensor_types[dev_id]
         return write_type
+
+    @staticmethod
+    def get_read_buf_name(uid: int) -> str:
+        return f'sensor-rbuf-{uid}'
+
+    @staticmethod
+    def get_write_buf_name(uid: int) -> str:
+        return f'sensor-wbuf-{uid}'
 
 
 class SensorObserver(MonitorObserver):
@@ -182,8 +191,6 @@ class SensorProtocol(asyncio.Protocol):
     """
     def __init__(self, sensor_service):
         self.sensor_service = sensor_service
-        # read_type = self.sensor_service.get_read_type()
-        # self.read_shm, self.write_shm =
         self.read_queue, self.write_queue = BinaryRingBuffer(), BinaryRingBuffer()
         # self.encoder = threading.Thread(
         #     target=packet.encode_loop,
@@ -204,46 +211,43 @@ class SensorProtocol(asyncio.Protocol):
         self.send_task = asyncio.ensure_future(loop.run_in_executor(None, self.send_messages))
         self.ping_task = asyncio.create_task(self.ping())
 
-    async def ping(self, delay=1):
+    @property
+    def port(self):
+        return self.transport.serial.port
+
+    async def ping(self, delay=0.1):
         try:
-            while True:
-                await asyncio.sleep(delay)
+            while not self.ready.is_set():
                 packet_lib.append_packet(self.write_queue, packet_lib.make_ping())
+                await asyncio.sleep(delay)
                 LOGGER.debug('Sending ping.')
         except asyncio.CancelledError:
-            LOGGER.debug('Stopping ping.')
-
-    # async def handshake(self, delay=1):
-    #     while True:
-    #         packet = self.read_queue.read_with_timeout(delay)
-    #         # LOGGER.debug(packet)
-    #         LOGGER.debug(repr(packet))
-
-    """
-    def handshake(self):
-        packet_lib.append_packet(self.write_queue, packet_lib.make_ping())
-        LOGGER.debug('Starting handshake with device.')
-
-        while True:
-            packet = self.read_queue.read()
-            LOGGER.debug(packet)
-            # LOGGER.debug(packet_lib.decode_packet(packet))
-
-
-        # read_type = self.sensor_service.get_read_type('PolarBear')
-        # read_buf = SensorReadBuffer('tmp', read_type)
-        # struct = read_type.from_buffer(read_buf)
-        # self.decoder = threading.Thread(target=packet.decode_loop, args=(read_buf, self.read_queue, self.write_queue), daemon=True)
-        # self.decoder.start()
-    """
+            pass
+        finally:
+            LOGGER.debug('Handshake completed. Stopping ping.')
 
     def connection_lost(self, exc):
-        LOGGER.debug('Connection to serial lost.', com_port=self.transport.serial.port)
+        LOGGER.debug('Connection to serial lost.', com_port=self.port)
         self.send_task.cancel()
         self.log_task.cancel()
         self.ready.clear()
         self.read_queue.clear()
         self.write_queue.clear()
+
+    def make_sensor(self, dev_id, uid, read=True):
+        if read:
+            name = self.sensor_service.get_read_buf_name(uid)
+            struct_type = self.sensor_service.get_read_type(dev_id)
+            sensor_buf = SensorReadBuffer(name, struct_type)
+        else:
+            name = self.sensor_service.get_write_buf_name(uid)
+            struct_type = self.sensor_service.get_write_type(dev_id)
+            sensor_buf = SensorWriteBuffer(name, struct_type)
+        LOGGER.debug('Building sensor structure.',
+                     read=read,
+                     name=name,
+                     struct_type=struct_type.__name__)
+        return struct_type.from_buffer(sensor_buf), sensor_buf
 
     def data_received(self, data: bytes):
         self.recv_count += 1
@@ -255,11 +259,21 @@ class SensorProtocol(asyncio.Protocol):
             packet = packet_lib.extract_from_frame(packet)
             if not packet:
                 LOGGER.error('Unable to extract packet from COBS frame.')
-                LOGGER.error(repr(raw_packet))
                 return
-            dev_id = packet[0]
-            LOGGER.error(repr(packet))
-            # self.read_buf = SensorReadBuffer()
+            (msg_type, payload_len), payload = packet[:2], packet[2:]
+            msg_type = packet_lib.MessageType(msg_type)
+            if msg_type is not packet_lib.MessageType.SUB_RES:
+                LOGGER.debug('Subscription response not received during handshake.', msg_type=msg_type.name)
+            elif payload_len != len(payload) or payload_len != 15:
+                LOGGER.error('Subscription response payload length not correct.')
+            else:
+                params, delay, dev_id, year, rand_id = struct.unpack('<HHHBQ', payload)
+                uid = dev_id << 72 | year << 64 | rand_id
+
+                self.read_struct, self.read_buf = self.make_sensor(dev_id, uid)
+                self.write_struct, self.write_buf = self.make_sensor(dev_id, uid)
+                LOGGER.info('Sensor registered.', uid=uid, dev_id=dev_id)
+                self.ready.set()
 
     async def log_statistics(self):
         try:
@@ -276,8 +290,7 @@ class SensorProtocol(asyncio.Protocol):
             if not packet:
                 LOGGER.warn('Write queue read timed out.',
                             write_timeout=self.write_timeout,
-                            com_port=self.transport.serial.port)
-            LOGGER.critical(repr(packet))
+                            com_port=self.port)
             self.transport.write(b'\x00' + packet)
 
 
